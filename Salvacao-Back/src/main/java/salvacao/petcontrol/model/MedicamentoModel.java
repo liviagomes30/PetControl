@@ -4,13 +4,11 @@ public class MedicamentoModel {
     private Integer idproduto;
     private String composicao;
 
-    // Construtor completo
     public MedicamentoModel(Integer idproduto, String composicao) {
         this.idproduto = idproduto;
         this.composicao = composicao;
     }
 
-    // Construtor sem ID para novas inserções
     public MedicamentoModel(String composicao) {
         this.composicao = composicao;
     }
