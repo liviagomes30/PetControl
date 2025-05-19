@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PetControl - Editar Medicamento</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css"
+    />
+    <link rel="stylesheet" href="../../assets/css/style.css" />
+    <script src="../../assets/js/components/sidebar.js" defer></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header d-flex align-items-center">
+        <a href="listarMedicamentos.html" class="btn btn-secondary me-3">
+          <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+        <h1 class="h3 mb-0" style="color: var(--vermelho-escuro)">
+          Editar Medicamento
+        </h1>
+      </div>
+
+      <div class="bg-white shadow rounded p-4">
+        <form id="formMedicamento">
+          <input type="hidden" id="idproduto" />
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="nome" class="form-label">Nome do Medicamento</label>
+              <input
+                type="text"
+                class="form-control"
+                id="nome"
+                required
+                data-max-length="100"
+                data-show-counter="true"
+              />
+              <div id="nomeError" class="input-error"></div>
+            </div>
+
+            <div class="col-md-6">
+              <label for="composicao" class="form-label">Composição</label>
+              <input
+                type="text"
+                class="form-control"
+                id="composicao"
+                required
+                data-max-length="200"
+                data-show-counter="true"
+              />
+              <div id="composicaoError" class="input-error"></div>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="tipoProduto" class="form-label"
+                >Tipo de Produto</label
+              >
+              <select class="form-select" id="tipoProduto" required>
+                <option value="">Selecione</option>
+                <!-- Será carregado dinamicamente -->
+              </select>
+              <div id="tipoError" class="input-error"></div>
+            </div>
+
+            <div class="col-md-6">
+              <label for="unidadeMedida" class="form-label"
+                >Unidade de Medida</label
+              >
+              <select class="form-select" id="unidadeMedida" required>
+                <option value="">Selecione</option>
+                <!-- Será carregado dinamicamente -->
+              </select>
+              <div id="unidadeError" class="input-error"></div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="fabricante" class="form-label">Fabricante</label>
+            <input
+              type="text"
+              class="form-control"
+              id="fabricante"
+              data-max-length="100"
+            />
+          </div>
+
+          <!-- Novos campos para preço e estoque mínimo -->
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="preco" class="form-label">Preço (R$)</label>
+              <input
+                type="text"
+                class="form-control"
+                id="preco"
+                data-mask="money"
+                placeholder="0,00"
+              />
+              <div id="precoError" class="input-error"></div>
+            </div>
+
+            <div class="col-md-6">
+              <label for="estoqueMinimo" class="form-label"
+                >Estoque Mínimo</label
+              >
+              <input
+                type="text"
+                class="form-control"
+                id="estoqueMinimo"
+                data-mask="number"
+                placeholder="0"
+              />
+              <div id="estoqueError" class="input-error"></div>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="window.location.href='listarMedicamentos.html'"
+            >
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Loading overlay para operações assíncronas -->
+    <div id="loadingOverlay" class="loading-overlay">
+      <div class="spinner" role="status">
+        <span class="visually-hidden">Carregando...</span>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+      import { medicamentoController } from "../../assets/js/controllers/MedicamentoController.js";
+      import UIComponents from "../../assets/js/components/uiComponents.js";
+
+      document.addEventListener("DOMContentLoaded", () => {
+        // Inicializar máscaras de input
+        UIComponents.InputMasks.inicializar();
+
+        // Inicializar controller e formulário
+        medicamentoController.inicializarFormulario();
+
+        // Implementar função para mostrar toast se necessário
+        window.mostrarToast = function (titulo, mensagem, tipo = "success") {
+          if (tipo === "success") {
+            UIComponents.Toast.sucesso(mensagem);
+          } else if (tipo === "error") {
+            UIComponents.Toast.erro(mensagem);
+          } else if (tipo === "warning") {
+            UIComponents.Toast.alerta(mensagem);
+          } else {
+            UIComponents.Toast.info(mensagem);
+          }
+        };
+
+        console.log("Página de edição de medicamento inicializada");
+      });
+    </script>
+  </body>
+</html>
