@@ -45,7 +45,6 @@ public class MedicacaoService {
     }
 
     public MedicacaoModel efetuarMedicacao(MedicacaoModel medicacao, String descricaoHistorico) throws Exception {
-        // Validações
         if (medicacao.getIdanimal() == null) {
             throw new Exception("Animal é obrigatório");
         }
@@ -68,12 +67,10 @@ public class MedicacaoService {
             throw new Exception("Medicamento não encontrado");
         }
 
-        // Verificar se receita existe
-        if (receitaMedicamentoDAL.findById(medicacao.getPosologia_receitamedicamento_idreceita()) == null) {
-            throw new Exception("Receita não encontrada");
-        }
+//        if (receitaMedicamentoDAL.findById(medicacao.getPosologia_receitamedicamento_idreceita()) == null) {
+//            throw new Exception("Receita não encontrada");
+//        }
 
-        // Se não foi fornecida uma data, usar a data atual
         if (medicacao.getData() == null) {
             medicacao.setData(LocalDate.now());
         }

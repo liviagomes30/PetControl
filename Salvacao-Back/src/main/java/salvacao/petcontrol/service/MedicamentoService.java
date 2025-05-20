@@ -45,7 +45,6 @@ public class MedicamentoService {
             throw new Exception("Composição do medicamento é obrigatória");
         }
 
-        // Verificar se tipo de produto e unidade de medida existem
         if (tipoProdutoDAL.findById(dto.getProduto().getIdtipoproduto()) == null) {
             throw new Exception("Tipo de produto não encontrado");
         }
@@ -54,7 +53,6 @@ public class MedicamentoService {
             throw new Exception("Unidade de medida não encontrada");
         }
 
-        // Adicionar o medicamento
         return medicamentoDAL.addMedicamento(dto.getMedicamento(), dto.getProduto());
     }
 

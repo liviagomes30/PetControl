@@ -1,14 +1,16 @@
 package salvacao.petcontrol.model;
 
+import java.math.BigDecimal;
+
 public class EstoqueModel {
     private Integer idestoque;
     private Integer idproduto;
-    private Integer quantidade;
+    private BigDecimal quantidade;
 
     public EstoqueModel() {
     }
 
-    public EstoqueModel(Integer idestoque, Integer idproduto, Integer quantidade) {
+    public EstoqueModel(Integer idestoque, Integer idproduto, BigDecimal quantidade) {
         this.idestoque = idestoque;
         this.idproduto = idproduto;
         this.quantidade = quantidade;
@@ -30,11 +32,11 @@ public class EstoqueModel {
         this.idproduto = idproduto;
     }
 
-    public Integer getQuantidade() {
+    public BigDecimal getQuantidade() {
         return quantidade;
     }
 
-    public void setQuantidade(Integer quantidade) {
+    public void setQuantidade(BigDecimal quantidade) {
         this.quantidade = quantidade;
     }
 }

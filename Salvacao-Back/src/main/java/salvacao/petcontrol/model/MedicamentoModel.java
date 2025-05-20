@@ -13,12 +13,10 @@ public class MedicamentoModel {
         this.composicao = composicao;
     }
 
-    // Construtor vazio
     public MedicamentoModel() {
         this(0, "");
     }
 
-    // Getters e Setters
     public Integer getIdproduto() {
         return idproduto;
     }

@@ -7,7 +7,6 @@ public class PosologiaModel {
     private Integer medicamento_idproduto;
     private Integer receitamedicamento_idreceita;
 
-    // Construtores, getters e setters
 
     public PosologiaModel() {
     }
