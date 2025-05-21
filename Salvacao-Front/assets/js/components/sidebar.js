@@ -80,6 +80,7 @@ document.addEventListener("DOMContentLoaded", function () {
         <a href="${getBasePath()}pages/produto/categorias.html" class="sidebar-submenu-item" id="submenu-produtos-categorias">Lista de Categorias</a>
         <a href="${getBasePath()}pages/produto/tipo/listarTipos.html" class="sidebar-submenu-item" id="submenu-produtos-tipos">Tipos de Produto</a>
         <a href="${getBasePath()}pages/produto/unidade/listarUnidades.html" class="sidebar-submenu-item" id="submenu-produtos-unidades">Unidades de Medida</a>
+        <a href="${getBasePath()}pages/produto/entrada/listarprodutos.html" class="sidebar-submenu-item" id="submenu-produtos-unidades">Entrada de produtos</a>
       </ul>
       
       <a href="${getBasePath()}pages/estoque/index.html" class="sidebar-item" id="menu-estoque">

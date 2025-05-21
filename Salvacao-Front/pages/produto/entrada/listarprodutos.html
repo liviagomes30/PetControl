@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PetControl - Registar Entrada</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <link rel="stylesheet" href="../../../assets/css/style.css" />
+    <script src="../../../assets/js/components/sidebar.js" defer></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header d-flex justify-content-between align-items-center">
+        <h1 class="h3" style="color: var(--vermelho-escuro)">
+          Lista de Produtos
+        </h1>
+        <a href="listarMovimenta.html" class="btn btn-primary">Registro de Movimentações</a>
+      </div>
+
+      <div class="filtro-container mt-3">
+        <div class="row g-2 align-items-center">
+          <!-- Campo de pesquisa -->
+          <div class="col">
+            <input
+              class="form-control filtro-input"
+              type="search"
+              placeholder="Digite para pesquisar..."
+              aria-label="Pesquisar"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabela de Produto -->
+      <div class="bg-white shadow rounded p-4">
+        <table class="table table-hover">
+          <thead class="table-header">
+            <tr>
+              <th>Nome</th>
+              <th>Fabricante</th>
+              <th>Preço</th>
+              <th>Estoque Minimo</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-produto">
+            <!-- Conteúdo será carregado dinamicamente -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!--
+    <script type="module">
+      import { produtoController } from "../../assets/js/controllers/ProdutoController.js";
+
+      document.addEventListener("DOMContentLoaded", () => {
+        console.log("InicializarListagem");
+        ProdutoController.inicializarListagem();
+
+      });
+      
+      window.animalController = animalController;
+    </script>
+    -->
+  </body>
+</html>

@@ -1,8 +1,12 @@
 package salvacao.petcontrol.model;
 
+import org.springframework.stereotype.Repository;
+import salvacao.petcontrol.dal.ProdutoDAL;
+
 import java.math.BigDecimal;
 import java.util.Date;
 
+@Repository
 public class ProdutoModel {
     private Integer idproduto;
     private String nome;
@@ -12,6 +16,7 @@ public class ProdutoModel {
     private BigDecimal preco;
     private Integer estoqueMinimo;
     private Date dataCadastro;
+    private ProdutoDAL produtoDAL;
 
     // Construtor completo
     public ProdutoModel(Integer idproduto, String nome, Integer idtipoproduto, Integer idunidademedida,
@@ -49,6 +54,7 @@ public class ProdutoModel {
 
     // Construtor vazio
     public ProdutoModel() {
+        produtoDAL = new ProdutoDAL();
     }
 
     // Getters e Setters
@@ -114,5 +120,9 @@ public class ProdutoModel {
 
     public void setDataCadastro(Date dataCadastro) {
         this.dataCadastro = dataCadastro;
+    }
+
+    public ProdutoDAL getProdutoDAL() {
+        return produtoDAL;
     }
 }

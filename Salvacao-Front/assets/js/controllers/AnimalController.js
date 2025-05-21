@@ -139,6 +139,25 @@ class AnimalController {
         });
     }
 
+    validarDataNaoFutura(elemento) {
+        const data = new Date(elemento.value);
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+
+        if (data > hoje) {
+            throw new Error("A data não pode ser no futuro.");
+        }
+    }
+
+    validarDataMenorOuIgual(elemento1, elemento2) {
+        const data1 = new Date(elemento1.value);
+        const data2 = new Date(elemento2.value);
+
+        if (data1 > data2) {
+            throw new Error("A data de nascimento não pode ser maior que a data de resgate.");
+        }
+    }
+
 
     obterDadosFormulario() {
         const nomeElement = document.getElementById("nome");
@@ -154,10 +173,23 @@ class AnimalController {
         const corElement = document.getElementById("cor");
 
         
+        
 
         // Verificação de campos obrigatórios
-        if (!nomeElement || !especieElement || !sexoElement || !statusElement) {
+        if (!nomeElement.value.trim() || !especieElement.value.trim() || !sexoElement.value.trim() || !statusElement.value.trim()) {
             throw new Error("Campos obrigatórios não preenchidos.");
+        }
+
+        if(datanascimentoElement){
+            this.validarDataNaoFutura(datanascimentoElement);
+        }
+
+        if(datanascimentoElement){
+            this.validarDataNaoFutura(dataresgateElement);
+        }
+
+        if(datanascimentoElement && datanascimentoElement){
+            this.validarDataMenorOuIgual(datanascimentoElement,dataresgateElement);
         }
 
 
@@ -238,6 +270,8 @@ class AnimalController {
         }
     }
 
+    
+
     obterDadosAtualizacao(id) {
 
         const nomeElement = document.getElementById("nome");
@@ -255,8 +289,21 @@ class AnimalController {
         
 
         // Verificação de campos obrigatórios
-        if (!nomeElement || !especieElement || !sexoElement || !statusElement) {
+         if (!nomeElement.value.trim() || !especieElement.value.trim() || !sexoElement.value.trim() || !statusElement.value.trim()) {
             throw new Error("Campos obrigatórios não preenchidos.");
+        }
+        
+
+        if(datanascimentoElement){
+            this.validarDataNaoFutura(datanascimentoElement);
+        }
+
+        if(datanascimentoElement){
+            this.validarDataNaoFutura(dataresgateElement);
+        }
+
+        if(datanascimentoElement && datanascimentoElement){
+            this.validarDataMenorOuIgual(datanascimentoElement,dataresgateElement);
         }
 
 
@@ -337,6 +384,9 @@ class AnimalController {
 
       if (resposta.ok) {
           UIComponents.Toast.sucesso(MensagensPadroes.SUCESSO.EXCLUSAO);
+          setTimeout(() => {
+            location.reload();
+          }, 1500);
       } 
       else 
       {
