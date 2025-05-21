@@ -915,56 +915,123 @@ td {
   margin-top: var(--spacing-xs);
 }
 
-.filtro-select {
-  background-color: #d5d9c7; /* Bege claro da paleta */
-  color: #400101; /* Vermelho escuro da paleta */
-  border: 2px solid #f2a03d; /* Laranja suave da paleta */
-  border-radius: 10px;
-  padding: 6px 12px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  width: auto;
-  min-width: 120px;
+/* estiloComplementar.css - Estilos para novos componentes UI */
+
+/* Estilos para indicação de campos obrigatórios */
+.form-label.required::after {
+  content: " *";
+  color: var(--vermelho-intenso);
+  font-weight: bold;
 }
 
-.filtro-select:hover,
-.filtro-select:focus {
-  background-color: #f2a03d; /* Laranja suave da paleta */
+/* Estilos para feedback de validação (sistema legado) */
+.input-error {
+  color: var(--vermelho-intenso);
+  font-size: 0.875rem;
+  font-style: italic;
+  margin-top: 0.25rem;
+}
+
+/* Estilos para contadores de caracteres */
+.form-counter {
+  position: absolute;
+  right: 10px;
+  bottom: -22px;
+  font-size: 0.75rem;
+  color: #6c757d;
+  transition: color 0.2s ease;
+}
+
+.form-group {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+/* Estilos para validação server-side do Bootstrap */
+.form-control.is-invalid,
+.form-select.is-invalid {
+  border-color: var(--vermelho-intenso) !important;
+}
+
+.form-control.is-valid,
+.form-select.is-valid {
+  border-color: #198754 !important;
+}
+
+.invalid-feedback {
+  color: var(--vermelho-intenso);
+  font-size: 0.875rem;
+  display: none;
+}
+
+.valid-feedback {
+  color: #198754;
+  font-size: 0.875rem;
+  display: none;
+}
+
+.is-invalid ~ .invalid-feedback,
+.is-invalid ~ .invalid-tooltip {
+  display: block;
+}
+
+.is-valid ~ .valid-feedback,
+.is-valid ~ .valid-tooltip {
+  display: block;
+}
+
+/* Correção para input-groups com validação */
+.input-group.has-validation > .input-group-text {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.input-group.has-validation > .form-control:not(:last-child),
+.input-group.has-validation > .form-select:not(:last-child) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* Estilos para o modal de erro */
+#modal-erro .modal-header {
+  background-color: var(--vermelho-intenso);
   color: white;
-  border-color: #f2541b; /* Laranja vibrante da paleta */
-  box-shadow: 0 0 5px rgba(242, 84, 27, 0.5);
 }
 
-.filtro-select option {
-  background-color: white;
-  color: #400101; /* Vermelho escuro da paleta */
+#modal-erro .modal-body {
+  font-size: 1rem;
+  padding: 1.5rem;
 }
 
-/* Estilo para o container de filtro */
-.filtro-container {
-  background-color: rgba(242, 160, 61, 0.1); /* Laranja suave com opacidade */
-  padding: 15px;
-  border-radius: 10px;
-  margin-bottom: 20px;
-  border-left: 4px solid #f2541b; /* Laranja vibrante da paleta */
+/* Melhorias para campos com ícones */
+.input-group-text {
+  background-color: var(--bege-claro);
+  color: var(--vermelho-escuro);
+  border-color: #ced4da;
 }
 
-/* Estilo para o campo de busca */
-.filtro-input {
-  border: 2px solid #d5d9c7;
-  border-radius: 10px;
-  padding: 6px 12px;
-  transition: all 0.3s ease;
+/* Melhorias para botões no formulário */
+.btn-primary {
+  background-color: var(--laranja-vibrante);
+  border-color: var(--laranja-vibrante);
 }
 
-.filtro-input:focus {
-  border-color: #f2541b;
-  box-shadow: 0 0 5px rgba(242, 84, 27, 0.5);
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: #d4470f;
+  border-color: #d4470f;
 }
 
-/* Texto do filtro */
-.filtro-texto {
-  color: #400101;
-  font-weight: 500;
-  margin-right: 10px;
+/* Responsividade para contadores de caracteres */
+@media (max-width: 768px) {
+  .form-counter {
+    position: static;
+    display: block;
+    text-align: right;
+    margin-top: 0.25rem;
+  }
+
+  .form-group {
+    margin-bottom: 2rem;
+  }
 }

@@ -10,10 +10,8 @@ const ModalConfirmacao = {
     corCabecalho = "#F2A03D",
     corBotaoConfirmar = "#F2541B"
   ) {
-    // Remove qualquer modal existente para evitar duplicação
     this.removerModaisExistentes();
 
-    // Cria o modal com estilos explícitos para garantir visibilidade
     const modalHtml = `
       <div class="modal-custom" id="modal-confirmacao" tabindex="-1" style="display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1050;" aria-modal="true" role="dialog">
         <div class="modal-dialog" style="position: relative; width: auto; margin: 100px auto; max-width: 500px; z-index: 1060;">

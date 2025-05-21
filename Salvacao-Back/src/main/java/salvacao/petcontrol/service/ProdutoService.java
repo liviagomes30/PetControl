@@ -41,7 +41,6 @@ public class ProdutoService {
     }
 
     public ProdutoModel addProduto(ProdutoCompletoDTO dto) throws Exception {
-        // Validações
         if (dto.getProduto() == null) {
             throw new Exception("Dados do produto incompletos");
         }
@@ -50,7 +49,6 @@ public class ProdutoService {
             throw new Exception("Nome do produto é obrigatório");
         }
 
-        // Verificar se tipo de produto e unidade de medida existem
         if (tipoProdutoDAL.findById(dto.getProduto().getIdtipoproduto()) == null) {
             throw new Exception("Tipo de produto não encontrado");
         }
@@ -59,12 +57,10 @@ public class ProdutoService {
             throw new Exception("Unidade de medida não encontrada");
         }
 
-        // Adicionar o produto
         return produtoDAL.addProduto(dto.getProduto());
     }
 
     public boolean updateProduto(Integer id, ProdutoCompletoDTO dto) throws Exception {
-        // Validações
         if (dto.getProduto() == null) {
             throw new Exception("Dados do produto incompletos");
         }
@@ -73,13 +69,11 @@ public class ProdutoService {
             throw new Exception("Nome do produto é obrigatório");
         }
 
-        // Verificar se o produto existe
         ProdutoCompletoDTO existente = produtoDAL.findProdutoCompleto(id);
         if (existente == null) {
             throw new Exception("Produto não encontrado");
         }
 
-        // Verificar se tipo de produto e unidade de medida existem
         if (tipoProdutoDAL.findById(dto.getProduto().getIdtipoproduto()) == null) {
             throw new Exception("Tipo de produto não encontrado");
         }
@@ -88,18 +82,15 @@ public class ProdutoService {
             throw new Exception("Unidade de medida não encontrada");
         }
 
-        // Atualizar o produto
         return produtoDAL.updateProduto(id, dto.getProduto());
     }
 
     public boolean deleteProduto(Integer id) throws Exception {
-        // Verificar se o produto existe
         ProdutoCompletoDTO existente = produtoDAL.findProdutoCompleto(id);
         if (existente == null) {
             throw new Exception("Produto não encontrado");
         }
 
-        // Excluir o produto
         return produtoDAL.deleteProduto(id);
     }
 

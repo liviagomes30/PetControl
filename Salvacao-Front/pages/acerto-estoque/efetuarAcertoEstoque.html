@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PetControl - Efetuar Acerto de Estoque</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css"
+    />
+    <link rel="stylesheet" href="../../assets/css/style.css" />
+    <script src="../../assets/js/components/sidebar.js" defer></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header d-flex align-items-center">
+        <a href="listarAcertosEstoque.html" class="btn btn-secondary me-3">
+          <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+        <h1 class="h3 mb-0" style="color: var(--vermelho-escuro)">
+          Efetuar Acerto de Estoque
+        </h1>
+      </div>
+
+      <div class="bg-white shadow rounded p-4">
+        <form id="formAcertoEstoque">
+          <div class="row mb-3">
+            <div class="col-md-12">
+              <label for="motivo" class="form-label"
+                >Motivo do Acerto <span style="color: #f23e2e">*</span></label
+              >
+              <select class="form-select" id="motivo" required>
+                <option value="">Selecione</option>
+                <option value="Contagem física">Contagem física</option>
+                <option value="Inventário">Inventário</option>
+                <option value="Ajuste de perdas">Ajuste de perdas</option>
+                <option value="Ajuste de expiração">Ajuste de expiração</option>
+                <option value="Doação recebida">Doação recebida</option>
+                <option value="Outro">Outro</option>
+              </select>
+              <div id="motivoError" class="input-error"></div>
+            </div>
+          </div>
+
+          <div class="row mb-3" id="motivoOutroContainer" style="display: none">
+            <div class="col-md-12">
+              <label for="motivoOutro" class="form-label"
+                >Especifique o Motivo
+                <span style="color: #f23e2e">*</span></label
+              >
+              <input
+                type="text"
+                class="form-control"
+                id="motivoOutro"
+                data-max-length="100"
+              />
+              <div id="motivoOutroError" class="input-error"></div>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-12">
+              <label for="observacao" class="form-label">Observações</label>
+              <textarea
+                class="form-control"
+                id="observacao"
+                rows="3"
+                data-max-length="500"
+                data-show-counter="true"
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="card mb-4">
+            <div
+              class="card-header d-flex justify-content-between align-items-center"
+            >
+              <span>Itens do Acerto</span>
+              <button
+                type="button"
+                class="btn btn-sm btn-primary"
+                id="btnAdicionarItem"
+              >
+                <i class="bi bi-plus-circle"></i> Adicionar Item
+              </button>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Produto</th>
+                      <th>Qtd. Atual</th>
+                      <th>Nova Qtd.</th>
+                      <th>Tipo Ajuste</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="itensAcerto">
+                    <tr id="nenhumItem">
+                      <td colspan="5" class="text-center">
+                        Nenhum item adicionado
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="mb-3 p-2"
+            style="
+              background-color: rgba(242, 84, 27, 0.1);
+              border-left: 3px solid #f2541b;
+              border-radius: 4px;
+            "
+          >
+            <small
+              >Os campos marcados com
+              <span style="color: #f23e2e; font-weight: bold">*</span> são de
+              preenchimento obrigatório.</small
+            >
+          </div>
+
+          <div class="d-flex justify-content-end gap-2">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="window.location.href='listarAcertosEstoque.html'"
+            >
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary">Confirmar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal para adicionar item - versão corrigida -->
+    <div
+      class="modal fade"
+      id="adicionarItemModal"
+      tabindex="-1"
+      aria-labelledby="adicionarItemModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="adicionarItemModalLabel">
+              Adicionar Item ao Acerto
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Fechar"
+              id="fecharModalX"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form id="formItem">
+              <div class="mb-3">
+                <label for="selectProduto" class="form-label"
+                  >Produto <span style="color: #f23e2e">*</span></label
+                >
+                <select class="form-select" id="selectProduto">
+                  <option value="">Selecione um produto</option>
+                  <!-- Será carregado dinamicamente -->
+                </select>
+                <div id="selectProdutoError" class="input-error"></div>
+              </div>
+              <div class="mb-3">
+                <label for="quantidadeAtual" class="form-label"
+                  >Quantidade Atual</label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  id="quantidadeAtual"
+                  readonly
+                />
+              </div>
+              <div class="mb-3">
+                <label for="novaQuantidade" class="form-label"
+                  >Nova Quantidade <span style="color: #f23e2e">*</span></label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  id="novaQuantidade"
+                  data-mask="decimal"
+                />
+                <div id="novaQuantidadeError" class="input-error"></div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+              id="btnCancelarModal"
+            >
+              Cancelar
+            </button>
+            <button type="button" class="btn btn-primary" id="btnConfirmarItem">
+              Adicionar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay">
+      <div class="spinner" role="status">
+        <span class="visually-hidden">Carregando...</span>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+      import { acertoEstoqueController } from "../../assets/js/controllers/AcertoEstoqueController.js";
+      import UIComponents from "../../assets/js/components/uiComponents.js";
+
+      document.addEventListener("DOMContentLoaded", () => {
+        UIComponents.InputMasks.inicializar();
+
+        acertoEstoqueController.inicializarFormulario();
+
+        document
+          .getElementById("motivo")
+          .addEventListener("change", function () {
+            const motivoOutroContainer = document.getElementById(
+              "motivoOutroContainer"
+            );
+            if (this.value === "Outro") {
+              motivoOutroContainer.style.display = "block";
+            } else {
+              motivoOutroContainer.style.display = "none";
+            }
+          });
+
+        const btnAdicionarItem = document.getElementById("btnAdicionarItem");
+        if (btnAdicionarItem) {
+          btnAdicionarItem.addEventListener("click", () => {
+            const selectProduto = document.getElementById("selectProduto");
+            const quantidadeAtual = document.getElementById("quantidadeAtual");
+            const novaQuantidade = document.getElementById("novaQuantidade");
+
+            if (selectProduto) selectProduto.value = "";
+            if (quantidadeAtual) quantidadeAtual.value = "";
+            if (novaQuantidade) novaQuantidade.value = "";
+
+            UIComponents.Validacao.limparErros("formItem");
+
+            UIComponents.ModalHelper.abrirModal("adicionarItemModal");
+          });
+        }
+
+        const btnCancelarModal = document.getElementById("btnCancelarModal");
+        if (btnCancelarModal) {
+          btnCancelarModal.addEventListener("click", () => {
+            UIComponents.ModalHelper.fecharModal("adicionarItemModal");
+          });
+        }
+
+        const fecharModalX = document.getElementById("fecharModalX");
+        if (fecharModalX) {
+          fecharModalX.addEventListener("click", () => {
+            UIComponents.ModalHelper.fecharModal("adicionarItemModal");
+          });
+        }
+      });
+    </script>
+  </body>
+</html>

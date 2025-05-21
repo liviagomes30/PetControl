@@ -13,7 +13,6 @@ public class ProdutoModel {
     private Integer estoqueMinimo;
     private Date dataCadastro;
 
-    // Construtor completo
     public ProdutoModel(Integer idproduto, String nome, Integer idtipoproduto, Integer idunidademedida,
                         String fabricante, BigDecimal preco, Integer estoqueMinimo, Date dataCadastro) {
         this.idproduto = idproduto;
@@ -26,7 +25,6 @@ public class ProdutoModel {
         this.dataCadastro = dataCadastro;
     }
 
-    // Construtor simplificado (usado no MedicamentoDAL)
     public ProdutoModel(Integer idproduto, String nome, Integer idtipoproduto, Integer idunidademedida, String fabricante) {
         this.idproduto = idproduto;
         this.nome = nome;
@@ -35,7 +33,6 @@ public class ProdutoModel {
         this.fabricante = fabricante;
     }
 
-    // Construtor sem ID para novas inserções
     public ProdutoModel(String nome, Integer idtipoproduto, Integer idunidademedida,
                         String fabricante, BigDecimal preco, Integer estoqueMinimo) {
         this.nome = nome;
@@ -47,11 +44,9 @@ public class ProdutoModel {
         this.dataCadastro = new Date(); // Data atual
     }
 
-    // Construtor vazio
     public ProdutoModel() {
     }
 
-    // Getters e Setters
     public Integer getIdproduto() {
         return idproduto;
     }
