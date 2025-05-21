@@ -24,10 +24,10 @@ public class MedicamentoDAO {
     private ProdutoDAO produtoDAO;
 
     @Autowired
-    private TipoProdutoDAO tipoProdutoDAO; // Updated from TipoProdutoDAL
+    private TipoProdutoDAO tipoProdutoDAO;
 
     @Autowired
-    private UnidadeMedidaDAO unidadeMedidaDAO; // Updated from UnidadeMedidaDAL
+    private UnidadeMedidaDAO unidadeMedidaDAO;
 
     public MedicamentoModel getId(Integer id) {
         MedicamentoModel medicamento = null;

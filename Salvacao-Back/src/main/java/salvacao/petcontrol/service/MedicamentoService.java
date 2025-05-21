@@ -4,8 +4,8 @@ package salvacao.petcontrol.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import salvacao.petcontrol.dao.MedicamentoDAO;
-import salvacao.petcontrol.dao.TipoProdutoDAO; // Changed from TipoProdutoDAL
-import salvacao.petcontrol.dao.UnidadeMedidaDAO; // Changed from UnidadeMedidaDAL
+import salvacao.petcontrol.dao.TipoProdutoDAO;
+import salvacao.petcontrol.dao.UnidadeMedidaDAO;
 import salvacao.petcontrol.dto.MedicamentoCompletoDTO;
 import salvacao.petcontrol.model.MedicamentoModel;
 import salvacao.petcontrol.util.ResultadoOperacao;
@@ -19,10 +19,10 @@ public class MedicamentoService {
     private MedicamentoDAO medicamentoDAO;
 
     @Autowired
-    private TipoProdutoDAO tipoProdutoDAO; // Changed from TipoProdutoDAL
+    private TipoProdutoDAO tipoProdutoDAO;
 
     @Autowired
-    private UnidadeMedidaDAO unidadeMedidaDAO; // Changed from UnidadeMedidaDAL
+    private UnidadeMedidaDAO unidadeMedidaDAO;
 
     public MedicamentoCompletoDTO getId(Integer id) {
         return medicamentoDAO.findMedicamentoCompleto(id);
