@@ -82,7 +82,7 @@ document.addEventListener("DOMContentLoaded", function () {
         <a href="${getBasePath()}pages/produto/unidade/listarUnidades.html" class="sidebar-submenu-item" id="submenu-produtos-unidades">Unidades de Medida</a>
       </ul>
       
-      <a href="${getBasePath()}pages/estoque/index.html" class="sidebar-item" id="menu-estoque">
+      <a href="${getBasePath()}pages/acerto-estoque/listarAcertosEstoque.html" class="sidebar-item" id="menu-estoque">
         <div class="sidebar-item-content">
           <i class="bi bi-box sidebar-item-icon"></i>
           <span class="sidebar-item-text">Estoque</span>
@@ -191,7 +191,7 @@ function markActiveMenuItem() {
     const arrow = document.querySelector("#menu-produtos .sidebar-item-arrow");
     arrow.classList.remove("bi-chevron-down");
     arrow.classList.add("bi-chevron-up");
-  } else if (currentPath.includes("/estoque/")) {
+  } else if (currentPath.includes("")) {
     document.getElementById("menu-estoque").classList.add("active");
   }
 }

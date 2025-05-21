@@ -5,9 +5,11 @@ import UIToast from "../utils/uiToast.js";
 import UIModalErro from "../utils/uiModalErro.js";
 import UIValidacao from "../utils/uiValidacao.js";
 import UIInputMasks from "../utils/uiInputMasks.js";
+import ModalHelper from "../utils/modalHelper.js";
 
 const UIComponents = {
   ModalConfirmacao,
+  ModalHelper,
   Loading: UILoading,
   Toast: UIToast,
   ModalErro: UIModalErro,
