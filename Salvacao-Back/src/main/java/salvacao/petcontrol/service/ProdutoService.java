@@ -1,10 +1,11 @@
+// salvacao.petcontrol.service.ProdutoService.java
 package salvacao.petcontrol.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import salvacao.petcontrol.dal.ProdutoDAL;
-import salvacao.petcontrol.dal.TipoProdutoDAL;
-import salvacao.petcontrol.dal.UnidadeMedidaDAL;
+import salvacao.petcontrol.dao.ProdutoDAO; // Updated from ProdutoDAL
+import salvacao.petcontrol.dalNÃOUSARMAIS.TipoProdutoDAL; // Will be TipoProdutoDAO in future refactoring
+import salvacao.petcontrol.dalNÃOUSARMAIS.UnidadeMedidaDAL; // Will be UnidadeMedidaDAO in future refactoring
 import salvacao.petcontrol.dto.ProdutoCompletoDTO;
 import salvacao.petcontrol.model.ProdutoModel;
 import salvacao.petcontrol.util.ResultadoOperacao;
@@ -16,31 +17,31 @@ import java.util.List;
 public class ProdutoService {
 
     @Autowired
-    private ProdutoDAL produtoDAL;
+    private ProdutoDAO produtoDAO; // Updated from ProdutoDAL
 
     @Autowired
-    private TipoProdutoDAL tipoProdutoDAL;
+    private TipoProdutoDAL tipoProdutoDAL; // Dependency for now
 
     @Autowired
-    private UnidadeMedidaDAL unidadeMedidaDAL;
+    private UnidadeMedidaDAL unidadeMedidaDAL; // Dependency for now
 
-    public ProdutoCompletoDTO getProdutoById(Integer id) {
-        return produtoDAL.findProdutoCompleto(id);
+    public ProdutoCompletoDTO getId(Integer id) { // Renamed from getProdutoById
+        return produtoDAO.findProdutoCompleto(id);
     }
 
-    public List<ProdutoCompletoDTO> getAllProdutos() {
-        return produtoDAL.getAllProdutos();
+    public List<ProdutoCompletoDTO> getAll() { // Renamed from getAllProdutos
+        return produtoDAO.getAllProdutos();
     }
 
-    public List<ProdutoCompletoDTO> getProdutosByTipo(Integer idTipo) {
-        return produtoDAL.getProdutosByTipo(idTipo);
+    public List<ProdutoCompletoDTO> getProdutosByTipo(Integer idTipo) { // Kept original method name as it's a specific filter
+        return produtoDAO.getProdutosByTipo(idTipo);
     }
 
-    public List<ProdutoCompletoDTO> getByName(String searchTerm) {
-        return produtoDAL.getByName(searchTerm);
+    public List<ProdutoCompletoDTO> getByName(String searchTerm) { // Kept original method name
+        return produtoDAO.getByName(searchTerm);
     }
 
-    public ProdutoModel addProduto(ProdutoCompletoDTO dto) throws Exception {
+    public ProdutoModel gravar(ProdutoCompletoDTO dto) throws Exception { // Renamed from addProduto
         if (dto.getProduto() == null) {
             throw new Exception("Dados do produto incompletos");
         }
@@ -49,18 +50,22 @@ public class ProdutoService {
             throw new Exception("Nome do produto é obrigatório");
         }
 
-        if (tipoProdutoDAL.findById(dto.getProduto().getIdtipoproduto()) == null) {
+        // Validate if TipoProdutoDAL and UnidadeMedidaDAL will be DAOs and their methods renamed
+        if (tipoProdutoDAL.findById(dto.getProduto().getIdtipoproduto()) == null) { // Calls existing findById
             throw new Exception("Tipo de produto não encontrado");
         }
 
-        if (unidadeMedidaDAL.findById(dto.getProduto().getIdunidademedida()) == null) {
+        if (unidadeMedidaDAL.findById(dto.getProduto().getIdunidademedida()) == null) { // Calls existing findById
             throw new Exception("Unidade de medida não encontrada");
         }
 
-        return produtoDAL.addProduto(dto.getProduto());
+        // No direct date validation methods are needed from AnimalService for ProdutoModel based on its fields.
+        // DataCadastro is usually set at DAO level or passed as java.util.Date.
+
+        return produtoDAO.gravar(dto.getProduto()); // Updated method call
     }
 
-    public boolean updateProduto(Integer id, ProdutoCompletoDTO dto) throws Exception {
+    public boolean alterar(Integer id, ProdutoCompletoDTO dto) throws Exception { // Renamed from updateProduto
         if (dto.getProduto() == null) {
             throw new Exception("Dados do produto incompletos");
         }
@@ -69,33 +74,24 @@ public class ProdutoService {
             throw new Exception("Nome do produto é obrigatório");
         }
 
-        ProdutoCompletoDTO existente = produtoDAL.findProdutoCompleto(id);
+        ProdutoCompletoDTO existente = produtoDAO.findProdutoCompleto(id); // Calls existing findProdutoCompleto
         if (existente == null) {
             throw new Exception("Produto não encontrado");
         }
 
-        if (tipoProdutoDAL.findById(dto.getProduto().getIdtipoproduto()) == null) {
+        if (tipoProdutoDAL.findById(dto.getProduto().getIdtipoproduto()) == null) { // Calls existing findById
             throw new Exception("Tipo de produto não encontrado");
         }
 
-        if (unidadeMedidaDAL.findById(dto.getProduto().getIdunidademedida()) == null) {
+        if (unidadeMedidaDAL.findById(dto.getProduto().getIdunidademedida()) == null) { // Calls existing findById
             throw new Exception("Unidade de medida não encontrada");
         }
 
-        return produtoDAL.updateProduto(id, dto.getProduto());
+        return produtoDAO.alterar(id, dto.getProduto()); // Updated method call
     }
 
-    public boolean deleteProduto(Integer id) throws Exception {
-        ProdutoCompletoDTO existente = produtoDAL.findProdutoCompleto(id);
-        if (existente == null) {
-            throw new Exception("Produto não encontrado");
-        }
-
-        return produtoDAL.deleteProduto(id);
-    }
-
-    public ResultadoOperacao gerenciarExclusaoProduto(Integer id) throws Exception {
-        ProdutoCompletoDTO existente = produtoDAL.findProdutoCompleto(id);
+    public ResultadoOperacao apagarProduto(Integer id) throws Exception { // Renamed from gerenciarExclusaoProduto (Matches controller now)
+        ProdutoCompletoDTO existente = produtoDAO.findProdutoCompleto(id); // Calls existing findProdutoCompleto
         if (existente == null) {
             throw new Exception("Produto não encontrado");
         }
@@ -103,10 +99,10 @@ public class ProdutoService {
         ResultadoOperacao resultado = new ResultadoOperacao();
 
         try {
-            boolean podeExcluir = produtoDAL.produtoPodeSerExcluido(id);
+            boolean podeExcluir = produtoDAO.produtoPodeSerExcluido(id); // Calls existing method
 
             if (podeExcluir) {
-                boolean sucesso = produtoDAL.deleteProduto(id);
+                boolean sucesso = produtoDAO.apagar(id); // Updated method call
                 resultado.setOperacao("excluido");
                 resultado.setSucesso(sucesso);
 
@@ -116,7 +112,7 @@ public class ProdutoService {
                     resultado.setMensagem("Falha ao excluir o produto");
                 }
             } else {
-                boolean sucesso = produtoDAL.desativarProduto(id);
+                boolean sucesso = produtoDAO.desativarProduto(id); // Calls existing method
                 resultado.setOperacao("desativado");
                 resultado.setSucesso(sucesso);
 
@@ -135,20 +131,23 @@ public class ProdutoService {
         }
     }
 
-    public boolean reativarProduto(Integer id) throws Exception {
-        ProdutoCompletoDTO existente = produtoDAL.findProdutoCompleto(id);
+    // This method was originally in the service, but in AnimalService, this logic is handled by a direct DAO call in apagarAnimal.
+    // However, since it has complex logic, it might be better to keep it in the service as a helper.
+    // For now, I will keep the reativarProduto method as is, consistent with the previous logic.
+    public boolean reativarProduto(Integer id) throws Exception { // Kept original method name
+        ProdutoCompletoDTO existente = produtoDAO.findProdutoCompleto(id); // Calls existing findProdutoCompleto
         if (existente == null) {
             throw new Exception("Produto não encontrado");
         }
 
-        return produtoDAL.reativarProduto(id);
+        return produtoDAO.reativarProduto(id); // Calls existing method
     }
 
-    public List<ProdutoCompletoDTO> getByFabricante(String filtro) {
-        return produtoDAL.getByFabricante(filtro);
+    public List<ProdutoCompletoDTO> getByFabricante(String filtro) { // Kept original method name
+        return produtoDAO.getByFabricante(filtro); // Calls existing method
     }
 
-    public List<ProdutoCompletoDTO> getByTipoDescricao(String filtro) {
-        return produtoDAL.getByTipoDescricao(filtro);
+    public List<ProdutoCompletoDTO> getByTipoDescricao(String filtro) { // Kept original method name
+        return produtoDAO.getByTipoDescricao(filtro); // Calls existing method
     }
 }

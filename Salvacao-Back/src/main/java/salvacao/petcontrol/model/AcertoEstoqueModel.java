@@ -1,5 +1,7 @@
 package salvacao.petcontrol.model;
 
+import salvacao.petcontrol.dao.AcertoEstoqueDAO;
+
 import java.time.LocalDate;
 
 public class AcertoEstoqueModel {
@@ -8,8 +10,10 @@ public class AcertoEstoqueModel {
     private Integer usuario_pessoa_id;
     private String motivo;
     private String observacao;
+    private AcertoEstoqueDAO acDAO;
 
     public AcertoEstoqueModel() {
+        acDAO = new AcertoEstoqueDAO();
     }
 
     public AcertoEstoqueModel(Integer idacerto, LocalDate data, Integer usuario_pessoa_id, String motivo, String observacao) {
@@ -59,5 +63,9 @@ public class AcertoEstoqueModel {
 
     public void setObservacao(String observacao) {
         this.observacao = observacao;
+    }
+
+    public AcertoEstoqueDAO getAcDAO() {
+        return acDAO;
     }
 }

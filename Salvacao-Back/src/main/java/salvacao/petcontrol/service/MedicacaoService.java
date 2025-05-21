@@ -2,10 +2,10 @@ package salvacao.petcontrol.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import salvacao.petcontrol.dal.AnimalDAL;
-import salvacao.petcontrol.dal.MedicacaoDAL;
-import salvacao.petcontrol.dal.MedicamentoDAL;
-import salvacao.petcontrol.dal.ReceitaMedicamentoDAL;
+import salvacao.petcontrol.dalNÃOUSARMAIS.AnimalDAL;
+import salvacao.petcontrol.dalNÃOUSARMAIS.MedicacaoDAL;
+import salvacao.petcontrol.dalNÃOUSARMAIS.MedicamentoDAL;
+import salvacao.petcontrol.dalNÃOUSARMAIS.ReceitaMedicamentoDAL;
 import salvacao.petcontrol.dto.MedicacaoCompletaDTO;
 import salvacao.petcontrol.model.MedicacaoModel;
 

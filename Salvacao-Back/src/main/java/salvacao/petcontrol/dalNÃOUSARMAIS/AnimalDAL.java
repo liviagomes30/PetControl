@@ -1,4 +1,4 @@
-package salvacao.petcontrol.dal;
+package salvacao.petcontrol.dalNÃOUSARMAIS;
 
 import org.springframework.stereotype.Repository;
 import salvacao.petcontrol.config.SingletonDB;

@@ -1,5 +1,7 @@
 package salvacao.petcontrol.model;
 
+import salvacao.petcontrol.dao.PessoaDAO;
+
 public class PessoaModel {
     private Integer idpessoa;
     private String nome;
@@ -7,8 +9,10 @@ public class PessoaModel {
     private String endereco;
     private String telefone;
     private String email;
+    private PessoaDAO pessoaDAO;
 
     public PessoaModel() {
+        pessoaDAO = new PessoaDAO();
     }
 
     public PessoaModel(Integer idpessoa, String nome, String cpf, String endereco, String telefone, String email) {

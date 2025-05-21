@@ -2,7 +2,7 @@ package salvacao.petcontrol.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import salvacao.petcontrol.dal.AnimalDAL;
+import salvacao.petcontrol.dalNÃOUSARMAIS.AnimalDAL;
 import salvacao.petcontrol.model.AnimalModel;
 
 import java.util.List;

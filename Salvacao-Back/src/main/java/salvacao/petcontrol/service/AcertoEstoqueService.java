@@ -1,13 +1,14 @@
+// salvacao.petcontrol.service.AcertoEstoqueService.java
 package salvacao.petcontrol.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import salvacao.petcontrol.dal.AcertoEstoqueDAL;
-import salvacao.petcontrol.dal.EstoqueDAL;
-import salvacao.petcontrol.dal.ProdutoDAL;
-import salvacao.petcontrol.dal.UsuarioDAL;
-import salvacao.petcontrol.dal.TipoProdutoDAL;
-import salvacao.petcontrol.dal.UnidadeMedidaDAL;
+import salvacao.petcontrol.dao.AcertoEstoqueDAO; // Changed from AcertoEstoqueDAL
+import salvacao.petcontrol.dalNÃOUSARMAIS.EstoqueDAL; // Dependency, will be EstoqueDAO in future refactoring
+import salvacao.petcontrol.dao.ProdutoDAO; // Changed from ProdutoDAL
+import salvacao.petcontrol.dalNÃOUSARMAIS.UsuarioDAL; // Dependency, will be UsuarioDAO in future refactoring
+import salvacao.petcontrol.dao.TipoProdutoDAO; // Changed from TipoProdutoDAL
+import salvacao.petcontrol.dao.UnidadeMedidaDAO; // Changed from UnidadeMedidaDAL
 import salvacao.petcontrol.dto.AcertoEstoqueCompletoDTO;
 import salvacao.petcontrol.dto.AcertoEstoqueRequestDTO;
 import salvacao.petcontrol.dto.ItemAcertoEstoqueDTO;
@@ -30,39 +31,39 @@ import java.math.BigDecimal;
 public class AcertoEstoqueService {
 
     @Autowired
-    private AcertoEstoqueDAL acertoEstoqueDAL;
+    private AcertoEstoqueDAO acertoEstoqueDAO; // Changed from AcertoEstoqueDAL
 
     @Autowired
-    private EstoqueDAL estoqueDAL;
+    private EstoqueDAL estoqueDAL; // Dependency, will be EstoqueDAO later
 
     @Autowired
-    private ProdutoDAL produtoDAL;
+    private ProdutoDAO produtoDAO; // Changed from ProdutoDAL
 
     @Autowired
-    private UsuarioDAL usuarioDAL;
+    private UsuarioDAL usuarioDAL; // Dependency, will be UsuarioDAO later
 
     @Autowired
-    private TipoProdutoDAL tipoProdutoDAL;
+    private TipoProdutoDAO tipoProdutoDAO; // Changed from TipoProdutoDAL
 
     @Autowired
-    private UnidadeMedidaDAL unidadeMedidaDAL;
+    private UnidadeMedidaDAO unidadeMedidaDAO; // Changed from UnidadeMedidaDAL
 
 
-    public AcertoEstoqueCompletoDTO getAcertoById(Integer id) throws Exception {
-        AcertoEstoqueModel acerto = acertoEstoqueDAL.findById(id);
+    public AcertoEstoqueCompletoDTO getId(Integer id) throws Exception { // Renamed from getAcertoById
+        AcertoEstoqueModel acerto = acertoEstoqueDAO.getId(id); // Calls DAO.getId()
         if (acerto == null) {
             throw new Exception("Acerto de estoque não encontrado");
         }
 
-        UsuarioModel usuario = usuarioDAL.findById(acerto.getUsuario_pessoa_id());
+        UsuarioModel usuario = usuarioDAL.findById(acerto.getUsuario_pessoa_id()); // Calls existing findById
 
-        List<ItemAcertoEstoqueModel> itensModel = acertoEstoqueDAL.findItensAcerto(id);
+        List<ItemAcertoEstoqueModel> itensModel = acertoEstoqueDAO.getItensAcerto(id); // Calls DAO.getItensAcerto()
         List<ItemAcertoEstoqueDTO> itensDTO = new ArrayList<>();
 
         for (ItemAcertoEstoqueModel item : itensModel) {
-            ProdutoModel produto = produtoDAL.findById(item.getProduto_id());
-            TipoProdutoModel tipoProduto = tipoProdutoDAL.findById(produto.getIdtipoproduto());
-            UnidadeMedidaModel unidadeMedida = unidadeMedidaDAL.findById(produto.getIdunidademedida());
+            ProdutoModel produto = produtoDAO.getId(item.getProduto_id()); // Calls DAO.getId()
+            TipoProdutoModel tipoProduto = tipoProdutoDAO.getId(produto.getIdtipoproduto()); // Calls DAO.getId()
+            UnidadeMedidaModel unidadeMedida = unidadeMedidaDAO.getId(produto.getIdunidademedida()); // Calls DAO.getId()
 
             ItemAcertoEstoqueDTO itemDTO = new ItemAcertoEstoqueDTO(
                     item,
@@ -78,22 +79,22 @@ public class AcertoEstoqueService {
     }
 
 
-    public List<AcertoEstoqueModel> getAllAcertos() {
-        return acertoEstoqueDAL.findAll();
+    public List<AcertoEstoqueModel> getAll() { // Renamed from getAllAcertos
+        return acertoEstoqueDAO.getAll(); // Calls DAO.getAll()
     }
 
 
-    public List<AcertoEstoqueModel> getAcertosByPeriodo(LocalDate dataInicio, LocalDate dataFim) {
-        return acertoEstoqueDAL.findByPeriodo(dataInicio, dataFim);
+    public List<AcertoEstoqueModel> getByPeriodo(LocalDate dataInicio, LocalDate dataFim) { // Renamed from getAcertosByPeriodo
+        return acertoEstoqueDAO.getByPeriodo(dataInicio, dataFim); // Calls DAO.getByPeriodo()
     }
 
 
-    public List<AcertoEstoqueModel> getAcertosByUsuario(Integer usuarioId) {
-        return acertoEstoqueDAL.findByUsuario(usuarioId);
+    public List<AcertoEstoqueModel> getByUsuario(Integer usuarioId) { // Renamed from getAcertosByUsuario
+        return acertoEstoqueDAO.getByUsuario(usuarioId); // Calls DAO.getByUsuario()
     }
 
 
-    public ResultadoOperacao efetuarAcertoEstoque(AcertoEstoqueRequestDTO request) throws Exception {
+    public ResultadoOperacao gravar(AcertoEstoqueRequestDTO request) throws Exception { // Renamed from efetuarAcertoEstoque
         // Validações
         if (request.getUsuario_pessoa_id() == null) {
             throw new Exception("Usuário é obrigatório");
@@ -107,7 +108,7 @@ public class AcertoEstoqueService {
             throw new Exception("É necessário ao menos um item para acerto de estoque");
         }
 
-        UsuarioModel usuario = usuarioDAL.findById(request.getUsuario_pessoa_id());
+        UsuarioModel usuario = usuarioDAL.findById(request.getUsuario_pessoa_id()); // Calls existing findById
         if (usuario == null) {
             throw new Exception("Usuário não encontrado");
         }
@@ -121,7 +122,7 @@ public class AcertoEstoqueService {
         List<ItemAcertoEstoqueModel> itens = new ArrayList<>();
 
         for (AcertoEstoqueRequestDTO.ItemAcertoRequestDTO itemRequest : request.getItens()) {
-            EstoqueModel estoque = estoqueDAL.findByProdutoId(itemRequest.getProduto_id());
+            EstoqueModel estoque = estoqueDAL.findByProdutoId(itemRequest.getProduto_id()); // Calls existing findByProdutoId
             if (estoque == null) {
                 throw new Exception("Produto ID " + itemRequest.getProduto_id() + " não encontrado no estoque");
             }
@@ -139,7 +140,7 @@ public class AcertoEstoqueService {
         }
 
         try {
-            AcertoEstoqueModel acertoRealizado = acertoEstoqueDAL.efetuarAcertoEstoque(acerto, itens);
+            AcertoEstoqueModel acertoRealizado = acertoEstoqueDAO.efetuarAcertoEstoque(acerto, itens); // Calls DAO.efetuarAcertoEstoque()
 
             // Retornar resultado positivo
             ResultadoOperacao resultado = new ResultadoOperacao();

@@ -1,11 +1,12 @@
+// salvacao.petcontrol.service.EstoqueService.java
 package salvacao.petcontrol.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import salvacao.petcontrol.dal.EstoqueDAL;
-import salvacao.petcontrol.dal.ProdutoDAL;
-import salvacao.petcontrol.dal.TipoProdutoDAL;
-import salvacao.petcontrol.dal.UnidadeMedidaDAL;
+import salvacao.petcontrol.dao.EstoqueDAO; // Changed from EstoqueDAL
+import salvacao.petcontrol.dao.ProdutoDAO; // Changed from ProdutoDAL
+import salvacao.petcontrol.dao.TipoProdutoDAO; // Changed from TipoProdutoDAL
+import salvacao.petcontrol.dao.UnidadeMedidaDAO; // Changed from UnidadeMedidaDAL
 import salvacao.petcontrol.dto.EstoqueProdutoDTO;
 import salvacao.petcontrol.model.EstoqueModel;
 import salvacao.petcontrol.model.ProdutoModel;
@@ -15,58 +16,59 @@ import salvacao.petcontrol.model.UnidadeMedidaModel;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.math.BigDecimal;
 
 @Service
 public class EstoqueService {
 
     @Autowired
-    private EstoqueDAL estoqueDAL;
+    private EstoqueDAO estoqueDAO; // Changed from EstoqueDAL
 
     @Autowired
-    private ProdutoDAL produtoDAL;
+    private ProdutoDAO produtoDAO; // Changed from ProdutoDAL
 
     @Autowired
-    private TipoProdutoDAL tipoProdutoDAL;
+    private TipoProdutoDAO tipoProdutoDAO; // Changed from TipoProdutoDAL
 
     @Autowired
-    private UnidadeMedidaDAL unidadeMedidaDAL;
+    private UnidadeMedidaDAO unidadeMedidaDAO; // Changed from UnidadeMedidaDAL
 
-    public EstoqueModel getEstoqueById(Integer id) {
-        return estoqueDAL.findById(id);
+    public EstoqueModel getId(Integer id) { // Renamed from getEstoqueById
+        return estoqueDAO.getId(id); // Calls DAO.getId()
     }
 
-    public EstoqueModel getEstoqueByProdutoId(Integer idProduto) {
-        return estoqueDAL.findByProdutoId(idProduto);
+    public EstoqueModel getByProdutoId(Integer idProduto) { // Renamed from getEstoqueByProdutoId
+        return estoqueDAO.getByProdutoId(idProduto); // Calls DAO.getByProdutoId()
     }
 
-    public List<EstoqueModel> getAllEstoque() {
-        return estoqueDAL.findAll();
+    public List<EstoqueModel> getAll() { // Renamed from getAllEstoque
+        return estoqueDAO.getAll(); // Calls DAO.getAll()
     }
 
-    public List<EstoqueModel> getEstoqueAbaixoMinimo() {
-        return estoqueDAL.findEstoqueAbaixoMinimo();
+    public List<EstoqueModel> getAbaixoMinimo() { // Renamed from getEstoqueAbaixoMinimo
+        return estoqueDAO.getEstoqueAbaixoMinimo(); // Calls DAO.getEstoqueAbaixoMinimo()
     }
 
     public EstoqueProdutoDTO getEstoqueProdutoCompleto(Integer idEstoque) throws Exception {
-        EstoqueModel estoque = estoqueDAL.findById(idEstoque);
+        EstoqueModel estoque = estoqueDAO.getId(idEstoque); // Calls DAO.getId()
         if (estoque == null) {
             throw new Exception("Estoque não encontrado");
         }
 
-        ProdutoModel produto = produtoDAL.findById(estoque.getIdproduto());
+        ProdutoModel produto = produtoDAO.getId(estoque.getIdproduto()); // Calls DAO.getId()
         if (produto == null) {
             throw new Exception("Produto não encontrado");
         }
 
-        TipoProdutoModel tipoProduto = tipoProdutoDAL.findById(produto.getIdtipoproduto());
-        UnidadeMedidaModel unidadeMedida = unidadeMedidaDAL.findById(produto.getIdunidademedida());
+        TipoProdutoModel tipoProduto = tipoProdutoDAO.getId(produto.getIdtipoproduto()); // Calls DAO.getId()
+        UnidadeMedidaModel unidadeMedida = unidadeMedidaDAO.getId(produto.getIdunidademedida()); // Calls DAO.getId()
 
         return new EstoqueProdutoDTO(estoque, produto, tipoProduto, unidadeMedida);
     }
 
     public List<EstoqueProdutoDTO> getAllEstoqueProduto() {
         List<EstoqueProdutoDTO> estoqueCompleto = new ArrayList<>();
-        List<EstoqueModel> estoqueList = estoqueDAL.findAll();
+        List<EstoqueModel> estoqueList = estoqueDAO.getAll(); // Calls DAO.getAll()
 
         for (EstoqueModel estoque : estoqueList) {
             try {
@@ -82,7 +84,7 @@ public class EstoqueService {
 
     public List<EstoqueProdutoDTO> getEstoqueProdutoAbaixoMinimo() {
         List<EstoqueProdutoDTO> estoqueAbaixoMinimo = new ArrayList<>();
-        List<EstoqueModel> estoqueList = estoqueDAL.findEstoqueAbaixoMinimo();
+        List<EstoqueModel> estoqueList = estoqueDAO.getEstoqueAbaixoMinimo(); // Calls DAO.getEstoqueAbaixoMinimo()
 
         for (EstoqueModel estoque : estoqueList) {
             try {
@@ -96,7 +98,7 @@ public class EstoqueService {
         return estoqueAbaixoMinimo;
     }
 
-    public EstoqueModel addEstoque(EstoqueModel estoque) throws Exception {
+    public EstoqueModel gravar(EstoqueModel estoque) throws Exception { // Renamed from addEstoque
         if (estoque.getIdproduto() == null) {
             throw new Exception("Produto é obrigatório");
         }
@@ -105,24 +107,24 @@ public class EstoqueService {
             throw new Exception("Quantidade deve ser maior ou igual a zero");
         }
 
-        if (produtoDAL.findById(estoque.getIdproduto()) == null) {
+        if (produtoDAO.getId(estoque.getIdproduto()) == null) { // Calls DAO.getId()
             throw new Exception("Produto não encontrado");
         }
 
-        EstoqueModel estoqueExistente = estoqueDAL.findByProdutoId(estoque.getIdproduto());
+        EstoqueModel estoqueExistente = estoqueDAO.getByProdutoId(estoque.getIdproduto()); // Calls DAO.getByProdutoId()
         if (estoqueExistente != null) {
             throw new Exception("Já existe registro de estoque para este produto. Utilize atualização de estoque.");
         }
 
         try {
-            return estoqueDAL.adicionarEstoque(estoque);
+            return estoqueDAO.gravar(estoque); // Calls DAO.gravar()
         } catch (SQLException e) {
             throw new Exception("Erro ao adicionar estoque: " + e.getMessage());
         }
     }
 
-    public boolean updateEstoque(Integer id, EstoqueModel estoque) throws Exception {
-        EstoqueModel existente = estoqueDAL.findById(id);
+    public boolean alterar(Integer id, EstoqueModel estoque) throws Exception { // Renamed from updateEstoque
+        EstoqueModel existente = estoqueDAO.getId(id); // Calls DAO.getId()
         if (existente == null) {
             throw new Exception("Estoque não encontrado");
         }
@@ -134,24 +136,24 @@ public class EstoqueService {
         estoque.setIdestoque(id);
         estoque.setIdproduto(existente.getIdproduto()); // Não permite alterar o produto
 
-        return estoqueDAL.atualizarEstoque(estoque);
+        return estoqueDAO.alterar(estoque); // Calls DAO.alterar()
     }
 
-    public boolean deleteEstoque(Integer id) throws Exception {
-        EstoqueModel existente = estoqueDAL.findById(id);
+    public boolean apagar(Integer id) throws Exception { // Renamed from deleteEstoque
+        EstoqueModel existente = estoqueDAO.getId(id); // Calls DAO.getId()
         if (existente == null) {
             throw new Exception("Estoque não encontrado");
         }
 
-        return estoqueDAL.removerEstoque(id);
+        return estoqueDAO.apagar(id); // Calls DAO.apagar()
     }
 
-    public boolean decrementarEstoque(Integer idProduto, Integer quantidade) throws Exception {
+    public boolean decrementar(Integer idProduto, Integer quantidade) throws Exception { // Renamed from decrementarEstoque
         if (quantidade <= 0) {
             throw new Exception("Quantidade para decrementar deve ser maior que zero");
         }
 
-        EstoqueModel estoque = estoqueDAL.findByProdutoId(idProduto);
+        EstoqueModel estoque = estoqueDAO.getByProdutoId(idProduto); // Calls DAO.getByProdutoId()
         if (estoque == null) {
             throw new Exception("Estoque não encontrado para o produto");
         }
@@ -160,28 +162,28 @@ public class EstoqueService {
             throw new Exception("Quantidade em estoque insuficiente");
         }
 
-        return estoqueDAL.decrementarEstoque(idProduto, quantidade);
+        return estoqueDAO.decrementarEstoque(idProduto, quantidade); // Calls DAO.decrementarEstoque()
     }
 
-    public boolean incrementarEstoque(Integer idProduto, Integer quantidade) throws Exception {
+    public boolean incrementar(Integer idProduto, Integer quantidade) throws Exception { // Renamed from incrementarEstoque
         if (quantidade <= 0) {
             throw new Exception("Quantidade para incrementar deve ser maior que zero");
         }
 
-        if (produtoDAL.findById(idProduto) == null) {
+        if (produtoDAO.getId(idProduto) == null) { // Calls DAO.getId()
             throw new Exception("Produto não encontrado");
         }
 
-        return estoqueDAL.incrementarEstoque(idProduto, quantidade);
+        return estoqueDAO.incrementarEstoque(idProduto, quantidade); // Calls DAO.incrementarEstoque()
     }
 
-    public boolean verificarEstoqueSuficiente(Integer idProduto, Integer quantidade) {
-        return estoqueDAL.verificarEstoqueSuficiente(idProduto, quantidade);
+    public boolean verificarSuficiente(Integer idProduto, Integer quantidade) { // Renamed from verificarEstoqueSuficiente
+        return estoqueDAO.verificarEstoqueSuficiente(idProduto, quantidade); // Calls DAO.verificarEstoqueSuficiente()
     }
 
-    public List<EstoqueProdutoDTO> buscarEstoquePorNomeProduto(String nomeProduto) {
+    public List<EstoqueProdutoDTO> getByNomeProduto(String nomeProduto) { // Renamed from buscarEstoquePorNomeProduto
         List<EstoqueProdutoDTO> resultado = new ArrayList<>();
-        List<EstoqueModel> estoqueList = estoqueDAL.buscarPorNomeProduto(nomeProduto);
+        List<EstoqueModel> estoqueList = estoqueDAO.getByNomeProduto(nomeProduto); // Calls DAO.getByNomeProduto()
 
         for (EstoqueModel estoque : estoqueList) {
             try {
@@ -196,13 +198,13 @@ public class EstoqueService {
         return resultado;
     }
 
-    public List<EstoqueProdutoDTO> buscarEstoquePorTipoProduto(Integer idTipoProduto) throws Exception {
-        if (tipoProdutoDAL.findById(idTipoProduto) == null) {
+    public List<EstoqueProdutoDTO> getByTipoProduto(Integer idTipoProduto) throws Exception { // Renamed from buscarEstoquePorTipoProduto
+        if (tipoProdutoDAO.getId(idTipoProduto) == null) { // Calls DAO.getId()
             throw new Exception("Tipo de produto não encontrado");
         }
 
         List<EstoqueProdutoDTO> resultado = new ArrayList<>();
-        List<EstoqueModel> estoqueList = estoqueDAL.buscarPorTipoProduto(idTipoProduto);
+        List<EstoqueModel> estoqueList = estoqueDAO.getByTipoProduto(idTipoProduto); // Calls DAO.getByTipoProduto()
 
         for (EstoqueModel estoque : estoqueList) {
             try {

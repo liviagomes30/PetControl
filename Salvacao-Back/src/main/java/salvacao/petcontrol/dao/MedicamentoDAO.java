@@ -1,4 +1,5 @@
-package salvacao.petcontrol.dal;
+// salvacao.petcontrol.dal.MedicamentoDAO.java
+package salvacao.petcontrol.dao;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -17,18 +18,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Repository
-public class MedicamentoDAL {
+public class MedicamentoDAO {
 
     @Autowired
-    private ProdutoDAL produtoDAL;
+    private ProdutoDAO produtoDAO;
 
     @Autowired
-    private TipoProdutoDAL tipoProdutoDAL;
+    private TipoProdutoDAO tipoProdutoDAO; // Updated from TipoProdutoDAL
 
     @Autowired
-    private UnidadeMedidaDAL unidadeMedidaDAL;
+    private UnidadeMedidaDAO unidadeMedidaDAO; // Updated from UnidadeMedidaDAL
 
-    public MedicamentoModel findById(Integer id) {
+    public MedicamentoModel getId(Integer id) {
         MedicamentoModel medicamento = null;
         String sql = "SELECT * FROM medicamento WHERE idproduto = ?";
         try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
@@ -49,7 +50,7 @@ public class MedicamentoDAL {
     public MedicamentoCompletoDTO findMedicamentoCompleto(Integer id) {
         MedicamentoCompletoDTO dto = null;
         String sql = "SELECT m.idproduto, m.composicao, " +
-                "p.nome, p.idtipoproduto, p.idunidademedida, p.fabricante, " +
+                "p.nome, p.idtipoproduto, p.idunidademedida, p.fabricante, p.preco, p.estoque_minimo, p.data_cadastro, " +
                 "t.descricao AS tipo_descricao, " +
                 "u.descricao AS unidade_descricao, u.sigla AS unidade_sigla " +
                 "FROM medicamento m " +
@@ -68,7 +69,10 @@ public class MedicamentoDAL {
                         rs.getString("nome"),
                         rs.getInt("idtipoproduto"),
                         rs.getInt("idunidademedida"),
-                        rs.getString("fabricante")
+                        rs.getString("fabricante"),
+                        rs.getBigDecimal("preco"),
+                        rs.getInt("estoque_minimo"),
+                        rs.getDate("data_cadastro")
                 );
 
                 MedicamentoModel medicamento = new MedicamentoModel(
@@ -96,11 +100,11 @@ public class MedicamentoDAL {
         return dto;
     }
 
-    public MedicamentoModel addMedicamento(MedicamentoModel medicamento, ProdutoModel produto) {
+    public MedicamentoModel gravar(MedicamentoModel medicamento, ProdutoModel produto) {
         try {
             SingletonDB.getConexao().getConnection().setAutoCommit(false);
 
-            ProdutoModel novoProduto = produtoDAL.addProduto(produto);
+            ProdutoModel novoProduto = produtoDAO.gravar(produto); // Updated method call
 
             String sql = "INSERT INTO medicamento (idproduto, composicao) VALUES (?, ?)";
             try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
@@ -131,11 +135,11 @@ public class MedicamentoDAL {
         return medicamento;
     }
 
-    public boolean updateMedicamento(Integer id, MedicamentoModel medicamento, ProdutoModel produto) {
+    public boolean alterar(Integer id, MedicamentoModel medicamento, ProdutoModel produto) {
         try {
             SingletonDB.getConexao().getConnection().setAutoCommit(false);
 
-            boolean produtoAtualizado = produtoDAL.updateProduto(id, produto);
+            boolean produtoAtualizado = produtoDAO.alterar(id, produto); // Updated method call
 
             if (!produtoAtualizado) {
                 SingletonDB.getConexao().getConnection().rollback();
@@ -174,7 +178,7 @@ public class MedicamentoDAL {
     }
 
 
-    public boolean deleteMedicamento(Integer id) {
+    public boolean apagar(Integer id) {
         try {
             if (!medicamentoPodeSerExcluido(id)) {
                 throw new RuntimeException("Este medicamento não pode ser excluído porque está sendo utilizado em medicações ou movimentações de estoque. Use a função de desativação em vez de exclusão.");
@@ -215,7 +219,7 @@ public class MedicamentoDAL {
                     }
                 }
 
-                boolean produtoDeletado = produtoDAL.deleteProduto(id);
+                boolean produtoDeletado = produtoDAO.apagar(id); // Updated method call
                 System.out.println("Produto excluído: " + (produtoDeletado ? "Sim" : "Não"));
 
                 if (produtoDeletado) {

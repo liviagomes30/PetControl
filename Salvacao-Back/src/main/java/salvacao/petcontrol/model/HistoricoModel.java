@@ -1,5 +1,7 @@
 package salvacao.petcontrol.model;
 
+import salvacao.petcontrol.dao.HistoricoDAO;
+
 import java.time.LocalDate;
 
 public class HistoricoModel {
@@ -9,9 +11,11 @@ public class HistoricoModel {
     private Integer animal_idanimal;
     private Integer vacinacao_idvacinacao;
     private Integer medicacao_idmedicacao;
+    private HistoricoDAO histDAO;
 
 
     public HistoricoModel() {
+        histDAO = new HistoricoDAO();
     }
 
     public HistoricoModel(Integer idhistorico, String descricao, LocalDate data, Integer animal_idanimal, Integer vacinacao_idvacinacao, Integer medicacao_idmedicacao) {
@@ -69,5 +73,9 @@ public class HistoricoModel {
 
     public void setMedicacao_idmedicacao(Integer medicacao_idmedicacao) {
         this.medicacao_idmedicacao = medicacao_idmedicacao;
+    }
+
+    public HistoricoDAO getHistDAO() {
+        return histDAO;
     }
 }

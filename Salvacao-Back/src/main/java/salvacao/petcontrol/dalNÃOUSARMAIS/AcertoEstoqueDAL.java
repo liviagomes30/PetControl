@@ -1,4 +1,4 @@
-package salvacao.petcontrol.dal;
+package salvacao.petcontrol.dalNÃOUSARMAIS;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -15,7 +15,6 @@ import java.sql.Date;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.math.BigDecimal;
 
 @Repository
 public class AcertoEstoqueDAL {
