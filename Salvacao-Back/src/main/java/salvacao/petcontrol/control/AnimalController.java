@@ -89,7 +89,6 @@ public class AnimalController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> delete(@PathVariable Integer id) {
         try {
-            System.out.println("Controller: "+id);
             boolean deletado = animalService.apagarAnimal(id);
             if (deletado) {
                 return ResponseEntity.ok("Animal excluído com sucesso");

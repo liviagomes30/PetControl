@@ -4,8 +4,8 @@ package salvacao.petcontrol.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import salvacao.petcontrol.dao.MedicamentoDAO;
-import salvacao.petcontrol.dalNÃOUSARMAIS.TipoProdutoDAL; // This will be refactored to TipoProdutoDAO later
-import salvacao.petcontrol.dalNÃOUSARMAIS.UnidadeMedidaDAL; // This will be refactored to UnidadeMedidaDAO later
+import salvacao.petcontrol.dao.TipoProdutoDAO; // Changed from TipoProdutoDAL
+import salvacao.petcontrol.dao.UnidadeMedidaDAO; // Changed from UnidadeMedidaDAL
 import salvacao.petcontrol.dto.MedicamentoCompletoDTO;
 import salvacao.petcontrol.model.MedicamentoModel;
 import salvacao.petcontrol.util.ResultadoOperacao;
@@ -19,20 +19,20 @@ public class MedicamentoService {
     private MedicamentoDAO medicamentoDAO;
 
     @Autowired
-    private TipoProdutoDAL tipoProdutoDAL; // Dependency, will be changed to TipoProdutoDAO later
+    private TipoProdutoDAO tipoProdutoDAO; // Changed from TipoProdutoDAL
 
     @Autowired
-    private UnidadeMedidaDAL unidadeMedidaDAL; // Dependency, will be changed to UnidadeMedidaDAO later
+    private UnidadeMedidaDAO unidadeMedidaDAO; // Changed from UnidadeMedidaDAL
 
-    public MedicamentoCompletoDTO getId(Integer id) { // Renamed from getMedicamentoById
+    public MedicamentoCompletoDTO getId(Integer id) {
         return medicamentoDAO.findMedicamentoCompleto(id);
     }
 
-    public List<MedicamentoCompletoDTO> getAll() { // Renamed from getAllMedicamentos
+    public List<MedicamentoCompletoDTO> getAll() {
         return medicamentoDAO.getAllMedicamentos();
     }
 
-    public MedicamentoModel gravar(MedicamentoCompletoDTO dto) throws Exception { // Renamed from addMedicamento
+    public MedicamentoModel gravar(MedicamentoCompletoDTO dto) throws Exception {
         // Validações
         if (dto.getProduto() == null || dto.getMedicamento() == null) {
             throw new Exception("Dados do medicamento incompletos");
@@ -46,11 +46,11 @@ public class MedicamentoService {
             throw new Exception("Composição do medicamento é obrigatória");
         }
 
-        if (tipoProdutoDAL.findById(dto.getProduto().getIdtipoproduto()) == null) {
+        if (tipoProdutoDAO.getId(dto.getProduto().getIdtipoproduto()) == null) { // Updated method call
             throw new Exception("Tipo de produto não encontrado");
         }
 
-        if (unidadeMedidaDAL.findById(dto.getProduto().getIdunidademedida()) == null) {
+        if (unidadeMedidaDAO.getId(dto.getProduto().getIdunidademedida()) == null) { // Updated method call
             throw new Exception("Unidade de medida não encontrada");
         }
 
@@ -58,7 +58,7 @@ public class MedicamentoService {
         return medicamentoDAO.gravar(dto.getMedicamento(), dto.getProduto());
     }
 
-    public boolean alterar(Integer id, MedicamentoCompletoDTO dto) throws Exception { // Renamed from updateMedicamento
+    public boolean alterar(Integer id, MedicamentoCompletoDTO dto) throws Exception {
         if (dto.getProduto() == null || dto.getMedicamento() == null) {
             throw new Exception("Dados do medicamento incompletos");
         }
@@ -76,11 +76,11 @@ public class MedicamentoService {
             throw new Exception("Medicamento não encontrado");
         }
 
-        if (tipoProdutoDAL.findById(dto.getProduto().getIdtipoproduto()) == null) {
+        if (tipoProdutoDAO.getId(dto.getProduto().getIdtipoproduto()) == null) { // Updated method call
             throw new Exception("Tipo de produto não encontrado");
         }
 
-        if (unidadeMedidaDAL.findById(dto.getProduto().getIdunidademedida()) == null) {
+        if (unidadeMedidaDAO.getId(dto.getProduto().getIdunidademedida()) == null) { // Updated method call
             throw new Exception("Unidade de medida não encontrada");
         }
 
@@ -88,7 +88,7 @@ public class MedicamentoService {
     }
 
 
-    public ResultadoOperacao apagarMedicamento(Integer id) throws Exception { // Renamed from gerenciarExclusaoMedicamento
+    public ResultadoOperacao apagarMedicamento(Integer id) throws Exception {
         MedicamentoCompletoDTO existente = medicamentoDAO.findMedicamentoCompleto(id);
         if (existente == null) {
             throw new Exception("Medicamento não encontrado");

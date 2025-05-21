@@ -1,4 +1,4 @@
-package salvacao.petcontrol.dalNÃOUSARMAIS;
+package salvacao.petcontrol.dao;
 
 import org.springframework.stereotype.Repository;
 import salvacao.petcontrol.config.SingletonDB;
@@ -14,7 +14,7 @@ import java.util.List;
 import java.sql.Date;
 
 @Repository
-public class AnimalDAL {
+public class AnimalDAO {
 
     public AnimalModel gravar(AnimalModel animal){
         String sql = "INSERT INTO animal(\n" +

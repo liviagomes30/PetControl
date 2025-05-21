@@ -1,4 +1,3 @@
-// salvacao.petcontrol.dal.AcertoEstoqueDAO.java
 package salvacao.petcontrol.dao;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +21,7 @@ import java.math.BigDecimal;
 public class AcertoEstoqueDAO { // Renamed from AcertoEstoqueDAL
 
     @Autowired
-    private EstoqueDAL estoqueDAL; // Dependency, will be EstoqueDAO in future refactoring
+    private EstoqueDAO estoqueDAO; // Renamed from estoqueDAL
 
     public AcertoEstoqueModel getId(Integer id) { // Renamed from findById
         AcertoEstoqueModel acerto = null;
@@ -225,7 +224,7 @@ public class AcertoEstoqueDAO { // Renamed from AcertoEstoqueDAL
             for (ItemAcertoEstoqueModel item : itens) {
                 item.setAcerto_id(acertoInserido.getIdacerto());
 
-                EstoqueModel estoque = estoqueDAL.findByProdutoId(item.getProduto_id()); // This dependency needs to be EstoqueDAO
+                EstoqueModel estoque = estoqueDAO.getByProdutoId(item.getProduto_id()); // Calls estoqueDAO.getByProdutoId()
                 if (estoque == null) {
                     throw new SQLException("Produto não encontrado no estoque: " + item.getProduto_id());
                 }
@@ -239,7 +238,7 @@ public class AcertoEstoqueDAO { // Renamed from AcertoEstoqueDAL
                 }
 
                 estoque.setQuantidade(item.getQuantidade_depois());
-                boolean estoqueAtualizado = estoqueDAL.atualizarEstoque(estoque); // This dependency needs to be EstoqueDAO
+                boolean estoqueAtualizado = estoqueDAO.alterar(estoque); // Calls estoqueDAO.alterar()
 
                 if (!estoqueAtualizado) {
                     throw new SQLException("Falha ao atualizar estoque para o produto: " + item.getProduto_id());

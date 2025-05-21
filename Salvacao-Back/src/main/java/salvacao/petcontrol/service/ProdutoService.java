@@ -4,8 +4,8 @@ package salvacao.petcontrol.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import salvacao.petcontrol.dao.ProdutoDAO; // Updated from ProdutoDAL
-import salvacao.petcontrol.dalNÃOUSARMAIS.TipoProdutoDAL; // Will be TipoProdutoDAO in future refactoring
-import salvacao.petcontrol.dalNÃOUSARMAIS.UnidadeMedidaDAL; // Will be UnidadeMedidaDAO in future refactoring
+import salvacao.petcontrol.dao.TipoProdutoDAO; // Changed from TipoProdutoDAL
+import salvacao.petcontrol.dao.UnidadeMedidaDAO; // Changed from UnidadeMedidaDAL
 import salvacao.petcontrol.dto.ProdutoCompletoDTO;
 import salvacao.petcontrol.model.ProdutoModel;
 import salvacao.petcontrol.util.ResultadoOperacao;
@@ -20,10 +20,10 @@ public class ProdutoService {
     private ProdutoDAO produtoDAO; // Updated from ProdutoDAL
 
     @Autowired
-    private TipoProdutoDAL tipoProdutoDAL; // Dependency for now
+    private TipoProdutoDAO tipoProdutoDAO; // Changed from TipoProdutoDAL
 
     @Autowired
-    private UnidadeMedidaDAL unidadeMedidaDAL; // Dependency for now
+    private UnidadeMedidaDAO unidadeMedidaDAO; // Changed from UnidadeMedidaDAL
 
     public ProdutoCompletoDTO getId(Integer id) { // Renamed from getProdutoById
         return produtoDAO.findProdutoCompleto(id);
@@ -50,17 +50,14 @@ public class ProdutoService {
             throw new Exception("Nome do produto é obrigatório");
         }
 
-        // Validate if TipoProdutoDAL and UnidadeMedidaDAL will be DAOs and their methods renamed
-        if (tipoProdutoDAL.findById(dto.getProduto().getIdtipoproduto()) == null) { // Calls existing findById
+        // Validate if TipoProdutoDAO and UnidadeMedidaDAO are used and their methods renamed
+        if (tipoProdutoDAO.getId(dto.getProduto().getIdtipoproduto()) == null) { // Calls tipoProdutoDAO.getId()
             throw new Exception("Tipo de produto não encontrado");
         }
 
-        if (unidadeMedidaDAL.findById(dto.getProduto().getIdunidademedida()) == null) { // Calls existing findById
+        if (unidadeMedidaDAO.getId(dto.getProduto().getIdunidademedida()) == null) { // Calls unidadeMedidaDAO.getId()
             throw new Exception("Unidade de medida não encontrada");
         }
-
-        // No direct date validation methods are needed from AnimalService for ProdutoModel based on its fields.
-        // DataCadastro is usually set at DAO level or passed as java.util.Date.
 
         return produtoDAO.gravar(dto.getProduto()); // Updated method call
     }
@@ -79,11 +76,11 @@ public class ProdutoService {
             throw new Exception("Produto não encontrado");
         }
 
-        if (tipoProdutoDAL.findById(dto.getProduto().getIdtipoproduto()) == null) { // Calls existing findById
+        if (tipoProdutoDAO.getId(dto.getProduto().getIdtipoproduto()) == null) { // Calls tipoProdutoDAO.getId()
             throw new Exception("Tipo de produto não encontrado");
         }
 
-        if (unidadeMedidaDAL.findById(dto.getProduto().getIdunidademedida()) == null) { // Calls existing findById
+        if (unidadeMedidaDAO.getId(dto.getProduto().getIdunidademedida()) == null) { // Calls unidadeMedidaDAO.getId()
             throw new Exception("Unidade de medida não encontrada");
         }
 
@@ -131,9 +128,6 @@ public class ProdutoService {
         }
     }
 
-    // This method was originally in the service, but in AnimalService, this logic is handled by a direct DAO call in apagarAnimal.
-    // However, since it has complex logic, it might be better to keep it in the service as a helper.
-    // For now, I will keep the reativarProduto method as is, consistent with the previous logic.
     public boolean reativarProduto(Integer id) throws Exception { // Kept original method name
         ProdutoCompletoDTO existente = produtoDAO.findProdutoCompleto(id); // Calls existing findProdutoCompleto
         if (existente == null) {

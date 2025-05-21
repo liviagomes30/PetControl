@@ -59,4 +59,8 @@ public class TipoProdutoService {
             throw new Exception("Erro ao excluir tipo de produto: " + e.getMessage());
         }
     }
+
+    public List<TipoProdutoModel> getByDescricao(String filtro) { // Implemented the method
+        return tipoProdutoDAO.getByDescricao(filtro); // Calls the corresponding DAO method
+    }
 }

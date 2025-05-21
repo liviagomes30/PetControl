@@ -105,5 +105,22 @@ public class TipoProdutoDAO { // Renamed from TipoProdutoDAL
         }
     }
 
-
+    public List<TipoProdutoModel> getByDescricao(String filtro) { // Implemented the method
+        List<TipoProdutoModel> list = new ArrayList<>();
+        String sql = "SELECT * FROM tipoproduto WHERE UPPER(descricao) LIKE UPPER(?)";
+        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+            stmt.setString(1, "%" + filtro + "%");
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                TipoProdutoModel tipoProduto = new TipoProdutoModel(
+                        rs.getInt("idtipoproduto"),
+                        rs.getString("descricao")
+                );
+                list.add(tipoProduto);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
 }

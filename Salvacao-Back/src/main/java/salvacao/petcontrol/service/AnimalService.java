@@ -2,70 +2,90 @@ package salvacao.petcontrol.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import salvacao.petcontrol.dalNÃOUSARMAIS.AnimalDAL;
 import salvacao.petcontrol.model.AnimalModel;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
 public class AnimalService {
     @Autowired
-    private AnimalDAL animalDAL;
+    private AnimalModel animal_Model = new AnimalModel();
 
     public AnimalModel getId(Integer id){
-        return animalDAL.getId(id);
+        return animal_Model.getAnimalDAO().getId(id);
     }
 
     public List<AnimalModel> getAll(){
-        return animalDAL.getAll();
+        return animal_Model.getAnimalDAO().getAll();
     }
     public List<AnimalModel> getNome(String filtro){
-        return animalDAL.getNome(filtro);
+        return animal_Model.getAnimalDAO().getNome(filtro);
     }
     public List<AnimalModel> getEspecie(String filtro){
-        return animalDAL.getEspecie(filtro);
+        return animal_Model.getAnimalDAO().getEspecie(filtro);
     }
     public List<AnimalModel> getRaca(String filtro){
-        return animalDAL.getRaca(filtro);
+        return animal_Model.getAnimalDAO().getRaca(filtro);
     }
 
     public AnimalModel addAnimal(AnimalModel animalModel) throws Exception{
-        if(animalModel.getNome() == null || animalModel.getEspecie() == null || animalModel.getSexo() == null){
+        validarDataNaoFutura(animalModel.getDatanascimento());
+        validarDataNaoFutura(animalModel.getDataresgate());
+        validarDataMenorOuIgual(animalModel.getDatanascimento(),animalModel.getDataresgate());
+        if(animalModel.getNome().isEmpty() || animalModel.getEspecie().isEmpty() || animalModel.getSexo().isEmpty()){
             throw new Exception("Dados inclompletos");
         }
         else
-            return animalDAL.gravar(animalModel);
+            return animal_Model.getAnimalDAO().gravar(animalModel);
     }
 
     public boolean uptAnimal(AnimalModel animalModel) throws Exception{
-        if(animalModel.getNome() == null || animalModel.getEspecie() == null || animalModel.getSexo() == null){
+        validarDataNaoFutura(animalModel.getDatanascimento());
+        validarDataNaoFutura(animalModel.getDataresgate());
+        validarDataMenorOuIgual(animalModel.getDatanascimento(),animalModel.getDataresgate());
+        if(animalModel.getNome().isEmpty() || animalModel.getEspecie().isEmpty() || animalModel.getSexo().isEmpty()){
             throw new Exception("Dados inclompletos");
         }
         else
-            return animalDAL.alterar(animalModel);
+            return animal_Model.getAnimalDAO().alterar(animalModel);
     }
 
     public boolean apagarAnimal(Integer id) throws Exception{
-        AnimalModel animal = animalDAL.getId(id);
+        AnimalModel animal = animal_Model.getAnimalDAO().getId(id);
         if(animal != null) {
-            if (animalDAL.buscarAdocaoPorAnimal(id))
+            if (animal_Model.getAnimalDAO().buscarAdocaoPorAnimal(id))
                 throw new Exception("Animal encontrado em adoção");
-            if (animalDAL.buscarAgendamentoVacinacaoPorAnimal(id))
+            if (animal_Model.getAnimalDAO().buscarAgendamentoVacinacaoPorAnimal(id))
                 throw new Exception("Animal encontrado em agendamento de vacinação");
-            if (animalDAL.buscarEventoPorAnimal(id))
+            if (animal_Model.getAnimalDAO().buscarEventoPorAnimal(id))
                 throw new Exception("Animal encontrado em eventos");
-            if (animalDAL.buscarHistoricoPorAnimal(id))
+            if (animal_Model.getAnimalDAO().buscarHistoricoPorAnimal(id))
                 throw new Exception("Animal possui historico");
-            if (animalDAL.buscarMedicacaoPorAnimal(id))
+            if (animal_Model.getAnimalDAO().buscarMedicacaoPorAnimal(id))
                 throw new Exception("Animal encontrado em medicação");
-            if (animalDAL.buscarReceitaMedicamentoPorAnimal(id))
+            if (animal_Model.getAnimalDAO().buscarReceitaMedicamentoPorAnimal(id))
                 throw new Exception("Animal possui receita de medicameto");
-            if (animalDAL.buscarVacinacaoPorAnimal(id))
+            if (animal_Model.getAnimalDAO().buscarVacinacaoPorAnimal(id))
                 throw new Exception("Animal encontrado em vacinação");
 
-            return animalDAL.apagar(animal);
+            return animal_Model.getAnimalDAO().apagar(animal);
         }
         else
             throw new Exception("Animal não encontrado");
+    }
+
+    private void validarDataNaoFutura(LocalDate data) throws Exception{
+        LocalDate hoje = LocalDate.now();
+        if (data != null && data.isAfter(hoje)) {
+            throw new Exception("Erro: A data não pode ser no futuro.");
+        }
+    }
+
+    // Verifica se data1 é menor ou igual à data2
+    private void validarDataMenorOuIgual(LocalDate data1, LocalDate data2) throws Exception{
+        if (data1 != null && data2 != null && data1.isAfter(data2)) {
+            throw new Exception("Erro: A data de nascimento não pode ser maior que a data de resgate.");
+        }
     }
 }
