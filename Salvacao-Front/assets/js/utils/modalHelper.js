@@ -1,7 +1,5 @@
-// salvacao.petcontrol.Front/assets/js/utils/modalHelper.js
 const ModalHelper = {
   abrirModal: function (modalId) {
-    // Acessar via window.bootstrap é mais seguro em módulos JS
     const bootstrapInstance = window.bootstrap;
 
     if (!bootstrapInstance || typeof bootstrapInstance.Modal === "undefined") {
@@ -35,7 +33,6 @@ const ModalHelper = {
       modalElement.style.display = "none";
       modalElement.setAttribute("aria-hidden", "true");
 
-      // CORREÇÃO: Criar uma nova instância do modal e exibi-la imediatamente (sem setTimeout)
       const modal = new bootstrapInstance.Modal(modalElement);
       modal.show();
     }
