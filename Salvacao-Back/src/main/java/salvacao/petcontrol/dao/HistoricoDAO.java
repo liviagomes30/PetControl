@@ -15,7 +15,7 @@ import java.util.List;
 import java.sql.Date;
 
 @Repository
-public class HistoricoDAO { // Renamed from HistoricoDAL
+public class HistoricoDAO {
 
     public HistoricoModel gravar(HistoricoModel historico) {
         String sql = "INSERT INTO historico (descricao, data, animal_idanimal, vacinacao_idvacinacao, medicacao_idmedicacao) " +
@@ -107,7 +107,7 @@ public class HistoricoDAO { // Renamed from HistoricoDAL
         }
     }
 
-    public boolean apagar(Integer id) throws SQLException { // Renamed from apagar(HistoricoModel historicoModel) and added ID parameter
+    public boolean apagar(Integer id) throws SQLException {
         // Check for dependencies before deleting
         String sqlCheckVacinacao = "SELECT COUNT(*) FROM vacinacao WHERE idhistorico = ?";
         try (PreparedStatement stmtCheck = SingletonDB.getConexao().getPreparedStatement(sqlCheckVacinacao)) {

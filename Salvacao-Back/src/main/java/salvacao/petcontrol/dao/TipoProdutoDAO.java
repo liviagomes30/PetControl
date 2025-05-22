@@ -13,9 +13,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Repository
-public class TipoProdutoDAO { // Renamed from TipoProdutoDAL
+public class TipoProdutoDAO {
 
-    public TipoProdutoModel getId(Integer id) { // Renamed from findById
+    public TipoProdutoModel getId(Integer id) {
         TipoProdutoModel tipoProduto = null;
         String sql = "SELECT * FROM tipoproduto WHERE idtipoproduto = ?";
         try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {

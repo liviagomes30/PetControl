@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import salvacao.petcontrol.config.SingletonDB;
 import salvacao.petcontrol.model.EstoqueModel;
+import salvacao.petcontrol.model.ProdutoModel;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -15,10 +16,6 @@ import java.math.BigDecimal;
 
 @Repository
 public class EstoqueDAO {
-
-    @Autowired
-    private ProdutoDAO produtoDAO;
-
     public EstoqueModel getId(Integer id) {
         EstoqueModel estoque = null;
         String sql = "SELECT * FROM estoque WHERE idestoque = ?";

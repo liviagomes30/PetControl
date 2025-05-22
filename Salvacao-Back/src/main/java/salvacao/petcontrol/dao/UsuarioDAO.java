@@ -15,12 +15,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Repository
-public class UsuarioDAO { // Renamed from UsuarioDAL
+public class UsuarioDAO {
 
     @Autowired
-    private PessoaDAO pessoaDAO; // Updated from PessoaDAL
+    private PessoaModel pessoaModel = new PessoaModel();
 
-    public UsuarioModel getId(Integer pessoaId) { // Renamed from findById
+    public UsuarioModel getId(Integer pessoaId) {
         UsuarioModel usuario = null;
         String sql = "SELECT * FROM usuario WHERE pessoa_idpessoa = ?";
 
@@ -36,7 +36,7 @@ public class UsuarioDAO { // Renamed from UsuarioDAL
                 );
 
                 // Carregar dados da pessoa
-                PessoaModel pessoa = pessoaDAO.getId(pessoaId); // Calls updated DAO method
+                PessoaModel pessoa = pessoaModel.getPessoaDAO().getId(pessoaId);
                 if (pessoa != null) {
                     usuario.setPessoa(pessoa);
                 }
@@ -53,14 +53,14 @@ public class UsuarioDAO { // Renamed from UsuarioDAL
             stmt.setString(1, usuario.getLogin());
             stmt.setString(2, usuario.getSenha());
             stmt.setInt(3, usuario.getPessoa_idpessoa());
-            stmt.executeUpdate(); // No generated keys for this table based on the schema, but keeping it for consistency if it changes
+            stmt.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao adicionar usuário: " + e.getMessage(), e);
         }
         return usuario;
     }
 
-    public boolean alterar(UsuarioModel usuario) { // Added alterar method
+    public boolean alterar(UsuarioModel usuario) {
         String sql = "UPDATE usuario SET login = ?, senha = ? WHERE pessoa_idpessoa = ?";
         try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
             stmt.setString(1, usuario.getLogin());
@@ -77,8 +77,7 @@ public class UsuarioDAO { // Renamed from UsuarioDAL
         }
     }
 
-    public boolean apagar(Integer pessoaId) throws SQLException { // Added apagar method
-        // Check for dependencies before deleting (e.g., if referenced in 'acertoestoque' table)
+    public boolean apagar(Integer pessoaId) throws SQLException {
         String sqlCheckAcertoEstoque = "SELECT COUNT(*) FROM acertoestoque WHERE usuario_pessoa_id = ?";
         try (PreparedStatement stmtCheck = SingletonDB.getConexao().getPreparedStatement(sqlCheckAcertoEstoque)) {
             stmtCheck.setInt(1, pessoaId);
@@ -87,7 +86,6 @@ public class UsuarioDAO { // Renamed from UsuarioDAL
                 throw new SQLException("Usuário não pode ser excluído pois está associado a acertos de estoque.");
             }
         }
-        // Add more checks if Usuario is referenced by other tables
 
         String sql = "DELETE FROM usuario WHERE pessoa_idpessoa = ?";
         try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
@@ -99,7 +97,7 @@ public class UsuarioDAO { // Renamed from UsuarioDAL
         }
     }
 
-    public List<UsuarioModel> getAll() { // Added getAll method
+    public List<UsuarioModel> getAll() {
         List<UsuarioModel> list = new ArrayList<>();
         String sql = "SELECT * FROM usuario";
         try {
@@ -110,11 +108,7 @@ public class UsuarioDAO { // Renamed from UsuarioDAL
                         rs.getString("senha"),
                         rs.getInt("pessoa_idpessoa")
                 );
-                // Optionally load associated Pessoa data if needed for the full list
-                // PessoaModel pessoa = pessoaDAO.getId(usuario.getPessoa_idpessoa());
-                // if (pessoa != null) {
-                //     usuario.setPessoa(pessoa);
-                // }
+
                 list.add(usuario);
             }
         } catch (SQLException e) {
@@ -123,7 +117,7 @@ public class UsuarioDAO { // Renamed from UsuarioDAL
         return list;
     }
 
-    public List<UsuarioModel> getByLogin(String filtro) { // Added getByLogin method
+    public List<UsuarioModel> getByLogin(String filtro) {
         List<UsuarioModel> list = new ArrayList<>();
         String sql = "SELECT * FROM usuario WHERE UPPER(login) LIKE UPPER(?)";
         try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {

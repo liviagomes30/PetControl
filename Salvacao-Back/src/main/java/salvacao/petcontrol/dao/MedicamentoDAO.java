@@ -21,13 +21,7 @@ import java.util.List;
 public class MedicamentoDAO {
 
     @Autowired
-    private ProdutoDAO produtoDAO;
-
-    @Autowired
-    private TipoProdutoDAO tipoProdutoDAO;
-
-    @Autowired
-    private UnidadeMedidaDAO unidadeMedidaDAO;
+    private ProdutoModel produtoModel = new ProdutoModel();
 
     public MedicamentoModel getId(Integer id) {
         MedicamentoModel medicamento = null;
@@ -104,7 +98,7 @@ public class MedicamentoDAO {
         try {
             SingletonDB.getConexao().getConnection().setAutoCommit(false);
 
-            ProdutoModel novoProduto = produtoDAO.gravar(produto); // Updated method call
+            ProdutoModel novoProduto = produtoModel.getProdDAO().gravar(produto); // Updated method call
 
             String sql = "INSERT INTO medicamento (idproduto, composicao) VALUES (?, ?)";
             try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
@@ -139,7 +133,7 @@ public class MedicamentoDAO {
         try {
             SingletonDB.getConexao().getConnection().setAutoCommit(false);
 
-            boolean produtoAtualizado = produtoDAO.alterar(id, produto); // Updated method call
+            boolean produtoAtualizado = produtoModel.getProdDAO().alterar(id, produto); // Updated method call
 
             if (!produtoAtualizado) {
                 SingletonDB.getConexao().getConnection().rollback();
@@ -219,7 +213,7 @@ public class MedicamentoDAO {
                     }
                 }
 
-                boolean produtoDeletado = produtoDAO.apagar(id); // Updated method call
+                boolean produtoDeletado = produtoModel.getProdDAO().apagar(id); // Updated method call
                 System.out.println("Produto excluído: " + (produtoDeletado ? "Sim" : "Não"));
 
                 if (produtoDeletado) {

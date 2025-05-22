@@ -14,14 +14,6 @@ import java.util.List;
 
 @Repository
 public class ProdutoDAO {
-
-    @Autowired
-    private TipoProdutoDAO tipoProdutoDAO;
-
-    @Autowired
-    private UnidadeMedidaDAO unidadeMedidaDAO;
-
-
     public ProdutoModel getId(Integer id) {
         ProdutoModel produto = null;
         String sql = "SELECT * FROM produto WHERE idproduto = ?";

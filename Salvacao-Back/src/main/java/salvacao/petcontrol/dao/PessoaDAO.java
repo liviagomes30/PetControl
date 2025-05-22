@@ -13,9 +13,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Repository
-public class PessoaDAO { // Renamed from PessoaDAL
+public class PessoaDAO {
 
-    public PessoaModel getId(Integer id) { // Renamed from findById
+    public PessoaModel getId(Integer id) {
         PessoaModel pessoa = null;
         String sql = "SELECT * FROM pessoa WHERE idpessoa = ?";
 
@@ -39,7 +39,7 @@ public class PessoaDAO { // Renamed from PessoaDAL
         return pessoa;
     }
 
-    public PessoaModel gravar(PessoaModel pessoa) { // Added gravar method
+    public PessoaModel gravar(PessoaModel pessoa) {
         String sql = "INSERT INTO pessoa (nome, cpf, endereco, telefone, email) VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, pessoa.getNome());

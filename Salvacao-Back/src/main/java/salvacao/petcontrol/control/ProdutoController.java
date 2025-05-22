@@ -40,7 +40,7 @@ public class ProdutoController {
 
     @GetMapping("/tipo/{idTipo}")
     public ResponseEntity<Object> getByTipo(@PathVariable Integer idTipo) {
-        List<ProdutoCompletoDTO> produtos = produtoService.getProdutosByTipo(idTipo); // Method name in service remains getProdutosByTipo
+        List<ProdutoCompletoDTO> produtos = produtoService.getProdutosByTipo(idTipo); 
         if (!produtos.isEmpty()) {
             return ResponseEntity.ok(produtos);
         }
@@ -49,7 +49,7 @@ public class ProdutoController {
 
     @GetMapping("/search")
     public ResponseEntity<Object> search(@RequestParam String termo) {
-        List<ProdutoCompletoDTO> produtos = produtoService.getByName(termo); // Method name in service remains getByName
+        List<ProdutoCompletoDTO> produtos = produtoService.getByName(termo);
         if (!produtos.isEmpty()) {
             return ResponseEntity.ok(produtos);
         }

@@ -18,10 +18,10 @@ import java.util.List;
 import java.math.BigDecimal;
 
 @Repository
-public class AcertoEstoqueDAO { // Renamed from AcertoEstoqueDAL
+public class AcertoEstoqueDAO {
 
     @Autowired
-    private EstoqueDAO estoqueDAO; // Renamed from estoqueDAL
+    private EstoqueModel estoqueModel = new EstoqueModel();
 
     public AcertoEstoqueModel getId(Integer id) { // Renamed from findById
         AcertoEstoqueModel acerto = null;
@@ -219,12 +219,12 @@ public class AcertoEstoqueDAO { // Renamed from AcertoEstoqueDAL
         SingletonDB.getConexao().getConnection().setAutoCommit(false);
 
         try {
-            AcertoEstoqueModel acertoInserido = gravarAcerto(acerto); // Updated method call
+            AcertoEstoqueModel acertoInserido = gravarAcerto(acerto);
 
             for (ItemAcertoEstoqueModel item : itens) {
                 item.setAcerto_id(acertoInserido.getIdacerto());
 
-                EstoqueModel estoque = estoqueDAO.getByProdutoId(item.getProduto_id()); // Calls estoqueDAO.getByProdutoId()
+                EstoqueModel estoque = estoqueModel.getEstDAO().getByProdutoId(item.getProduto_id());
                 if (estoque == null) {
                     throw new SQLException("Produto não encontrado no estoque: " + item.getProduto_id());
                 }
@@ -238,7 +238,7 @@ public class AcertoEstoqueDAO { // Renamed from AcertoEstoqueDAL
                 }
 
                 estoque.setQuantidade(item.getQuantidade_depois());
-                boolean estoqueAtualizado = estoqueDAO.alterar(estoque); // Calls estoqueDAO.alterar()
+                boolean estoqueAtualizado = estoqueModel.getEstDAO().alterar(estoque);
 
                 if (!estoqueAtualizado) {
                     throw new SQLException("Falha ao atualizar estoque para o produto: " + item.getProduto_id());
@@ -258,6 +258,4 @@ public class AcertoEstoqueDAO { // Renamed from AcertoEstoqueDAL
         }
     }
 
-    // No direct 'apagar' or 'alterar' methods for AcertoEstoqueModel as per AnimalDAO comparison,
-    // as it's typically a transactional record.
 }

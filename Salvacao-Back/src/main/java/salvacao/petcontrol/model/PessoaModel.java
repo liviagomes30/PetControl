@@ -73,4 +73,8 @@ public class PessoaModel {
     public void setEmail(String email) {
         this.email = email;
     }
+
+    public PessoaDAO getPessoaDAO() {
+        return pessoaDAO;
+    }
 }

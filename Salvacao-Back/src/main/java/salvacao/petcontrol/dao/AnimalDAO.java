@@ -34,7 +34,6 @@ public class AnimalDAO {
             stmt.setString(6, animal.getSexo());
             stmt.setString(7, animal.getStatus());
 
-            // Se dataresgate puder ser nulo, trate-o aqui:
             if (animal.getDataresgate() != null) {
                 stmt.setDate(8, java.sql.Date.valueOf(animal.getDataresgate()));
             } else {

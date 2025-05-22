@@ -1,4 +1,3 @@
-// salvacao.petcontrol.service.AcertoEstoqueService.java
 package salvacao.petcontrol.service;
 
 import org.springframework.beans.factory.annotation.Autowired;

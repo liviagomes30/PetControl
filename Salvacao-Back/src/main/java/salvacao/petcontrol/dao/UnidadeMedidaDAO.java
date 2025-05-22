@@ -13,9 +13,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Repository
-public class UnidadeMedidaDAO { // Renamed from UnidadeMedidaDAL
+public class UnidadeMedidaDAO {
 
-    public UnidadeMedidaModel getId(Integer id) { // Renamed from findById
+    public UnidadeMedidaModel getId(Integer id) {
         UnidadeMedidaModel unidadeMedida = null;
         String sql = "SELECT * FROM unidadedemedida WHERE idunidademedida = ?";
         try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
