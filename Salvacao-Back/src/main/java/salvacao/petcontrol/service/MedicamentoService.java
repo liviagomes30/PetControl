@@ -1,13 +1,11 @@
-// salvacao.petcontrol.service.MedicamentoService.java
 package salvacao.petcontrol.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import salvacao.petcontrol.dao.MedicamentoDAO;
-import salvacao.petcontrol.dao.TipoProdutoDAO;
-import salvacao.petcontrol.dao.UnidadeMedidaDAO;
 import salvacao.petcontrol.dto.MedicamentoCompletoDTO;
 import salvacao.petcontrol.model.MedicamentoModel;
+import salvacao.petcontrol.model.TipoProdutoModel;
+import salvacao.petcontrol.model.UnidadeMedidaModel;
 import salvacao.petcontrol.util.ResultadoOperacao;
 
 import java.util.List;
@@ -16,24 +14,23 @@ import java.util.List;
 public class MedicamentoService {
 
     @Autowired
-    private MedicamentoDAO medicamentoDAO;
+    private MedicamentoModel medicamentoModel = new MedicamentoModel();
 
     @Autowired
-    private TipoProdutoDAO tipoProdutoDAO;
+    private TipoProdutoModel tipoProdutoModel = new TipoProdutoModel();
 
     @Autowired
-    private UnidadeMedidaDAO unidadeMedidaDAO;
+    private UnidadeMedidaModel unidadeMedidaModel = new UnidadeMedidaModel();
 
     public MedicamentoCompletoDTO getId(Integer id) {
-        return medicamentoDAO.findMedicamentoCompleto(id);
+        return medicamentoModel.getMedDAO().findMedicamentoCompleto(id);
     }
 
     public List<MedicamentoCompletoDTO> getAll() {
-        return medicamentoDAO.getAllMedicamentos();
+        return medicamentoModel.getMedDAO().getAllMedicamentos();
     }
 
     public MedicamentoModel gravar(MedicamentoCompletoDTO dto) throws Exception {
-        // Validações
         if (dto.getProduto() == null || dto.getMedicamento() == null) {
             throw new Exception("Dados do medicamento incompletos");
         }
@@ -46,16 +43,15 @@ public class MedicamentoService {
             throw new Exception("Composição do medicamento é obrigatória");
         }
 
-        if (tipoProdutoDAO.getId(dto.getProduto().getIdtipoproduto()) == null) {
+        if (tipoProdutoModel.getTpDAO().getId(dto.getProduto().getIdtipoproduto()) == null) {
             throw new Exception("Tipo de produto não encontrado");
         }
 
-        if (unidadeMedidaDAO.getId(dto.getProduto().getIdunidademedida()) == null) {
+        if (unidadeMedidaModel.getUnDAO().getId(dto.getProduto().getIdunidademedida()) == null) {
             throw new Exception("Unidade de medida não encontrada");
         }
 
-
-        return medicamentoDAO.gravar(dto.getMedicamento(), dto.getProduto());
+        return medicamentoModel.getMedDAO().gravar(dto.getMedicamento(), dto.getProduto());
     }
 
     public boolean alterar(Integer id, MedicamentoCompletoDTO dto) throws Exception {
@@ -71,72 +67,74 @@ public class MedicamentoService {
             throw new Exception("Composição do medicamento é obrigatória");
         }
 
-        MedicamentoCompletoDTO existente = medicamentoDAO.findMedicamentoCompleto(id);
+        MedicamentoCompletoDTO existente = medicamentoModel.getMedDAO().findMedicamentoCompleto(id);
         if (existente == null) {
             throw new Exception("Medicamento não encontrado");
         }
 
-        if (tipoProdutoDAO.getId(dto.getProduto().getIdtipoproduto()) == null) {
+        if (tipoProdutoModel.getTpDAO().getId(dto.getProduto().getIdtipoproduto()) == null) {
             throw new Exception("Tipo de produto não encontrado");
         }
 
-        if (unidadeMedidaDAO.getId(dto.getProduto().getIdunidademedida()) == null) {
+        if (unidadeMedidaModel.getUnDAO().getId(dto.getProduto().getIdunidademedida()) == null) {
             throw new Exception("Unidade de medida não encontrada");
         }
 
-        return medicamentoDAO.alterar(id, dto.getMedicamento(), dto.getProduto());
+        return medicamentoModel.getMedDAO().alterar(id, dto.getMedicamento(), dto.getProduto());
     }
 
-
     public ResultadoOperacao apagarMedicamento(Integer id) throws Exception {
-        MedicamentoCompletoDTO existente = medicamentoDAO.findMedicamentoCompleto(id);
+        MedicamentoCompletoDTO existente = medicamentoModel.getMedDAO().findMedicamentoCompleto(id);
         if (existente == null) {
             throw new Exception("Medicamento não encontrado");
         }
 
-        try {
-            boolean podeExcluir = medicamentoDAO.medicamentoPodeSerExcluido(id);
+        ResultadoOperacao resultado = new ResultadoOperacao();
 
-            ResultadoOperacao resultado = new ResultadoOperacao();
+        try {
+            boolean podeExcluir = medicamentoModel.getMedDAO().medicamentoPodeSerExcluido(id);
 
             if (podeExcluir) {
-                boolean sucesso = medicamentoDAO.apagar(id);
+                boolean sucesso = medicamentoModel.getMedDAO().apagar(id);
                 resultado.setOperacao("excluido");
                 resultado.setSucesso(sucesso);
-
-                if (sucesso) {
-                    resultado.setMensagem("Medicamento excluído com sucesso");
-                } else {
-                    resultado.setMensagem("Falha ao excluir o medicamento");
-                }
+                resultado.setMensagem(sucesso ? "Medicamento excluído com sucesso" : "Falha ao excluir o medicamento");
             } else {
-                boolean sucesso = medicamentoDAO.desativarMedicamento(id);
+                boolean sucesso = medicamentoModel.getMedDAO().desativarMedicamento(id);
                 resultado.setOperacao("desativado");
                 resultado.setSucesso(sucesso);
-
-                if (sucesso) {
-                    resultado.setMensagem("Medicamento desativado com sucesso. Este item está sendo utilizado no sistema e não pode ser excluído completamente.");
-                } else {
-                    resultado.setMensagem("Falha ao desativar o medicamento");
-                }
+                resultado.setMensagem(sucesso
+                        ? "Medicamento desativado com sucesso. Este item está sendo utilizado no sistema e não pode ser excluído completamente."
+                        : "Falha ao desativar o medicamento");
             }
 
             return resultado;
 
-        } catch (RuntimeException e) {
-            throw new Exception(e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception("Erro ao processar a exclusão: " + e.getMessage());
         }
     }
 
+    public boolean reativarMedicamento(Integer id) throws Exception {
+        MedicamentoCompletoDTO existente = medicamentoModel.getMedDAO().findMedicamentoCompleto(id);
+        if (existente == null) {
+            throw new Exception("Medicamento não encontrado");
+        }
+
+        return medicamentoModel.getMedDAO().reativarMedicamento(id);
+    }
+
+
     public List<MedicamentoCompletoDTO> getNome(String filtro){
-        return medicamentoDAO.getNome(filtro);
+        return medicamentoModel.getMedDAO().getNome(filtro);
     }
 
     public List<MedicamentoCompletoDTO> getComposicao(String filtro){
-        return medicamentoDAO.getComposicao(filtro);
+        return medicamentoModel.getMedDAO().getComposicao(filtro);
     }
 
     public List<MedicamentoCompletoDTO> getTipo(String filtro){
-        return medicamentoDAO.getTipo(filtro);
+        return medicamentoModel.getMedDAO().getTipo(filtro);
     }
 }

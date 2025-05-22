@@ -1,7 +1,9 @@
 package salvacao.petcontrol.model;
 
+import org.springframework.stereotype.Repository;
 import salvacao.petcontrol.dao.UsuarioDAO;
 
+@Repository
 public class UsuarioModel {
     private String login;
     private String senha;
@@ -57,5 +59,9 @@ public class UsuarioModel {
 
     public void setPessoa(PessoaModel pessoa) {
         this.pessoa = pessoa;
+    }
+
+    public UsuarioDAO getUsuDAO() {
+        return usuDAO;
     }
 }

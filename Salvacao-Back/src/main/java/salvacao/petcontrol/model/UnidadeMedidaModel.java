@@ -1,7 +1,9 @@
 package salvacao.petcontrol.model;
 
+import org.springframework.stereotype.Repository;
 import salvacao.petcontrol.dao.UnidadeMedidaDAO;
 
+@Repository
 public class UnidadeMedidaModel {
     private int idUnidadeMedida;
     private String descricao;

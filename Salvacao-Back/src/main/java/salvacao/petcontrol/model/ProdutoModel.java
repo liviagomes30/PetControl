@@ -1,10 +1,12 @@
 package salvacao.petcontrol.model;
 
+import org.springframework.stereotype.Repository;
 import salvacao.petcontrol.dao.ProdutoDAO;
 
 import java.math.BigDecimal;
 import java.util.Date;
 
+@Repository
 public class ProdutoModel {
     private Integer idproduto;
     private String nome;

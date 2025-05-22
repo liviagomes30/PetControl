@@ -3,7 +3,6 @@ package salvacao.petcontrol.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import salvacao.petcontrol.dao.UnidadeMedidaDAO;
 import salvacao.petcontrol.model.UnidadeMedidaModel;
 
 import java.sql.SQLException;
@@ -13,17 +12,17 @@ import java.util.List;
 public class UnidadeMedidaService {
 
     @Autowired
-    private UnidadeMedidaDAO unidadeMedidaDAO;
+    private UnidadeMedidaModel unidadeMedidaModel = new UnidadeMedidaModel();
 
     public UnidadeMedidaModel getId(Integer id) {
-        return unidadeMedidaDAO.getId(id);
+        return unidadeMedidaModel.getUnDAO().getId(id);
     }
 
     public List<UnidadeMedidaModel> getAll() {
-        return unidadeMedidaDAO.getAll();
+        return unidadeMedidaModel.getUnDAO().getAll();
     }
 
-    public UnidadeMedidaModel gravar(UnidadeMedidaModel unidadeMedida) throws Exception { // Added gravar method
+    public UnidadeMedidaModel gravar(UnidadeMedidaModel unidadeMedida) throws Exception {
         if (unidadeMedida.getDescricao() == null || unidadeMedida.getDescricao().trim().isEmpty()) {
             throw new Exception("A descrição é obrigatória.");
         }
@@ -36,7 +35,7 @@ public class UnidadeMedidaService {
         if (unidadeMedida.getSigla().length() > 10) {
             throw new Exception("A sigla não pode ter mais de 10 caracteres.");
         }
-        return unidadeMedidaDAO.gravar(unidadeMedida); // Calls the new DAO method
+        return unidadeMedidaModel.getUnDAO().gravar(unidadeMedida);
     }
 
     public boolean alterar(UnidadeMedidaModel unidadeMedida) throws Exception {
@@ -52,26 +51,26 @@ public class UnidadeMedidaService {
         if (unidadeMedida.getSigla().length() > 10) {
             throw new Exception("A sigla não pode ter mais de 10 caracteres.");
         }
-        UnidadeMedidaModel existente = unidadeMedidaDAO.getId(unidadeMedida.getIdUnidadeMedida());
+        UnidadeMedidaModel existente = unidadeMedidaModel.getUnDAO().getId(unidadeMedida.getIdUnidadeMedida());
         if (existente == null) {
             throw new Exception("Unidade de medida não encontrada para atualização.");
         }
-        return unidadeMedidaDAO.alterar(unidadeMedida);
+        return unidadeMedidaModel.getUnDAO().alterar(unidadeMedida);
     }
 
     public boolean apagar(Integer id) throws Exception {
-        UnidadeMedidaModel existente = unidadeMedidaDAO.getId(id);
+        UnidadeMedidaModel existente = unidadeMedidaModel.getUnDAO().getId(id);
         if (existente == null) {
             throw new Exception("Unidade de medida não encontrada para exclusão.");
         }
         try {
-            return unidadeMedidaDAO.apagar(id);
+            return unidadeMedidaModel.getUnDAO().apagar(id);
         } catch (SQLException e) {
             throw new Exception("Erro ao excluir unidade de medida: " + e.getMessage());
         }
     }
 
     public List<UnidadeMedidaModel> getByDescricaoSigla(String filtro) {
-        return unidadeMedidaDAO.getByDescricaoSigla(filtro);
+        return unidadeMedidaModel.getUnDAO().getByDescricaoSigla(filtro);
     }
 }

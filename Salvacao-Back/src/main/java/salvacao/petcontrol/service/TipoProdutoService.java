@@ -3,7 +3,6 @@ package salvacao.petcontrol.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import salvacao.petcontrol.dao.TipoProdutoDAO; // Updated from TipoProdutoDAL
 import salvacao.petcontrol.model.TipoProdutoModel;
 
 import java.sql.SQLException;
@@ -13,54 +12,54 @@ import java.util.List;
 public class TipoProdutoService {
 
     @Autowired
-    private TipoProdutoDAO tipoProdutoDAO; // Updated from TipoProdutoDAL
+    private TipoProdutoModel tipoProdutoModel = new TipoProdutoModel();
 
-    public TipoProdutoModel getId(Integer id) { // Renamed from getTipoProdutoById
-        return tipoProdutoDAO.getId(id); // Calls the new DAO method
+    public TipoProdutoModel getId(Integer id) {
+        return tipoProdutoModel.getTpDAO().getId(id); // Access DAO via Model
     }
 
-    public List<TipoProdutoModel> getAll() { // Renamed from getAllTiposProduto
-        return tipoProdutoDAO.getAll(); // Calls the new DAO method
+    public List<TipoProdutoModel> getAll() {
+        return tipoProdutoModel.getTpDAO().getAll(); // Access DAO via Model
     }
 
-    public TipoProdutoModel gravar(TipoProdutoModel tipoProduto) throws Exception { // Added gravar method
+    public TipoProdutoModel gravar(TipoProdutoModel tipoProduto) throws Exception {
         if (tipoProduto.getDescricao() == null || tipoProduto.getDescricao().trim().isEmpty()) {
             throw new Exception("A descrição é obrigatória.");
         }
         if (tipoProduto.getDescricao().length() > 100) {
             throw new Exception("A descrição não pode ter mais de 100 caracteres.");
         }
-        return tipoProdutoDAO.gravar(tipoProduto); // Calls the new DAO method
+        return tipoProdutoModel.getTpDAO().gravar(tipoProduto); // Access DAO via Model
     }
 
-    public boolean alterar(TipoProdutoModel tipoProduto) throws Exception { // Added alterar method
+    public boolean alterar(TipoProdutoModel tipoProduto) throws Exception {
         if (tipoProduto.getDescricao() == null || tipoProduto.getDescricao().trim().isEmpty()) {
             throw new Exception("A descrição é obrigatória.");
         }
         if (tipoProduto.getDescricao().length() > 100) {
             throw new Exception("A descrição não pode ter mais de 100 caracteres.");
         }
-        TipoProdutoModel existente = tipoProdutoDAO.getId(tipoProduto.getIdtipoproduto());
+        TipoProdutoModel existente = tipoProdutoModel.getTpDAO().getId(tipoProduto.getIdtipoproduto()); // Access DAO via Model
         if (existente == null) {
             throw new Exception("Tipo de produto não encontrado para atualização.");
         }
-        return tipoProdutoDAO.alterar(tipoProduto); // Calls the new DAO method
+        return tipoProdutoModel.getTpDAO().alterar(tipoProduto); // Access DAO via Model
     }
 
-    public boolean apagar(Integer id) throws Exception { // Added apagar method
-        TipoProdutoModel existente = tipoProdutoDAO.getId(id);
+    public boolean apagar(Integer id) throws Exception {
+        TipoProdutoModel existente = tipoProdutoModel.getTpDAO().getId(id); // Access DAO via Model
         if (existente == null) {
             throw new Exception("Tipo de produto não encontrado para exclusão.");
         }
         try {
-            return tipoProdutoDAO.apagar(id); // Calls the new DAO method
+            return tipoProdutoModel.getTpDAO().apagar(id); // Access DAO via Model
         } catch (SQLException e) {
             // Catch specific SQL exceptions if needed, e.g., foreign key constraints
             throw new Exception("Erro ao excluir tipo de produto: " + e.getMessage());
         }
     }
 
-    public List<TipoProdutoModel> getByDescricao(String filtro) { // Implemented the method
-        return tipoProdutoDAO.getByDescricao(filtro); // Calls the corresponding DAO method
+    public List<TipoProdutoModel> getByDescricao(String filtro) {
+        return tipoProdutoModel.getTpDAO().getByDescricao(filtro); // Access DAO via Model
     }
 }

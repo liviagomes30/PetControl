@@ -3,13 +3,11 @@ package salvacao.petcontrol.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import salvacao.petcontrol.dao.ProdutoDAO;
-import salvacao.petcontrol.dao.TipoProdutoDAO;
-import salvacao.petcontrol.dao.UnidadeMedidaDAO;
-import salvacao.petcontrol.dao.EstoqueDAO;
 import salvacao.petcontrol.dto.ProdutoCompletoDTO;
 import salvacao.petcontrol.model.EstoqueModel;
 import salvacao.petcontrol.model.ProdutoModel;
+import salvacao.petcontrol.model.UnidadeMedidaModel;
+import salvacao.petcontrol.model.TipoProdutoModel;
 import salvacao.petcontrol.util.ResultadoOperacao;
 
 import java.math.BigDecimal;
@@ -22,31 +20,32 @@ import salvacao.petcontrol.config.SingletonDB;
 public class ProdutoService {
 
     @Autowired
-    private ProdutoDAO produtoDAO;
+    private ProdutoModel produtoModel = new ProdutoModel();
 
     @Autowired
-    private TipoProdutoDAO tipoProdutoDAO;
+    private TipoProdutoModel TipoProdutoModel = new TipoProdutoModel();
 
     @Autowired
-    private UnidadeMedidaDAO unidadeMedidaDAO;
+    private UnidadeMedidaModel UnidadeMedidaModel = new UnidadeMedidaModel();
 
     @Autowired
-    private EstoqueDAO estoqueDAO;
+    private EstoqueModel estoqueModel = new EstoqueModel();
+
 
     public ProdutoCompletoDTO getId(Integer id) {
-        return produtoDAO.findProdutoCompleto(id);
+        return produtoModel.getProdDAO().findProdutoCompleto(id);
     }
 
     public List<ProdutoCompletoDTO> getAll() {
-        return produtoDAO.getAllProdutos();
+        return produtoModel.getProdDAO().getAllProdutos();
     }
 
     public List<ProdutoCompletoDTO> getProdutosByTipo(Integer idTipo) {
-        return produtoDAO.getProdutosByTipo(idTipo);
+        return produtoModel.getProdDAO().getProdutosByTipo(idTipo);
     }
 
     public List<ProdutoCompletoDTO> getByName(String searchTerm) {
-        return produtoDAO.getByName(searchTerm);
+        return produtoModel.getProdDAO().getByName(searchTerm);
     }
 
     public ProdutoModel gravar(ProdutoCompletoDTO dto) throws Exception {
@@ -58,53 +57,57 @@ public class ProdutoService {
             throw new Exception("Nome do produto é obrigatório");
         }
 
-        if (tipoProdutoDAO.getId(dto.getProduto().getIdtipoproduto()) == null) {
+        if (TipoProdutoModel.getTpDAO().getId(dto.getProduto().getIdtipoproduto()) == null) {
             throw new Exception("Tipo de produto não encontrado");
         }
 
-        if (unidadeMedidaDAO.getId(dto.getProduto().getIdunidademedida()) == null) {
+        if (UnidadeMedidaModel.getUnDAO().getId(dto.getProduto().getIdunidademedida()) == null) {
             throw new Exception("Unidade de medida não encontrada");
         }
-        Connection conn = SingletonDB.getConexao().getConnection();
+
+        Connection conn = null;
         boolean autoCommitOriginal = true;
+
         try {
+            conn = SingletonDB.getConexao().getConnection();
             autoCommitOriginal = conn.getAutoCommit();
             conn.setAutoCommit(false);
 
-            ProdutoModel novoProduto = produtoDAO.gravar(dto.getProduto());
+            ProdutoModel novoProduto = produtoModel.getProdDAO().gravar(dto.getProduto());
 
-            EstoqueModel newStock = new EstoqueModel();
-            newStock.setIdproduto(novoProduto.getIdproduto());
-            newStock.setQuantidade(BigDecimal.ZERO);
+            EstoqueModel novoEstoque = new EstoqueModel();
+            novoEstoque.setIdproduto(novoProduto.getIdproduto());
+            novoEstoque.setQuantidade(BigDecimal.ZERO);
 
-            EstoqueModel estoqueSalvo = estoqueDAO.gravar(newStock);
+            EstoqueModel estoqueSalvo = estoqueModel.getEstDAO().gravar(novoEstoque);
 
             if (estoqueSalvo == null) {
-                throw new Exception();
+                throw new Exception("Erro ao gravar estoque");
             }
 
             conn.commit();
             return novoProduto;
 
         } catch (SQLException e) {
-            try {
-                if (conn != null) {
+            if (conn != null) {
+                try {
                     conn.rollback();
+                } catch (SQLException rollbackEx) {
+                    rollbackEx.printStackTrace();
                 }
-            } catch (SQLException ex) {
-                ex.printStackTrace();
             }
             throw new Exception("Erro ao adicionar produto e inicializar estoque: " + e.getMessage());
         } finally {
-            try {
-                if (conn != null) {
+            if (conn != null) {
+                try {
                     conn.setAutoCommit(autoCommitOriginal);
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
                 }
-            } catch (SQLException ex) {
-                ex.printStackTrace();
             }
         }
     }
+
 
     public boolean alterar(Integer id, ProdutoCompletoDTO dto) throws Exception {
         if (dto.getProduto() == null) {
@@ -115,24 +118,24 @@ public class ProdutoService {
             throw new Exception("Nome do produto é obrigatório");
         }
 
-        ProdutoCompletoDTO existente = produtoDAO.findProdutoCompleto(id);
+        ProdutoCompletoDTO existente = produtoModel.getProdDAO().findProdutoCompleto(id);
         if (existente == null) {
             throw new Exception("Produto não encontrado");
         }
 
-        if (tipoProdutoDAO.getId(dto.getProduto().getIdtipoproduto()) == null) {
+        if (TipoProdutoModel.getTpDAO().getId(dto.getProduto().getIdtipoproduto()) == null) {
             throw new Exception("Tipo de produto não encontrado");
         }
 
-        if (unidadeMedidaDAO.getId(dto.getProduto().getIdunidademedida()) == null) {
+        if (UnidadeMedidaModel.getUnDAO().getId(dto.getProduto().getIdunidademedida()) == null) {
             throw new Exception("Unidade de medida não encontrada");
         }
 
-        return produtoDAO.alterar(id, dto.getProduto());
+        return produtoModel.getProdDAO().alterar(id, dto.getProduto());
     }
 
     public ResultadoOperacao apagarProduto(Integer id) throws Exception {
-        ProdutoCompletoDTO existente = produtoDAO.findProdutoCompleto(id);
+        ProdutoCompletoDTO existente = produtoModel.getProdDAO().findProdutoCompleto(id);
         if (existente == null) {
             throw new Exception("Produto não encontrado");
         }
@@ -140,10 +143,10 @@ public class ProdutoService {
         ResultadoOperacao resultado = new ResultadoOperacao();
 
         try {
-            boolean podeExcluir = produtoDAO.produtoPodeSerExcluido(id);
+            boolean podeExcluir = produtoModel.getProdDAO().produtoPodeSerExcluido(id);
 
             if (podeExcluir) {
-                boolean sucesso = produtoDAO.apagar(id);
+                boolean sucesso = produtoModel.getProdDAO().apagar(id);
                 resultado.setOperacao("excluido");
                 resultado.setSucesso(sucesso);
 
@@ -153,7 +156,7 @@ public class ProdutoService {
                     resultado.setMensagem("Falha ao excluir o produto");
                 }
             } else {
-                boolean sucesso = produtoDAO.desativarProduto(id);
+                boolean sucesso = produtoModel.getProdDAO().desativarProduto(id);
                 resultado.setOperacao("desativado");
                 resultado.setSucesso(sucesso);
 
@@ -173,19 +176,19 @@ public class ProdutoService {
     }
 
     public boolean reativarProduto(Integer id) throws Exception {
-        ProdutoCompletoDTO existente = produtoDAO.findProdutoCompleto(id);
+        ProdutoCompletoDTO existente = produtoModel.getProdDAO().findProdutoCompleto(id);
         if (existente == null) {
             throw new Exception("Produto não encontrado");
         }
 
-        return produtoDAO.reativarProduto(id);
+        return produtoModel.getProdDAO().reativarProduto(id);
     }
 
     public List<ProdutoCompletoDTO> getByFabricante(String filtro) {
-        return produtoDAO.getByFabricante(filtro);
+        return produtoModel.getProdDAO().getByFabricante(filtro);
     }
 
     public List<ProdutoCompletoDTO> getByTipoDescricao(String filtro) {
-        return produtoDAO.getByTipoDescricao(filtro);
+        return produtoModel.getProdDAO().getByTipoDescricao(filtro);
     }
 }

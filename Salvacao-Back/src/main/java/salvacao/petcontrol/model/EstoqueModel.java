@@ -4,6 +4,8 @@ import salvacao.petcontrol.dao.EstoqueDAO;
 
 import java.math.BigDecimal;
 
+import org.springframework.stereotype.Repository;
+@Repository
 public class EstoqueModel {
     private Integer idestoque;
     private Integer idproduto;

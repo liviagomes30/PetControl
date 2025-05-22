@@ -1,9 +1,11 @@
 package salvacao.petcontrol.model;
 
+import org.springframework.stereotype.Repository;
 import salvacao.petcontrol.dao.AcertoEstoqueDAO;
 
 import java.time.LocalDate;
 
+@Repository
 public class AcertoEstoqueModel {
     private Integer idacerto;
     private LocalDate data;

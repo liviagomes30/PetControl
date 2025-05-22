@@ -1,5 +1,8 @@
 package salvacao.petcontrol.model;
 
+import org.springframework.stereotype.Repository;
+
+@Repository
 public class PosologiaModel {
     private String dose;
     private Integer quantidadedias;

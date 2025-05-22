@@ -1,9 +1,11 @@
 package salvacao.petcontrol.model;
 
+import org.springframework.stereotype.Repository;
 import salvacao.petcontrol.dao.HistoricoDAO;
 
 import java.time.LocalDate;
 
+@Repository
 public class HistoricoModel {
     private Integer idhistorico;
     private String descricao;

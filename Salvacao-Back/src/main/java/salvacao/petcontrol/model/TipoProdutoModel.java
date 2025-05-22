@@ -1,7 +1,9 @@
 package salvacao.petcontrol.model;
 
+import org.springframework.stereotype.Repository;
 import salvacao.petcontrol.dao.TipoProdutoDAO;
 
+@Repository
 public class TipoProdutoModel {
     private Integer idtipoproduto;
     private String descricao;

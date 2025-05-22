@@ -1,7 +1,9 @@
 package salvacao.petcontrol.model;
 
+import org.springframework.stereotype.Repository;
 import salvacao.petcontrol.dao.PessoaDAO;
 
+@Repository
 public class PessoaModel {
     private Integer idpessoa;
     private String nome;
