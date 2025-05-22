@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import salvacao.petcontrol.config.SingletonDB;
 import salvacao.petcontrol.dto.ProdutoCompletoDTO;
+import salvacao.petcontrol.model.EstoqueModel;
 import salvacao.petcontrol.model.ProdutoModel;
 import salvacao.petcontrol.model.TipoProdutoModel;
 import salvacao.petcontrol.model.UnidadeMedidaModel;
@@ -14,6 +15,9 @@ import java.util.List;
 
 @Repository
 public class ProdutoDAO {
+    @Autowired
+    private EstoqueModel estoqueModel = new EstoqueModel();
+
     public ProdutoModel getId(Integer id) {
         ProdutoModel produto = null;
         String sql = "SELECT * FROM produto WHERE idproduto = ?";
@@ -89,16 +93,66 @@ public class ProdutoDAO {
     }
 
     public ProdutoModel gravar(ProdutoModel produto) {
-        String sql = "INSERT INTO produto (nome, idtipoproduto, idunidademedida, fabricante, preco, estoque_minimo, data_cadastro) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING idproduto";
+        Connection conn = null;
+        boolean autoCommitOriginal = true;
+        try {
+            conn = SingletonDB.getConexao().getConnection();
+            autoCommitOriginal = conn.getAutoCommit();
+            conn.setAutoCommit(false);
 
-        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+            ProdutoModel novoProduto = gravarInterno(produto, conn);
+
+            if (novoProduto != null && novoProduto.getIdproduto() != null) {
+                if (!estoqueModel.getEstDAO().inicializarEstoqueComConexao(novoProduto.getIdproduto(), conn)) {
+                    throw new SQLException("Erro ao gravar estoque inicial");
+                }
+                conn.commit();
+                return novoProduto;
+            } else {
+                conn.rollback();
+                return null;
+            }
+        } catch (SQLException e) {
+            try {
+                if (conn != null) {
+                    conn.rollback();
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+            throw new RuntimeException("Erro ao adicionar produto e inicializar estoque: " + e.getMessage(), e);
+        } finally {
+            try {
+                if (conn != null) {
+                    conn.setAutoCommit(autoCommitOriginal);
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    public ProdutoModel gravarComConexao(ProdutoModel produto, Connection conn) throws SQLException {
+        ProdutoModel novoProduto = gravarInterno(produto, conn);
+
+        if (novoProduto != null && novoProduto.getIdproduto() != null) {
+            if (!estoqueModel.getEstDAO().inicializarEstoqueComConexao(novoProduto.getIdproduto(), conn)) {
+                throw new SQLException("Erro ao gravar estoque inicial");
+            }
+            return novoProduto;
+        }
+        return null;
+    }
+
+    private ProdutoModel gravarInterno(ProdutoModel produto, Connection conn) throws SQLException {
+        String sql = "INSERT INTO produto (nome, idtipoproduto, idunidademedida, fabricante, preco, estoque_minimo, data_cadastro, ativo) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING idproduto";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, produto.getNome());
             stmt.setInt(2, produto.getIdtipoproduto());
             stmt.setInt(3, produto.getIdunidademedida());
             stmt.setString(4, produto.getFabricante());
 
-            // Valores numéricos podem ser nulos
             if (produto.getPreco() != null) {
                 stmt.setBigDecimal(5, produto.getPreco());
             } else {
@@ -116,14 +170,17 @@ public class ProdutoDAO {
             } else {
                 stmt.setDate(7, new java.sql.Date(System.currentTimeMillis()));
             }
+            stmt.setBoolean(8, true);
 
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 produto.setIdproduto(rs.getInt("idproduto"));
+                System.out.println("Produto gravado na DAO com ID: " + produto.getIdproduto());
                 return produto;
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Erro ao adicionar produto: " + e.getMessage(), e);
+            System.out.println("Erro na DAO ao gravar produto: " + e.getMessage());
+            throw e;
         }
         return null;
     }
@@ -167,7 +224,6 @@ public class ProdutoDAO {
 
             System.out.println("Iniciando exclusão do produto ID: " + id);
 
-            // Cascade deletes for related tables (medicamento, vacina, estoque)
             String sqlMedicamento = "DELETE FROM medicamento WHERE idproduto = ?";
             try (PreparedStatement stmt = conn.prepareStatement(sqlMedicamento)) {
                 stmt.setInt(1, id);

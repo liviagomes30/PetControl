@@ -6,10 +6,7 @@ import salvacao.petcontrol.config.SingletonDB;
 import salvacao.petcontrol.model.EstoqueModel;
 import salvacao.petcontrol.model.ProdutoModel;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.math.BigDecimal;
@@ -271,5 +268,18 @@ public class EstoqueDAO {
             e.printStackTrace();
         }
         return estoqueList;
+    }
+
+    public boolean inicializarEstoqueComConexao(Integer idProduto, Connection conn) throws SQLException {
+        String sql = "INSERT INTO estoque (idproduto, quantidade) VALUES (?, ?)";
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, idProduto);
+            stmt.setBigDecimal(2, BigDecimal.ZERO);
+
+            int rowsAffected = stmt.executeUpdate();
+            System.out.println("Estoque inicializado para produto ID " + idProduto + " - Linhas afetadas: " + rowsAffected);
+            return rowsAffected > 0;
+        }
     }
 }

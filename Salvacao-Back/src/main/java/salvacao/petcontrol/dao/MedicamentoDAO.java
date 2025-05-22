@@ -10,10 +10,7 @@ import salvacao.petcontrol.model.ProdutoModel;
 import salvacao.petcontrol.model.TipoProdutoModel;
 import salvacao.petcontrol.model.UnidadeMedidaModel;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -95,10 +92,15 @@ public class MedicamentoDAO {
     }
 
     public MedicamentoModel gravar(MedicamentoModel medicamento, ProdutoModel produto) {
+        Connection conn = null;
         try {
-            SingletonDB.getConexao().getConnection().setAutoCommit(false);
+            conn = SingletonDB.getConexao().getConnection();
+            conn.setAutoCommit(false);
 
-            ProdutoModel novoProduto = produtoModel.getProdDAO().gravar(produto); // Updated method call
+            ProdutoModel novoProduto = produtoModel.getProdDAO().gravarComConexao(produto,conn);
+            if (novoProduto == null || novoProduto.getIdproduto() == null) {
+                throw new RuntimeException("Erro ao gravar produto - ID não gerado");
+            }
 
             String sql = "INSERT INTO medicamento (idproduto, composicao) VALUES (?, ?)";
             try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {

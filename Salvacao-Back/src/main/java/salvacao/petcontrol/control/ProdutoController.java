@@ -40,7 +40,7 @@ public class ProdutoController {
 
     @GetMapping("/tipo/{idTipo}")
     public ResponseEntity<Object> getByTipo(@PathVariable Integer idTipo) {
-        List<ProdutoCompletoDTO> produtos = produtoService.getProdutosByTipo(idTipo); 
+        List<ProdutoCompletoDTO> produtos = produtoService.getProdutosByTipo(idTipo);
         if (!produtos.isEmpty()) {
             return ResponseEntity.ok(produtos);
         }

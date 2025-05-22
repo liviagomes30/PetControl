@@ -12,6 +12,7 @@ import salvacao.petcontrol.util.ResultadoOperacao;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
 import salvacao.petcontrol.config.SingletonDB;
@@ -65,46 +66,10 @@ public class ProdutoService {
             throw new Exception("Unidade de medida não encontrada");
         }
 
-        Connection conn = null;
-        boolean autoCommitOriginal = true;
-
         try {
-            conn = SingletonDB.getConexao().getConnection();
-            autoCommitOriginal = conn.getAutoCommit();
-            conn.setAutoCommit(false);
-
-            ProdutoModel novoProduto = produtoModel.getProdDAO().gravar(dto.getProduto());
-
-            EstoqueModel novoEstoque = new EstoqueModel();
-            novoEstoque.setIdproduto(novoProduto.getIdproduto());
-            novoEstoque.setQuantidade(BigDecimal.ZERO);
-
-            EstoqueModel estoqueSalvo = estoqueModel.getEstDAO().gravar(novoEstoque);
-
-            if (estoqueSalvo == null) {
-                throw new Exception("Erro ao gravar estoque");
-            }
-
-            conn.commit();
-            return novoProduto;
-
-        } catch (SQLException e) {
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException rollbackEx) {
-                    rollbackEx.printStackTrace();
-                }
-            }
-            throw new Exception("Erro ao adicionar produto e inicializar estoque: " + e.getMessage());
-        } finally {
-            if (conn != null) {
-                try {
-                    conn.setAutoCommit(autoCommitOriginal);
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
+            return produtoModel.getProdDAO().gravar(dto.getProduto());
+        } catch (RuntimeException e) {
+            throw new Exception("Erro ao adicionar produto: " + e.getMessage(), e);
         }
     }
 
