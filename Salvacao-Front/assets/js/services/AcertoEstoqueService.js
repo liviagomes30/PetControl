@@ -1,4 +1,3 @@
-// AcertoEstoqueService.js
 class AcertoEstoqueService {
   constructor(baseUrl = "http://localhost:8080") {
     this.baseUrl = baseUrl;
@@ -123,7 +122,6 @@ class AcertoEstoqueService {
     }
   }
 
-  // Métodos auxiliares para obter produtos e estoque atual
   async listarProdutos() {
     try {
       const response = await fetch(`${this.baseUrl}/produtos/listar`);
@@ -151,7 +149,6 @@ class AcertoEstoqueService {
       );
 
       if (response.status === 404) {
-        // Se o produto não tem estoque, retornar zero
         return { quantidade: 0 };
       }
 
@@ -162,7 +159,6 @@ class AcertoEstoqueService {
       return await response.json();
     } catch (error) {
       console.error(`Erro ao obter estoque do produto ${produtoId}:`, error);
-      // Retornar zero em caso de erro para não bloquear o processo
       return { quantidade: 0 };
     }
   }

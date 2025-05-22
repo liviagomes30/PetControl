@@ -1,5 +1,6 @@
 package salvacao.petcontrol.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import salvacao.petcontrol.dto.EstoqueProdutoDTO;
 import salvacao.petcontrol.model.EstoqueModel;
@@ -13,10 +14,13 @@ import java.util.List;
 
 @Service
 public class EstoqueService {
-
+    @Autowired
     private EstoqueModel estoqueModel = new EstoqueModel();
+    @Autowired
     private ProdutoModel produtoModel = new ProdutoModel();
+    @Autowired
     private TipoProdutoModel tipoProdutoModel = new TipoProdutoModel();
+    @Autowired
     private UnidadeMedidaModel unidadeMedidaModel = new UnidadeMedidaModel();
 
     public EstoqueModel getId(Integer id) {

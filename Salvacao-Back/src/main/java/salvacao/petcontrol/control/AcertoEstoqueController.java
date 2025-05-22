@@ -70,7 +70,7 @@ public class AcertoEstoqueController {
     @PostMapping
     public ResponseEntity<Object> gravar(@RequestBody AcertoEstoqueRequestDTO request) { // Renamed from efetuarAcertoEstoque
         try {
-            ResultadoOperacao resultado = acertoEstoqueService.gravar(request); // Calls service.gravar()
+            ResultadoOperacao resultado = acertoEstoqueService.gravar(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
         } catch (Exception e) {
             ResultadoOperacao resultado = new ResultadoOperacao("acertoEstoque", false, e.getMessage());

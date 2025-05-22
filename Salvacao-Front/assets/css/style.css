@@ -428,10 +428,6 @@ table tbody tr:last-child td {
   margin: 0 auto;
 }
 
-.form-group {
-  margin-bottom: var(--spacing-lg);
-}
-
 .form-group label {
   display: block;
   margin-bottom: var(--spacing-xs);
@@ -558,61 +554,6 @@ table tbody tr:last-child td {
 
 .toast-close:hover {
   color: var(--text-primary);
-}
-
-/* Modal melhorado */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  opacity: 0;
-  transition: opacity var(--transition-normal);
-}
-
-.modal.show {
-  opacity: 1;
-  display: flex;
-}
-
-.modal-content {
-  background-color: white;
-  border-radius: var(--border-radius-md);
-  padding: var(--spacing-xl);
-  width: 450px;
-  max-width: 90%;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
-  transform: translateY(-20px);
-  transition: transform var(--transition-normal);
-}
-
-.modal.show .modal-content {
-  transform: translateY(0);
-}
-
-.modal-header {
-  margin-bottom: var(--spacing-lg);
-}
-
-.modal-content h3 {
-  color: var(--vermelho-escuro);
-  margin: 0;
-}
-
-.modal-body {
-  margin-bottom: var(--spacing-lg);
-}
-
-.modal-buttons {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--spacing-md);
 }
 
 /* Loading Spinner melhorado */
@@ -940,11 +881,6 @@ td {
   font-size: 0.75rem;
   color: #6c757d;
   transition: color 0.2s ease;
-}
-
-.form-group {
-  position: relative;
-  margin-bottom: 1.5rem;
 }
 
 /* Estilos para validação server-side do Bootstrap */

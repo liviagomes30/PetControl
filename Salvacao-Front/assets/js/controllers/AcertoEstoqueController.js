@@ -14,38 +14,25 @@ class AcertoEstoqueController {
     try {
       UIComponents.Validacao.limparErros("formAcertoEstoque");
 
-      // Configurar formulário para envio
       const form = document.getElementById("formAcertoEstoque");
       if (form) {
         form.addEventListener("submit", (e) => this.efetuarAcerto(e));
       }
 
-      // Configurar botão para adicionar item
       const btnAdicionarItem = document.getElementById("btnAdicionarItem");
       if (btnAdicionarItem) {
         btnAdicionarItem.addEventListener("click", () => {
           this.prepararModal();
+          UIComponents.Loading.esconder();
           UIComponents.ModalHelper.abrirModal("adicionarItemModal");
         });
       }
 
-      // Configurar botão para confirmar adição de item no modal
       const btnConfirmarItem = document.getElementById("btnConfirmarItem");
       if (btnConfirmarItem) {
         btnConfirmarItem.addEventListener("click", () => this.adicionarItem());
       }
 
-      // Configurar botões para fechar o modal
-      const botoesFecharModal = document.querySelectorAll(
-        '[data-bs-dismiss="modal"]'
-      );
-      botoesFecharModal.forEach((botao) => {
-        botao.addEventListener("click", () => {
-          UIComponents.ModalHelper.fecharModal("adicionarItemModal");
-        });
-      });
-
-      // Configurar seleção de produto no modal para buscar quantidade atual
       const selectProduto = document.getElementById("selectProduto");
       if (selectProduto) {
         selectProduto.addEventListener("change", (e) =>
@@ -53,21 +40,21 @@ class AcertoEstoqueController {
         );
       }
 
-      // Inicializar a máscara para o campo de nova quantidade
       const novaQuantidadeInput = document.getElementById("novaQuantidade");
       if (novaQuantidadeInput) {
         novaQuantidadeInput.setAttribute("data-mask", "decimal");
-        UIComponents.InputMasks.inicializar();
+        UIComponents.InputMasks.inicializar(); // Still using UIComponents.InputMasks
       }
 
-      // Carregar produtos para o select
+      UIComponents.Loading.mostrar("Carregando produtos...");
       await this.carregarProdutos();
-
       UIComponents.Loading.esconder();
     } catch (error) {
       console.error("Erro ao inicializar formulário:", error);
       UIComponents.ModalErro.mostrar(
-        "Não foi possível carregar o formulário: " + (error.message || "")
+        // Still using UIComponents.ModalErro
+        "Não foi possível carregar o formulário. " +
+          (error.message || "Erro desconhecido.")
       );
       UIComponents.Loading.esconder();
     }
@@ -75,38 +62,28 @@ class AcertoEstoqueController {
 
   async carregarProdutos() {
     try {
-      UIComponents.Loading.mostrar("Carregando produtos...");
       const produtos = await this.service.listarProdutos();
       this.produtosCarregados = produtos;
 
       const selectProduto = document.getElementById("selectProduto");
       if (selectProduto) {
-        // Limpar opções existentes, mantendo apenas a opção padrão
         while (selectProduto.options.length > 1) {
           selectProduto.remove(1);
         }
-
-        // Adicionar produtos ao select
         produtos.forEach((produto) => {
           const option = document.createElement("option");
           option.value = produto.produto.idproduto;
-
-          // Montar descrição do produto com informações relevantes
           const tipoProduto = produto.tipoProduto?.descricao || "";
           const unidade = produto.unidadeMedida?.sigla || "";
-
           option.textContent = `${produto.produto.nome} (${tipoProduto}) - ${unidade}`;
           selectProduto.appendChild(option);
         });
       }
-
-      UIComponents.Loading.esconder();
     } catch (error) {
       console.error("Erro ao carregar produtos:", error);
-      UIComponents.Loading.esconder();
-      UIComponents.ModalErro.mostrar(
+      throw new Error(
         "Não foi possível carregar a lista de produtos: " +
-          (error.message || "")
+          (error.message || "Erro desconhecido.")
       );
     }
   }
@@ -116,51 +93,42 @@ class AcertoEstoqueController {
       document.getElementById("quantidadeAtual").value = "";
       return;
     }
-
     try {
       UIComponents.Loading.mostrar("Consultando estoque...");
       const estoque = await this.service.obterEstoqueAtual(produtoId);
-
       const quantidadeAtualInput = document.getElementById("quantidadeAtual");
       if (quantidadeAtualInput) {
-        // Formatar quantidade com duas casas decimais
         const quantidade = parseFloat(estoque.quantidade || 0).toFixed(2);
         quantidadeAtualInput.value = quantidade.replace(".", ",");
       }
-
       UIComponents.Loading.esconder();
     } catch (error) {
       console.error("Erro ao buscar estoque atual:", error);
       UIComponents.Loading.esconder();
-
       const quantidadeAtualInput = document.getElementById("quantidadeAtual");
       if (quantidadeAtualInput) {
         quantidadeAtualInput.value = "0,00";
       }
+      UIComponents.ModalErro.mostrar(
+        "Não foi possível consultar o estoque atual do produto."
+      );
     }
   }
 
   prepararModal() {
-    // Limpar campos do modal
     const selectProduto = document.getElementById("selectProduto");
     const quantidadeAtual = document.getElementById("quantidadeAtual");
     const novaQuantidade = document.getElementById("novaQuantidade");
-
     if (selectProduto) selectProduto.value = "";
     if (quantidadeAtual) quantidadeAtual.value = "";
     if (novaQuantidade) novaQuantidade.value = "";
-
-    // Limpar mensagens de erro
     UIComponents.Validacao.limparErros("formItem");
   }
 
   adicionarItem() {
-    // Validar campos
     const produtoId = document.getElementById("selectProduto")?.value;
     const novaQuantidade = document.getElementById("novaQuantidade")?.value;
-
     let valido = true;
-
     if (!produtoId) {
       UIComponents.Validacao.mostrarErro(
         "selectProduto",
@@ -168,7 +136,6 @@ class AcertoEstoqueController {
       );
       valido = false;
     }
-
     if (!novaQuantidade) {
       UIComponents.Validacao.mostrarErro(
         "novaQuantidade",
@@ -176,7 +143,6 @@ class AcertoEstoqueController {
       );
       valido = false;
     } else {
-      // Converter para número (considerando formatação brasileira)
       const novaQtdNum = parseFloat(novaQuantidade.replace(",", "."));
       if (isNaN(novaQtdNum)) {
         UIComponents.Validacao.mostrarErro(
@@ -192,10 +158,7 @@ class AcertoEstoqueController {
         valido = false;
       }
     }
-
     if (!valido) return;
-
-    // Verificar se o produto já foi adicionado
     const produtoExistente = this.itensAcerto.find(
       (item) => item.produto_id === parseInt(produtoId)
     );
@@ -205,34 +168,23 @@ class AcertoEstoqueController {
       );
       return;
     }
-
-    // Obter informações do produto selecionado
     const produtoSelecionado = this.produtosCarregados.find(
       (p) => p.produto.idproduto === parseInt(produtoId)
     );
-
     if (!produtoSelecionado) {
       UIComponents.ModalErro.mostrar("Produto não encontrado");
       return;
     }
-
-    // Obter quantidade atual
     const quantidadeAtual =
       document.getElementById("quantidadeAtual")?.value || "0,00";
     const qtdAtualNum = parseFloat(quantidadeAtual.replace(",", "."));
-
-    // Converter nova quantidade considerando formato brasileiro
     const novaQtdNum = parseFloat(novaQuantidade.replace(",", "."));
-
-    // Determinar tipo de ajuste
     let tipoAjuste = "ENTRADA";
     if (novaQtdNum < qtdAtualNum) {
       tipoAjuste = "SAIDA";
     } else if (novaQtdNum === qtdAtualNum) {
       tipoAjuste = "SEM ALTERAÇÃO";
     }
-
-    // Criar o item de acerto
     const novoItem = {
       produto_id: parseInt(produtoId),
       nome_produto: produtoSelecionado.produto.nome,
@@ -240,87 +192,74 @@ class AcertoEstoqueController {
       quantidade_nova: novaQtdNum,
       tipoajuste: tipoAjuste,
     };
-
-    // Adicionar à lista de itens
     this.itensAcerto.push(novoItem);
-
-    // Atualizar a tabela
     this.atualizarTabelaItens();
 
-    // Fechar o modal usando nosso utilitário
+    const modalElement = document.getElementById("adicionarItemModal");
+    let modalInstance = bootstrap.Modal.getInstance(modalElement);
+    if (!modalInstance) {
+      modalInstance = new bootstrap.Modal(modalElement);
+    }
+    modalInstance.hide();
     UIComponents.ModalHelper.fecharModal("adicionarItemModal");
-
-    // Mostrar mensagem de sucesso
     UIComponents.Toast.sucesso("Item adicionado com sucesso");
   }
 
   removerItem(index) {
-    // Remover o item do array
     this.itensAcerto.splice(index, 1);
-
-    // Atualizar a tabela
     this.atualizarTabelaItens();
-
-    // Mostrar mensagem
     UIComponents.Toast.sucesso("Item removido com sucesso");
   }
 
   atualizarTabelaItens() {
     const tabela = document.getElementById("itensAcerto");
     if (!tabela) return;
-
-    // Limpar tabela
     tabela.innerHTML = "";
-
-    // Se não houver itens, mostrar mensagem
     if (this.itensAcerto.length === 0) {
-      tabela.innerHTML = `
-        <tr id="nenhumItem">
-          <td colspan="5" class="text-center">Nenhum item adicionado</td>
+      tabela.innerHTML = ` 
+        <tr id="nenhumItem"> 
+          <td colspan="5" class="text-center">Nenhum item adicionado</td> 
         </tr>
       `;
       return;
     }
-
-    // Adicionar cada item à tabela
     this.itensAcerto.forEach((item, index) => {
       const tr = document.createElement("tr");
-
-      // Determinar a classe CSS baseada no tipo de ajuste
       let tipoAjusteClass = "";
       if (item.tipoajuste === "ENTRADA") {
         tipoAjusteClass = "text-success";
       } else if (item.tipoajuste === "SAIDA") {
         tipoAjusteClass = "text-danger";
       }
-
-      tr.innerHTML = `
-        <td>${item.nome_produto}</td>
-        <td>${item.quantidade_antes.toFixed(2).replace(".", ",")}</td>
-        <td>${item.quantidade_nova.toFixed(2).replace(".", ",")}</td>
-        <td class="${tipoAjusteClass}">${item.tipoajuste}</td>
-        <td>
-          <button type="button" class="btn btn-sm btn-outline-danger" onclick="acertoEstoqueController.removerItem(${index})">
-            <i class="bi bi-trash"></i>
+      tr.innerHTML = ` 
+        <td>${item.nome_produto}</td> 
+        <td>${item.quantidade_antes.toFixed(2).replace(".", ",")}</td> 
+        <td>${item.quantidade_nova.toFixed(2).replace(".", ",")}</td> 
+        <td class="${tipoAjusteClass}">${item.tipoajuste}</td> 
+        <td> 
+          <button type="button" class="btn btn-sm btn-outline-danger btn-remover-item" data-index="${index}"> 
+            <i class="bi bi-trash "></i> 
           </button>
         </td>
       `;
-
       tabela.appendChild(tr);
+    });
+
+    const removerButtons = tabela.querySelectorAll(".btn-remover-item");
+    removerButtons.forEach((button) => {
+      button.addEventListener("click", (e) => {
+        const indexToRemove = parseInt(e.currentTarget.dataset.index);
+        this.removerItem(indexToRemove);
+      });
     });
   }
 
   async efetuarAcerto(event) {
     event.preventDefault();
-
     try {
       UIComponents.Validacao.limparErros("formAcertoEstoque");
-
-      // Obter dados do formulário
       const motivo = document.getElementById("motivo")?.value;
       let motivoFinal = motivo;
-
-      // Se o motivo for "Outro", pegar o valor do campo personalizado
       if (motivo === "Outro") {
         const motivoOutro = document.getElementById("motivoOutro")?.value;
         if (!motivoOutro || !motivoOutro.trim()) {
@@ -332,57 +271,38 @@ class AcertoEstoqueController {
         }
         motivoFinal = motivoOutro;
       }
-
       const observacao = document.getElementById("observacao")?.value || "";
-
-      // Criar o modelo de acerto
       const acertoEstoque = new AcertoEstoqueModel({
-        usuario_pessoa_id: 1, // Exemplo - deve ser obtido do usuário logado
+        usuario_pessoa_id: 1,
         motivo: motivoFinal,
         observacao: observacao,
         itens: this.itensAcerto,
       });
-
-      // Validar o acerto
       const { valido, erros } = acertoEstoque.validar();
-
       if (!valido) {
-        // Exibir mensagens de erro
         if (erros.motivo) {
           UIComponents.Validacao.mostrarErro("motivo", erros.motivo);
         }
-
         if (erros.itens) {
           UIComponents.ModalErro.mostrar(erros.itens);
         }
-
         return;
       }
-
-      // Confirmar a operação
       UIComponents.ModalConfirmacao.mostrar(
         "Confirmar acerto de estoque",
         "Deseja confirmar o acerto de estoque? Esta operação não poderá ser desfeita.",
         async () => {
           try {
             UIComponents.Loading.mostrar("Processando acerto de estoque...");
-
-            // Enviar para o servidor
             const resultado = await this.service.efetuarAcerto(
               acertoEstoque.toJSON()
             );
-
             console.log("Resultado do acerto:", resultado);
-
             UIComponents.Toast.sucesso(
               "Acerto de estoque realizado com sucesso!"
             );
-
-            // Limpar o formulário e redirecionar após 2 segundos
-            setTimeout(() => {
-              window.location.href =
-                "listarAcertosEstoque.html?message=Acerto de estoque realizado com sucesso!";
-            }, 2000);
+            window.location.href =
+              "listarAcertosEstoque.html?message=Acerto de estoque realizado com sucesso!";
           } catch (error) {
             console.error("Erro ao efetuar acerto:", error);
             UIComponents.ModalErro.mostrar(
@@ -405,86 +325,78 @@ class AcertoEstoqueController {
     try {
       UIComponents.Loading.mostrar("Carregando acertos de estoque...");
       const acertos = await this.service.listarTodos();
-      this.renderizarTabela(acertos);
-
-      // Verificar mensagem na URL
-      const urlParams = new URLSearchParams(window.location.search);
-      const message = urlParams.get("message");
-      if (message) {
-        UIComponents.Toast.sucesso(message);
-        // Remover o parâmetro para não mostrar a mensagem novamente ao atualizar
-        window.history.replaceState(
-          {},
-          document.title,
-          window.location.pathname
-        );
-      }
+      this.atualizarTabelaAcertos(acertos);
+      UIComponents.Loading.esconder();
     } catch (error) {
-      console.error("Erro ao carregar acertos:", error);
-      UIComponents.ModalErro.mostrar(MensagensPadroes.ERRO.CARREGAMENTO);
-    } finally {
+      console.error("Erro ao carregar lista de acertos:", error);
+      UIComponents.ModalErro.mostrar(
+        "Não foi possível carregar a lista de acertos de estoque."
+      );
       UIComponents.Loading.esconder();
     }
   }
 
-  renderizarTabela(acertos) {
+  atualizarTabelaAcertos(acertosRetornados) {
     const tabela = document.getElementById("tabela-acertos");
     if (!tabela) return;
 
     tabela.innerHTML = "";
 
-    if (acertos.length === 0) {
+    if (!Array.isArray(acertosRetornados) || acertosRetornados.length === 0) {
       tabela.innerHTML = `
-        <tr>
-          <td colspan="5" class="text-center">Nenhum acerto de estoque encontrado.</td>
-        </tr>
-      `;
+            <tr>
+                <td colspan="5" class="text-center">Nenhum acerto de estoque encontrado.</td>
+            </tr>
+        `;
       return;
     }
 
-    acertos.forEach((acerto) => {
-      const data = new Date(acerto.data);
-      const dataFormatada = data.toLocaleDateString("pt-BR");
+    acertosRetornados.forEach((acertoModel) => {
+      if (acertoModel.idacerto === undefined || acertoModel.idacerto === null) {
+        console.warn(
+          "Acerto sem ID válido (idacerto) encontrado, pulando:",
+          acertoModel
+        );
+        return;
+      }
 
       const tr = document.createElement("tr");
+      const dataFormatada = new Date(acertoModel.data).toLocaleDateString(
+        "pt-BR"
+      );
       tr.innerHTML = `
-        <td>${acerto.idacerto}</td>
-        <td>${dataFormatada}</td>
-        <td>${acerto.motivo || "-"}</td>
-        <td>${acerto.observacao || "-"}</td>
-        <td>
-          <a href="detalhesAcertoEstoque.html?id=${
-            acerto.idacerto
-          }" class="btn btn-sm btn-primary">
-            <i class="bi bi-eye"></i> Detalhes
-          </a>
-        </td>
-      `;
+            <td>${acertoModel.idacerto}</td>
+            <td>${dataFormatada}</td>
+            <td>${acertoModel.motivo}</td>
+            <td>${acertoModel.observacao || "-"}</td>
+            <td>
+                <a href="detalhesAcertoEstoque.html?id=${
+                  acertoModel.idacerto
+                }" class="btn btn-sm btn-primary">
+                    <i class="bi bi-eye me-1"></i> Detalhes
+                </a>
+            </td>
+        `;
       tabela.appendChild(tr);
     });
   }
 
   async aplicarFiltro(event) {
     event.preventDefault();
-
-    const dataInicio = document.getElementById("dataInicio")?.value;
-    const dataFim = document.getElementById("dataFim")?.value;
-
-    if (!dataInicio || !dataFim) {
-      UIComponents.Toast.alerta(
-        "Informe as datas de início e fim para filtrar"
-      );
-      return;
-    }
-
     try {
-      UIComponents.Loading.mostrar("Filtrando acertos de estoque...");
-      const acertos = await this.service.buscarPorPeriodo(dataInicio, dataFim);
-      this.renderizarTabela(acertos);
+      UIComponents.Loading.mostrar("Aplicando filtro...");
+      const dataInicio = document.getElementById("dataInicio").value;
+      const dataFim = document.getElementById("dataFim").value;
+
+      const acertosFiltrados = await this.service.buscarPorPeriodo(
+        dataInicio,
+        dataFim
+      );
+      this.atualizarTabelaAcertos(acertosFiltrados);
+      UIComponents.Loading.esconder();
     } catch (error) {
-      console.error("Erro ao filtrar acertos:", error);
-      UIComponents.ModalErro.mostrar("Erro ao filtrar acertos de estoque");
-    } finally {
+      console.error("Erro ao aplicar filtro:", error);
+      UIComponents.ModalErro.mostrar("Não foi possível aplicar o filtro.");
       UIComponents.Loading.esconder();
     }
   }
@@ -492,84 +404,89 @@ class AcertoEstoqueController {
   async carregarDetalhesAcerto(id) {
     try {
       UIComponents.Loading.mostrar("Carregando detalhes do acerto...");
-      const acertoCompleto = await this.service.buscarPorId(id);
+      const acertoRetornado = await this.service.buscarPorId(id);
 
-      // Preencher os dados do acerto
-      const idAcerto = document.getElementById("idAcerto");
-      if (idAcerto)
-        idAcerto.textContent = acertoCompleto.acertoEstoque.idacerto;
+      if (acertoRetornado && acertoRetornado.acertoEstoque) {
+        const acerto = acertoRetornado.acertoEstoque;
+        const usuario = acertoRetornado.usuario;
 
-      // Formatar data
-      const data = new Date(acertoCompleto.acertoEstoque.data);
-      const dataAcerto = document.getElementById("dataAcerto");
-      if (dataAcerto) dataAcerto.textContent = data.toLocaleDateString("pt-BR");
-
-      const motivoAcerto = document.getElementById("motivoAcerto");
-      if (motivoAcerto)
-        motivoAcerto.textContent = acertoCompleto.acertoEstoque.motivo || "-";
-
-      const observacaoAcerto = document.getElementById("observacaoAcerto");
-      if (observacaoAcerto)
-        observacaoAcerto.textContent =
-          acertoCompleto.acertoEstoque.observacao || "-";
-
-      const usuarioAcerto = document.getElementById("usuarioAcerto");
-      if (usuarioAcerto && acertoCompleto.usuario) {
-        usuarioAcerto.textContent = acertoCompleto.usuario.nome || "-";
+        document.getElementById("idAcerto").textContent = acerto.idacerto;
+        document.getElementById("dataAcerto").textContent = new Date(
+          acerto.data
+        ).toLocaleDateString("pt-BR");
+        document.getElementById("usuarioAcerto").textContent =
+          usuario?.pessoa?.nome || "N/A";
+        document.getElementById("motivoAcerto").textContent = acerto.motivo;
+        document.getElementById("observacaoAcerto").textContent =
+          acerto.observacao || "N/A";
+        this.atualizarTabelaItensDetalhe(acertoRetornado.itens);
+      } else {
+        UIComponents.ModalErro.mostrar("Acerto de estoque não encontrado.");
+        setTimeout(() => {
+          window.location.href = "listarAcertosEstoque.html";
+        }, 2000);
       }
-
-      // Renderizar a tabela de itens
-      const tabelaItens = document.getElementById("itensAcertoDetalhe");
-      if (tabelaItens && acertoCompleto.itens) {
-        tabelaItens.innerHTML = "";
-
-        acertoCompleto.itens.forEach((item) => {
-          const tr = document.createElement("tr");
-
-          // Determinar a classe CSS baseada no tipo de ajuste
-          let tipoAjusteClass = "";
-          if (item.item.tipoajuste === "ENTRADA") {
-            tipoAjusteClass = "text-success";
-          } else if (item.item.tipoajuste === "SAIDA") {
-            tipoAjusteClass = "text-danger";
-          }
-
-          // Calcular a diferença
-          const qtdAntes = parseFloat(item.item.quantidade_antes);
-          const qtdDepois = parseFloat(item.item.quantidade_depois);
-          const diferenca = qtdDepois - qtdAntes;
-          let diferencaStr = diferenca.toFixed(2).replace(".", ",");
-          if (diferenca > 0) {
-            diferencaStr = "+" + diferencaStr;
-          }
-
-          tr.innerHTML = `
-            <td>${item.produto?.nome || "-"}</td>
-            <td>${item.nomeTipoProduto || "-"}</td>
-            <td>${item.unidadeMedida || "-"}</td>
-            <td>${item.item.quantidade_antes.toFixed(2).replace(".", ",")}</td>
-            <td>${item.item.quantidade_depois.toFixed(2).replace(".", ",")}</td>
-            <td>${diferencaStr}</td>
-            <td class="${tipoAjusteClass}">${item.item.tipoajuste}</td>
-          `;
-
-          tabelaItens.appendChild(tr);
-        });
-      }
-
       UIComponents.Loading.esconder();
     } catch (error) {
-      console.error("Erro ao carregar detalhes:", error);
+      console.error("Erro ao carregar detalhes do acerto:", error);
       UIComponents.ModalErro.mostrar(
-        "Erro ao carregar detalhes do acerto de estoque"
+        "Não foi possível carregar os detalhes do acerto de estoque."
       );
       UIComponents.Loading.esconder();
     }
   }
+
+  atualizarTabelaItensDetalhe(itensWrapper) {
+    const tabelaItens = document.getElementById("itensAcertoDetalhe");
+    if (!tabelaItens) return;
+
+    tabelaItens.innerHTML = "";
+
+    if (!Array.isArray(itensWrapper) || itensWrapper.length === 0) {
+      tabelaItens.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center">Nenhum item neste acerto.</td>
+            </tr>
+        `;
+      return;
+    }
+
+    itensWrapper.forEach((itemWrapper) => {
+      const item = itemWrapper.item;
+      const produto = itemWrapper.produto;
+
+      const tr = document.createElement("tr");
+
+      const quantidadeAntes = item.quantidade_antes ?? 0;
+      const quantidadeNova = item.quantidade_depois ?? 0;
+
+      const diferenca = (quantidadeNova - quantidadeAntes).toFixed(2);
+      let diferencaClass = "";
+      if (diferenca > 0) {
+        diferencaClass = "text-success";
+      } else if (diferenca < 0) {
+        diferencaClass = "text-danger";
+      }
+
+      let tipoAjusteClass = "";
+      if (item.tipoajuste === "ENTRADA") {
+        tipoAjusteClass = "text-success";
+      } else if (item.tipoajuste === "SAIDA") {
+        tipoAjusteClass = "text-danger";
+      }
+
+      tr.innerHTML = `
+            <td>${produto?.nome || "N/A"}</td>
+            <td>${itemWrapper.nomeTipoProduto || "N/A"}</td>
+            <td>${itemWrapper.unidadeMedida || "N/A"}</td>
+            <td>${quantidadeAntes.toFixed(2).replace(".", ",")}</td>
+            <td>${quantidadeNova.toFixed(2).replace(".", ",")}</td>
+            <td class="${diferencaClass}">${diferenca.replace(".", ",")}</td>
+            <td class="${tipoAjusteClass}">${item.tipoajuste || "N/A"}</td>
+        `;
+      tabelaItens.appendChild(tr);
+    });
+  }
 }
 
-const acertoEstoqueController = new AcertoEstoqueController();
-window.acertoEstoqueController = acertoEstoqueController;
-
-export { acertoEstoqueController };
-export default AcertoEstoqueController;
+export default new AcertoEstoqueController();

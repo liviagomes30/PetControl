@@ -34,7 +34,7 @@ public class EstoqueDAO {
         return estoque;
     }
 
-    public EstoqueModel getByProdutoId(Integer idProduto) { // Renamed from findByProdutoId
+    public EstoqueModel getByProdutoId(Integer idProduto) {
         EstoqueModel estoque = null;
         String sql = "SELECT * FROM estoque WHERE idproduto = ?";
 
@@ -106,8 +106,8 @@ public class EstoqueDAO {
             stmt.setInt(1, estoque.getIdproduto());
             stmt.setBigDecimal(2, estoque.getQuantidade());
 
-            ResultSet linhasMod = stmt.executeQuery();
-            if (linhasMod.next()) {
+            int linhasMod = stmt.executeUpdate();
+            if (linhasMod > 0) {
                 ResultSet rs = stmt.getGeneratedKeys();
                 if (rs.next()) {
                     estoque.setIdestoque(rs.getInt(1));

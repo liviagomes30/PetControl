@@ -89,7 +89,6 @@ public class AcertoEstoqueService {
 
 
     public ResultadoOperacao gravar(AcertoEstoqueRequestDTO request) throws Exception {
-        // Validações
         if (request.getUsuario_pessoa_id() == null) {
             throw new Exception("Usuário é obrigatório");
         }
@@ -107,11 +106,11 @@ public class AcertoEstoqueService {
             throw new Exception("Usuário não encontrado");
         }
 
-        AcertoEstoqueModel acerto = new AcertoEstoqueModel();
-        acerto.setData(LocalDate.now());
-        acerto.setUsuario_pessoa_id(request.getUsuario_pessoa_id());
-        acerto.setMotivo(request.getMotivo());
-        acerto.setObservacao(request.getObservacao());
+
+        acertoEstoqueModel.setData(LocalDate.now());
+        acertoEstoqueModel.setUsuario_pessoa_id(request.getUsuario_pessoa_id());
+        acertoEstoqueModel.setMotivo(request.getMotivo());
+        acertoEstoqueModel.setObservacao(request.getObservacao());
 
         List<ItemAcertoEstoqueModel> itens = new ArrayList<>();
 
@@ -134,9 +133,8 @@ public class AcertoEstoqueService {
         }
 
         try {
-            AcertoEstoqueModel acertoRealizado = acertoEstoqueModel.getAcDAO().efetuarAcertoEstoque(acerto, itens);
+            AcertoEstoqueModel acertoRealizado = acertoEstoqueModel.getAcDAO().efetuarAcertoEstoque(acertoEstoqueModel, itens);
 
-            // Retornar resultado positivo
             ResultadoOperacao resultado = new ResultadoOperacao();
             resultado.setOperacao("acertoEstoque");
             resultado.setSucesso(true);

@@ -31,8 +31,8 @@ public class EstoqueController {
     }
 
     @GetMapping("/produto/{idProduto}")
-    public ResponseEntity<Object> getByProdutoId(@PathVariable Integer idProduto) { // Renamed from getEstoqueByProdutoId
-        EstoqueModel estoque = estoqueService.getByProdutoId(idProduto); // Calls updated service method
+    public ResponseEntity<Object> getByProdutoId(@PathVariable Integer idProduto) {
+        EstoqueModel estoque = estoqueService.getByProdutoId(idProduto);
         if (estoque != null) {
             return ResponseEntity.ok(estoque);
         }

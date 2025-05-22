@@ -220,7 +220,7 @@ public class ProdutoDAO {
         boolean autoCommitOriginal = true;
         try {
             autoCommitOriginal = conn.getAutoCommit();
-            conn.setAutoCommit(false); // Start transaction
+            conn.setAutoCommit(false);
 
             System.out.println("Iniciando exclusão do produto ID: " + id);
 
