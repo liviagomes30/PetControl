@@ -1,7 +1,7 @@
 package salvacao.petcontrol.model;
 
 import org.springframework.stereotype.Repository;
-import salvacao.petcontrol.dal.MovimentacaoEstoqueDAO;
+import salvacao.petcontrol.dao.MovimentacaoEstoqueDAO;
 
 import java.time.LocalDate;
 
@@ -85,7 +85,7 @@ public class MovimentacaoEstoqueModel {
         this.fornecedor = fornecedor;
     }
 
-    public MovimentacaoEstoqueDAO getMovimentacaoEstoqueDAL() {
+    public MovimentacaoEstoqueDAO getMovimentacaoEstoqueDAO() {
         return movimentacaoEstoqueDAO;
     }
 }

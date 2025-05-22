@@ -1,7 +1,7 @@
 package salvacao.petcontrol.model;
 
 import org.springframework.stereotype.Repository;
-import salvacao.petcontrol.dal.ProdutoDAL;
+import salvacao.petcontrol.dao.ProdutoDAO;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -16,9 +16,8 @@ public class ProdutoModel {
     private BigDecimal preco;
     private Integer estoqueMinimo;
     private Date dataCadastro;
-    private ProdutoDAL produtoDAL;
+    private ProdutoDAO prodDAO;
 
-    // Construtor completo
     public ProdutoModel(Integer idproduto, String nome, Integer idtipoproduto, Integer idunidademedida,
                         String fabricante, BigDecimal preco, Integer estoqueMinimo, Date dataCadastro) {
         this.idproduto = idproduto;
@@ -31,7 +30,6 @@ public class ProdutoModel {
         this.dataCadastro = dataCadastro;
     }
 
-    // Construtor simplificado (usado no MedicamentoDAL)
     public ProdutoModel(Integer idproduto, String nome, Integer idtipoproduto, Integer idunidademedida, String fabricante) {
         this.idproduto = idproduto;
         this.nome = nome;
@@ -40,7 +38,6 @@ public class ProdutoModel {
         this.fabricante = fabricante;
     }
 
-    // Construtor sem ID para novas inserções
     public ProdutoModel(String nome, Integer idtipoproduto, Integer idunidademedida,
                         String fabricante, BigDecimal preco, Integer estoqueMinimo) {
         this.nome = nome;
@@ -49,15 +46,13 @@ public class ProdutoModel {
         this.fabricante = fabricante;
         this.preco = preco;
         this.estoqueMinimo = estoqueMinimo;
-        this.dataCadastro = new Date(); // Data atual
+        this.dataCadastro = new Date();
     }
 
-    // Construtor vazio
     public ProdutoModel() {
-        produtoDAL = new ProdutoDAL();
+        prodDAO = new ProdutoDAO();
     }
 
-    // Getters e Setters
     public Integer getIdproduto() {
         return idproduto;
     }
@@ -122,7 +117,7 @@ public class ProdutoModel {
         this.dataCadastro = dataCadastro;
     }
 
-    public ProdutoDAL getProdutoDAL() {
-        return produtoDAL;
+    public ProdutoDAO getProdDAO(){
+        return prodDAO;
     }
 }

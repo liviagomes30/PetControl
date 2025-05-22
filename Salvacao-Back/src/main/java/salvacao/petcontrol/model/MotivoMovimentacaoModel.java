@@ -1,7 +1,7 @@
 package salvacao.petcontrol.model;
 
 import org.springframework.stereotype.Repository;
-import salvacao.petcontrol.dal.MotivoMovimentacaoDAO;
+import salvacao.petcontrol.dao.MotivoMovimentacaoDAO;
 
 @Repository
 public class MotivoMovimentacaoModel {

@@ -1,4 +1,4 @@
-package salvacao.petcontrol.dal;
+package salvacao.petcontrol.dao;
 
 import org.springframework.stereotype.Repository;
 import salvacao.petcontrol.config.SingletonDB;
@@ -59,6 +59,33 @@ public class ItemMovimentacaoDAO {
                 );
             } else {
                 System.out.println("Nenhum item de movimentação encontrado com ID: " + id);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return item;
+    }
+
+    public ItemMovimentacaoModel getIdMovimentacao(Integer id) {
+        String sql = "SELECT * FROM itemmovimentacao WHERE movimentacao_id = ?";
+        ItemMovimentacaoModel item = null;
+
+        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+            stmt.setInt(1, id);
+            ResultSet resultset = stmt.executeQuery();
+
+            if (resultset.next()) {
+                item = new ItemMovimentacaoModel(
+                        resultset.getInt("iditem"),
+                        resultset.getInt("movimentacao_id"),
+                        resultset.getInt("produto_id"),
+                        resultset.getDouble("quantidade"),
+                        resultset.getInt("motivomovimentacao_id")
+                );
+            } else {
+                System.out.println("Nenhum item de movimentação encontrado com ID de movimentação: " + id);
             }
 
         } catch (Exception e) {

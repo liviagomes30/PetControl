@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PetControl - Listar Registros de Entrada</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <link rel="stylesheet" href="../../../assets/css/style.css" />
+    <script src="../../../assets/js/components/sidebar.js" defer></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header d-flex justify-content-between align-items-center">
+        <a href="listarprodutos.html" class="btn btn-secondary me-3">
+          <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+        <h1 class="h3" style="color: var(--vermelho-escuro)">
+          Lista de Registros
+        </h1>
+      </div>
+
+      <div class="filtro-container mt-3">
+       
+      </div>
+
+      <!-- Tabela de Registro -->
+      <div class="bg-white shadow rounded p-4">
+        <table class="table table-hover">
+          <thead class="table-header">
+            <tr>
+              <th>Usuario</th>
+              <th>Produto</th>
+              <th>Data</th>
+              <th>Quantidade</th>
+              <th>Fornecedor</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-registro">
+            <!-- Conteúdo será carregado dinamicamente -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+      import { entradaProdutoController } from "../../../assets/js/controllers/EntradaProdutoController.js";
+      
+      document.addEventListener("DOMContentLoaded", () => {
+        console.log("InicializarListagem");
+        entradaProdutoController.inicializarListagemRegistros();
+
+      });
+      
+    </script>
+    
+  </body>
+</html>

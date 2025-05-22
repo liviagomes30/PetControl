@@ -1,10 +1,11 @@
+// salvacao.petcontrol.service.MedicamentoService.java
 package salvacao.petcontrol.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import salvacao.petcontrol.dal.MedicamentoDAL;
-import salvacao.petcontrol.dal.TipoProdutoDAL;
-import salvacao.petcontrol.dal.UnidadeMedidaDAL;
+import salvacao.petcontrol.dao.MedicamentoDAO;
+import salvacao.petcontrol.dao.TipoProdutoDAO;
+import salvacao.petcontrol.dao.UnidadeMedidaDAO;
 import salvacao.petcontrol.dto.MedicamentoCompletoDTO;
 import salvacao.petcontrol.model.MedicamentoModel;
 import salvacao.petcontrol.util.ResultadoOperacao;
@@ -15,23 +16,23 @@ import java.util.List;
 public class MedicamentoService {
 
     @Autowired
-    private MedicamentoDAL medicamentoDAL;
+    private MedicamentoDAO medicamentoDAO;
 
     @Autowired
-    private TipoProdutoDAL tipoProdutoDAL;
+    private TipoProdutoDAO tipoProdutoDAO;
 
     @Autowired
-    private UnidadeMedidaDAL unidadeMedidaDAL;
+    private UnidadeMedidaDAO unidadeMedidaDAO;
 
-    public MedicamentoCompletoDTO getMedicamentoById(Integer id) {
-        return medicamentoDAL.findMedicamentoCompleto(id);
+    public MedicamentoCompletoDTO getId(Integer id) {
+        return medicamentoDAO.findMedicamentoCompleto(id);
     }
 
-    public List<MedicamentoCompletoDTO> getAllMedicamentos() {
-        return medicamentoDAL.getAllMedicamentos();
+    public List<MedicamentoCompletoDTO> getAll() {
+        return medicamentoDAO.getAllMedicamentos();
     }
 
-    public MedicamentoModel addMedicamento(MedicamentoCompletoDTO dto) throws Exception {
+    public MedicamentoModel gravar(MedicamentoCompletoDTO dto) throws Exception {
         // Validações
         if (dto.getProduto() == null || dto.getMedicamento() == null) {
             throw new Exception("Dados do medicamento incompletos");
@@ -45,20 +46,19 @@ public class MedicamentoService {
             throw new Exception("Composição do medicamento é obrigatória");
         }
 
-        // Verificar se tipo de produto e unidade de medida existem
-        if (tipoProdutoDAL.findById(dto.getProduto().getIdtipoproduto()) == null) {
+        if (tipoProdutoDAO.getId(dto.getProduto().getIdtipoproduto()) == null) { // Updated method call
             throw new Exception("Tipo de produto não encontrado");
         }
 
-        if (unidadeMedidaDAL.findById(dto.getProduto().getIdunidademedida()) == null) {
+        if (unidadeMedidaDAO.getId(dto.getProduto().getIdunidademedida()) == null) { // Updated method call
             throw new Exception("Unidade de medida não encontrada");
         }
 
-        // Adicionar o medicamento
-        return medicamentoDAL.addMedicamento(dto.getMedicamento(), dto.getProduto());
+
+        return medicamentoDAO.gravar(dto.getMedicamento(), dto.getProduto());
     }
 
-    public boolean updateMedicamento(Integer id, MedicamentoCompletoDTO dto) throws Exception {
+    public boolean alterar(Integer id, MedicamentoCompletoDTO dto) throws Exception {
         if (dto.getProduto() == null || dto.getMedicamento() == null) {
             throw new Exception("Dados do medicamento incompletos");
         }
@@ -71,36 +71,36 @@ public class MedicamentoService {
             throw new Exception("Composição do medicamento é obrigatória");
         }
 
-        MedicamentoCompletoDTO existente = medicamentoDAL.findMedicamentoCompleto(id);
+        MedicamentoCompletoDTO existente = medicamentoDAO.findMedicamentoCompleto(id);
         if (existente == null) {
             throw new Exception("Medicamento não encontrado");
         }
 
-        if (tipoProdutoDAL.findById(dto.getProduto().getIdtipoproduto()) == null) {
+        if (tipoProdutoDAO.getId(dto.getProduto().getIdtipoproduto()) == null) { // Updated method call
             throw new Exception("Tipo de produto não encontrado");
         }
 
-        if (unidadeMedidaDAL.findById(dto.getProduto().getIdunidademedida()) == null) {
+        if (unidadeMedidaDAO.getId(dto.getProduto().getIdunidademedida()) == null) { // Updated method call
             throw new Exception("Unidade de medida não encontrada");
         }
 
-        return medicamentoDAL.updateMedicamento(id, dto.getMedicamento(), dto.getProduto());
+        return medicamentoDAO.alterar(id, dto.getMedicamento(), dto.getProduto());
     }
 
 
-    public ResultadoOperacao gerenciarExclusaoMedicamento(Integer id) throws Exception {
-        MedicamentoCompletoDTO existente = medicamentoDAL.findMedicamentoCompleto(id);
+    public ResultadoOperacao apagarMedicamento(Integer id) throws Exception {
+        MedicamentoCompletoDTO existente = medicamentoDAO.findMedicamentoCompleto(id);
         if (existente == null) {
             throw new Exception("Medicamento não encontrado");
         }
 
         try {
-            boolean podeExcluir = medicamentoDAL.medicamentoPodeSerExcluido(id);
+            boolean podeExcluir = medicamentoDAO.medicamentoPodeSerExcluido(id);
 
             ResultadoOperacao resultado = new ResultadoOperacao();
 
             if (podeExcluir) {
-                boolean sucesso = medicamentoDAL.deleteMedicamento(id);
+                boolean sucesso = medicamentoDAO.apagar(id);
                 resultado.setOperacao("excluido");
                 resultado.setSucesso(sucesso);
 
@@ -110,7 +110,7 @@ public class MedicamentoService {
                     resultado.setMensagem("Falha ao excluir o medicamento");
                 }
             } else {
-                boolean sucesso = medicamentoDAL.desativarMedicamento(id);
+                boolean sucesso = medicamentoDAO.desativarMedicamento(id);
                 resultado.setOperacao("desativado");
                 resultado.setSucesso(sucesso);
 
@@ -129,14 +129,14 @@ public class MedicamentoService {
     }
 
     public List<MedicamentoCompletoDTO> getNome(String filtro){
-        return medicamentoDAL.getNome(filtro);
+        return medicamentoDAO.getNome(filtro);
     }
 
     public List<MedicamentoCompletoDTO> getComposicao(String filtro){
-        return medicamentoDAL.getComposicao(filtro);
+        return medicamentoDAO.getComposicao(filtro);
     }
 
     public List<MedicamentoCompletoDTO> getTipo(String filtro){
-        return medicamentoDAL.getTipo(filtro);
+        return medicamentoDAO.getTipo(filtro);
     }
 }

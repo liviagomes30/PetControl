@@ -1,21 +1,25 @@
 package salvacao.petcontrol.model;
 
+import salvacao.petcontrol.dao.TipoProdutoDAO;
+
 public class TipoProdutoModel {
     private Integer idtipoproduto;
     private String descricao;
+    private TipoProdutoDAO tpDAO;
 
     public TipoProdutoModel(Integer idtipoproduto, String descricao) {
         this.idtipoproduto = idtipoproduto;
         this.descricao = descricao;
     }
 
+    public TipoProdutoModel(){
+        tpDAO = new TipoProdutoDAO();
+    }
+
     public TipoProdutoModel(String descricao) {
         this.descricao = descricao;
     }
 
-    public TipoProdutoModel() {
-        this(0, "");
-    }
 
     public Integer getIdtipoproduto() {
         return idtipoproduto;
@@ -32,4 +36,10 @@ public class TipoProdutoModel {
     public void setDescricao(String descricao) {
         this.descricao = descricao;
     }
+
+    public TipoProdutoDAO getTpDAO() {
+        return tpDAO;
+    }
+
+
 }

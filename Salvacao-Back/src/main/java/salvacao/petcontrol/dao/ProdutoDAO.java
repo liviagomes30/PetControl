@@ -1,4 +1,4 @@
-package salvacao.petcontrol.dal;
+package salvacao.petcontrol.dao;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -13,15 +13,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Repository
-public class ProdutoDAL {
+public class ProdutoDAO { // Renamed from ProdutoDAL
 
     @Autowired
-    private TipoProdutoDAL tipoProdutoDAL;
+    private TipoProdutoDAO tipoProdutoDAO; // Updated dependency
 
     @Autowired
-    private UnidadeMedidaDAL unidadeMedidaDAL;
+    private UnidadeMedidaDAO unidadeMedidaDAO; // Updated dependency
 
-    public ProdutoModel findById(Integer id) {
+    public ProdutoModel getId(Integer id) { // Renamed from findById
         ProdutoModel produto = null;
         String sql = "SELECT * FROM produto WHERE idproduto = ?";
 
@@ -95,7 +95,7 @@ public class ProdutoDAL {
         return dto;
     }
 
-    public ProdutoModel addProduto(ProdutoModel produto) {
+    public ProdutoModel gravar(ProdutoModel produto) { // Renamed from addProduto
         String sql = "INSERT INTO produto (nome, idtipoproduto, idunidademedida, fabricante, preco, estoque_minimo, data_cadastro) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING idproduto";
 
@@ -137,7 +137,7 @@ public class ProdutoDAL {
         return null;
     }
 
-    public boolean updateProduto(Integer id, ProdutoModel produto) {
+    public boolean alterar(Integer id, ProdutoModel produto) { // Renamed from updateProduto
         String sql = "UPDATE produto SET nome = ?, idtipoproduto = ?, idunidademedida = ?, " +
                 "fabricante = ?, preco = ?, estoque_minimo = ? WHERE idproduto = ?";
 
@@ -169,7 +169,7 @@ public class ProdutoDAL {
         }
     }
 
-    public boolean deleteProduto(Integer id) {
+    public boolean apagar(Integer id) { // Renamed from deleteProduto
         try {
             SingletonDB.getConexao().getConnection().setAutoCommit(false);
 

@@ -1,4 +1,4 @@
-package salvacao.petcontrol.dal;
+package salvacao.petcontrol.dao;
 
 import org.springframework.stereotype.Repository;
 import salvacao.petcontrol.config.SingletonDB;
@@ -9,6 +9,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Repository
 public class MovimentacaoEstoqueDAO {
@@ -77,6 +79,37 @@ public class MovimentacaoEstoqueDAO {
 
         return movimentacao;
     }
+
+    public List<MovimentacaoEstoqueModel> getTipo(String tipo) {
+        List<MovimentacaoEstoqueModel> movimentacaoList = new ArrayList<>();
+        String sql = "SELECT * FROM movimentacaoestoque WHERE tipomovimentacao = ?";
+        MovimentacaoEstoqueModel movimentacao = null;
+
+        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+            stmt.setString(1, tipo);
+            ResultSet resultset = stmt.executeQuery();
+
+            while (resultset.next()) {
+                LocalDate data = resultset.getDate("data").toLocalDate();
+
+                movimentacao = new MovimentacaoEstoqueModel(
+                        resultset.getInt("idmovimentacao"),
+                        resultset.getString("tipomovimentacao"),
+                        data,
+                        resultset.getInt("usuario_pessoa_id"),
+                        resultset.getString("obs"),
+                        resultset.getString("fornecedor")
+                );
+                movimentacaoList.add(movimentacao);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return movimentacaoList;
+    }
+
 
 
 

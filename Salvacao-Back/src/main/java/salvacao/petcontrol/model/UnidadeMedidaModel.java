@@ -1,11 +1,15 @@
 package salvacao.petcontrol.model;
 
+import salvacao.petcontrol.dao.UnidadeMedidaDAO;
+
 public class UnidadeMedidaModel {
     private int idUnidadeMedida;
     private String descricao;
     private String sigla;
+    private UnidadeMedidaDAO unDAO;
 
     public UnidadeMedidaModel() {
+        unDAO = new UnidadeMedidaDAO();
     }
 
     public UnidadeMedidaModel(int idUnidadeMedida, String descricao, String sigla) {
@@ -41,5 +45,9 @@ public class UnidadeMedidaModel {
     @Override
     public String toString() {
         return descricao + " (" + sigla + ")";
+    }
+
+    public UnidadeMedidaDAO getUnDAO() {
+        return unDAO;
     }
 }

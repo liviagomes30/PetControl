@@ -1,26 +1,25 @@
 package salvacao.petcontrol.model;
 
+import salvacao.petcontrol.dao.MedicamentoDAO;
+
 public class MedicamentoModel {
     private Integer idproduto;
     private String composicao;
+    private MedicamentoDAO medDAO;
 
-    // Construtor completo
     public MedicamentoModel(Integer idproduto, String composicao) {
         this.idproduto = idproduto;
         this.composicao = composicao;
     }
 
-    // Construtor sem ID para novas inserções
     public MedicamentoModel(String composicao) {
         this.composicao = composicao;
     }
 
-    // Construtor vazio
     public MedicamentoModel() {
-        this(0, "");
+        medDAO = new MedicamentoDAO();
     }
 
-    // Getters e Setters
     public Integer getIdproduto() {
         return idproduto;
     }
@@ -35,5 +34,9 @@ public class MedicamentoModel {
 
     public void setComposicao(String composicao) {
         this.composicao = composicao;
+    }
+
+    public MedicamentoDAO getMedDAO(){
+        return medDAO;
     }
 }

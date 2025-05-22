@@ -1,4 +1,4 @@
-package salvacao.petcontrol.dal;
+package salvacao.petcontrol.dao;
 
 import org.springframework.stereotype.Repository;
 import salvacao.petcontrol.config.SingletonDB;
@@ -49,6 +49,31 @@ public class MotivoMovimentacaoDAO {
                 );
             } else {
                 System.out.println("Nenhum motivo de movimentação encontrado com ID: " + id);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return motivo;
+    }
+
+    public MotivoMovimentacaoModel getTipo(String tipo) {
+        String sql = "SELECT * FROM motivomovimentacao WHERE tipo = ?";
+        MotivoMovimentacaoModel motivo = null;
+
+        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+            stmt.setString(1, tipo);
+            ResultSet resultset = stmt.executeQuery();
+
+            if (resultset.next()) {
+                motivo = new MotivoMovimentacaoModel(
+                        resultset.getInt("idmotivo"),
+                        resultset.getString("descricao"),
+                        resultset.getString("tipo")
+                );
+            } else {
+                System.out.println("Nenhum motivo de movimentação encontrado com o tipo: " + tipo);
             }
 
         } catch (Exception e) {

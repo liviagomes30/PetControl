@@ -1,7 +1,7 @@
 package salvacao.petcontrol.model;
 
 import org.springframework.stereotype.Repository;
-import salvacao.petcontrol.dal.AnimalDAO;
+import salvacao.petcontrol.dao.AnimalDAO;
 
 import java.time.LocalDate;
 
