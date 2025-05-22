@@ -1,4 +1,5 @@
-package salvacao.petcontrol.dal;
+// salvacao.petcontrol.dal.HistoricoDAO.java
+package salvacao.petcontrol.dao;
 
 import org.springframework.stereotype.Repository;
 import salvacao.petcontrol.config.SingletonDB;
@@ -14,7 +15,7 @@ import java.util.List;
 import java.sql.Date;
 
 @Repository
-public class HistoricoDAL {
+public class HistoricoDAO {
 
     public HistoricoModel gravar(HistoricoModel historico) {
         String sql = "INSERT INTO historico (descricao, data, animal_idanimal, vacinacao_idvacinacao, medicacao_idmedicacao) " +
@@ -106,10 +107,29 @@ public class HistoricoDAL {
         }
     }
 
-    public boolean apagar(HistoricoModel historicoModel) {
+    public boolean apagar(Integer id) throws SQLException {
+        // Check for dependencies before deleting
+        String sqlCheckVacinacao = "SELECT COUNT(*) FROM vacinacao WHERE idhistorico = ?";
+        try (PreparedStatement stmtCheck = SingletonDB.getConexao().getPreparedStatement(sqlCheckVacinacao)) {
+            stmtCheck.setInt(1, id);
+            ResultSet rs = stmtCheck.executeQuery();
+            if (rs.next() && rs.getInt(1) > 0) {
+                throw new SQLException("Histórico não pode ser excluído pois está associado a vacinações.");
+            }
+        }
+
+        String sqlCheckMedicacao = "SELECT COUNT(*) FROM medicacao WHERE idhistorico = ?";
+        try (PreparedStatement stmtCheck = SingletonDB.getConexao().getPreparedStatement(sqlCheckMedicacao)) {
+            stmtCheck.setInt(1, id);
+            ResultSet rs = stmtCheck.executeQuery();
+            if (rs.next() && rs.getInt(1) > 0) {
+                throw new SQLException("Histórico não pode ser excluído pois está associado a medicações.");
+            }
+        }
+
         String sql = "DELETE FROM historico WHERE idhistorico = ?";
         try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
-            stmt.setInt(1, historicoModel.getIdhistorico());
+            stmt.setInt(1, id);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();

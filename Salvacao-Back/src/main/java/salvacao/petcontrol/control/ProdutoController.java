@@ -1,3 +1,4 @@
+// salvacao.petcontrol.control.ProdutoController.java
 package salvacao.petcontrol.control;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +22,7 @@ public class ProdutoController {
 
     @GetMapping("/listar")
     public ResponseEntity<Object> getAll() {
-        List<ProdutoCompletoDTO> produtos = produtoService.getAllProdutos();
+        List<ProdutoCompletoDTO> produtos = produtoService.getAll(); // Updated method call
         if (!produtos.isEmpty()) {
             return ResponseEntity.ok(produtos);
         }
@@ -29,8 +30,8 @@ public class ProdutoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Object> getProdutoById(@PathVariable Integer id) {
-        ProdutoCompletoDTO produto = produtoService.getProdutoById(id);
+    public ResponseEntity<Object> getId(@PathVariable Integer id) {
+        ProdutoCompletoDTO produto = produtoService.getId(id); // Updated method call
         if (produto != null) {
             return ResponseEntity.ok(produto);
         }
@@ -38,7 +39,7 @@ public class ProdutoController {
     }
 
     @GetMapping("/tipo/{idTipo}")
-    public ResponseEntity<Object> getProdutosByTipo(@PathVariable Integer idTipo) {
+    public ResponseEntity<Object> getByTipo(@PathVariable Integer idTipo) {
         List<ProdutoCompletoDTO> produtos = produtoService.getProdutosByTipo(idTipo);
         if (!produtos.isEmpty()) {
             return ResponseEntity.ok(produtos);
@@ -47,7 +48,7 @@ public class ProdutoController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<Object> searchProdutos(@RequestParam String termo) {
+    public ResponseEntity<Object> search(@RequestParam String termo) {
         List<ProdutoCompletoDTO> produtos = produtoService.getByName(termo);
         if (!produtos.isEmpty()) {
             return ResponseEntity.ok(produtos);
@@ -56,9 +57,9 @@ public class ProdutoController {
     }
 
     @PostMapping("/cadastro")
-    public ResponseEntity<Object> addProduto(@RequestBody ProdutoCompletoDTO produto) {
+    public ResponseEntity<Object> gravar(@RequestBody ProdutoCompletoDTO produto) {
         try {
-            ProdutoModel novoProduto = produtoService.addProduto(produto);
+            ProdutoModel novoProduto = produtoService.gravar(produto); // Updated method call
             return ResponseEntity.status(HttpStatus.CREATED).body(novoProduto);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -66,9 +67,9 @@ public class ProdutoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Object> updateProduto(@PathVariable Integer id, @RequestBody ProdutoCompletoDTO produto) {
+    public ResponseEntity<Object> alterar(@PathVariable Integer id, @RequestBody ProdutoCompletoDTO produto) {
         try {
-            boolean atualizado = produtoService.updateProduto(id, produto);
+            boolean atualizado = produtoService.alterar(id, produto); // Updated method call
             if (atualizado) {
                 return ResponseEntity.ok("Produto atualizado com sucesso");
             }
@@ -79,9 +80,9 @@ public class ProdutoController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Object> gerenciarExclusaoProduto(@PathVariable Integer id) {
+    public ResponseEntity<Object> apagarProduto(@PathVariable Integer id) {
         try {
-            ResultadoOperacao resultado = produtoService.gerenciarExclusaoProduto(id);
+            ResultadoOperacao resultado = produtoService.apagarProduto(id); // Updated method call
             return ResponseEntity.ok(resultado);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -91,7 +92,7 @@ public class ProdutoController {
     @PutMapping("/{id}/reativar")
     public ResponseEntity<Object> reativarProduto(@PathVariable Integer id) {
         try {
-            boolean reativado = produtoService.reativarProduto(id);
+            boolean reativado = produtoService.reativarProduto(id); // Method name in service remains reativarProduto
             if (reativado) {
                 return ResponseEntity.ok("Produto reativado com sucesso");
             }
@@ -103,7 +104,7 @@ public class ProdutoController {
 
     @GetMapping("/nome/{filtro}")
     public ResponseEntity<Object> getNome(@PathVariable String filtro) {
-        List<ProdutoCompletoDTO> produtoList = produtoService.getByName(filtro);
+        List<ProdutoCompletoDTO> produtoList = produtoService.getByName(filtro); // Method name in service remains getByName
         if (!produtoList.isEmpty())
             return ResponseEntity.ok(produtoList);
         else
@@ -112,7 +113,7 @@ public class ProdutoController {
 
     @GetMapping("/fabricante/{filtro}")
     public ResponseEntity<Object> getByFabricante(@PathVariable String filtro) {
-        List<ProdutoCompletoDTO> produtoList = produtoService.getByFabricante(filtro);
+        List<ProdutoCompletoDTO> produtoList = produtoService.getByFabricante(filtro); // Method name in service remains getByFabricante
         if (!produtoList.isEmpty())
             return ResponseEntity.ok(produtoList);
         else
@@ -121,7 +122,7 @@ public class ProdutoController {
 
     @GetMapping("/tipoDescricao/{filtro}")
     public ResponseEntity<Object> getByTipoDescricao(@PathVariable String filtro) {
-        List<ProdutoCompletoDTO> produtoList = produtoService.getByTipoDescricao(filtro);
+        List<ProdutoCompletoDTO> produtoList = produtoService.getByTipoDescricao(filtro); // Method name in service remains getByTipoDescricao
         if (!produtoList.isEmpty())
             return ResponseEntity.ok(produtoList);
         else

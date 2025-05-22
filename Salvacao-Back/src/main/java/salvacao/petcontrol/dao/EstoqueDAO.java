@@ -1,25 +1,19 @@
-package salvacao.petcontrol.dal;
+package salvacao.petcontrol.dao;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import salvacao.petcontrol.config.SingletonDB;
 import salvacao.petcontrol.model.EstoqueModel;
+import salvacao.petcontrol.model.ProdutoModel;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.math.BigDecimal;
 
 @Repository
-public class EstoqueDAL {
-
-    @Autowired
-    private ProdutoDAL produtoDAL;
-
-    public EstoqueModel findById(Integer id) {
+public class EstoqueDAO {
+    public EstoqueModel getId(Integer id) {
         EstoqueModel estoque = null;
         String sql = "SELECT * FROM estoque WHERE idestoque = ?";
 
@@ -40,7 +34,7 @@ public class EstoqueDAL {
         return estoque;
     }
 
-    public EstoqueModel findByProdutoId(Integer idProduto) {
+    public EstoqueModel getByProdutoId(Integer idProduto) {
         EstoqueModel estoque = null;
         String sql = "SELECT * FROM estoque WHERE idproduto = ?";
 
@@ -61,7 +55,7 @@ public class EstoqueDAL {
         return estoque;
     }
 
-    public List<EstoqueModel> findAll() {
+    public List<EstoqueModel> getAll() { // Renamed from findAll
         List<EstoqueModel> estoqueList = new ArrayList<>();
         String sql = "SELECT * FROM estoque";
 
@@ -82,7 +76,7 @@ public class EstoqueDAL {
         return estoqueList;
     }
 
-    public List<EstoqueModel> findEstoqueAbaixoMinimo() {
+    public List<EstoqueModel> getEstoqueAbaixoMinimo() {
         List<EstoqueModel> estoqueList = new ArrayList<>();
         String sql = "SELECT e.* FROM estoque e " +
                 "JOIN produto p ON e.idproduto = p.idproduto " +
@@ -105,7 +99,7 @@ public class EstoqueDAL {
         return estoqueList;
     }
 
-    public EstoqueModel adicionarEstoque(EstoqueModel estoque) throws SQLException {
+    public EstoqueModel gravar(EstoqueModel estoque) throws SQLException {
         String sql = "INSERT INTO estoque (idestoque, idproduto, quantidade) VALUES (nextval('seq_estoque'), ?, ?)";
 
         try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -125,7 +119,7 @@ public class EstoqueDAL {
         return estoque;
     }
 
-    public boolean atualizarEstoque(EstoqueModel estoque) {
+    public boolean alterar(EstoqueModel estoque) {
         String sql = "UPDATE estoque SET quantidade = ? WHERE idestoque = ?";
 
         try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
@@ -140,7 +134,7 @@ public class EstoqueDAL {
         }
     }
 
-    public boolean removerEstoque(Integer id) {
+    public boolean apagar(Integer id) {
         String sql = "DELETE FROM estoque WHERE idestoque = ?";
 
         try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
@@ -155,13 +149,13 @@ public class EstoqueDAL {
     }
 
     public boolean decrementarEstoque(Integer idProduto, BigDecimal quantidade) {
-        EstoqueModel estoque = findByProdutoId(idProduto);
+        EstoqueModel estoque = getByProdutoId(idProduto);
         if (estoque == null) {
             return false;
         }
 
         if (estoque.getQuantidade().compareTo(quantidade) < 0) {
-            return false; // Não há estoque suficiente
+            return false;
         }
 
         String sql = "UPDATE estoque SET quantidade = quantidade - ? WHERE idproduto = ?";
@@ -183,12 +177,12 @@ public class EstoqueDAL {
     }
 
     public boolean incrementarEstoque(Integer idProduto, BigDecimal quantidade) {
-        EstoqueModel estoque = findByProdutoId(idProduto);
+        EstoqueModel estoque = getByProdutoId(idProduto); // Calls refactored method
 
         if (estoque == null) {
             try {
                 EstoqueModel novoEstoque = new EstoqueModel(null, idProduto, quantidade);
-                adicionarEstoque(novoEstoque);
+                gravar(novoEstoque); // Calls refactored method
                 return true;
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -215,7 +209,7 @@ public class EstoqueDAL {
     }
 
     public boolean verificarEstoqueSuficiente(Integer idProduto, BigDecimal quantidadeNecessaria) {
-        EstoqueModel estoque = findByProdutoId(idProduto);
+        EstoqueModel estoque = getByProdutoId(idProduto);
 
         if (estoque == null) {
             return false;
@@ -228,7 +222,7 @@ public class EstoqueDAL {
         return verificarEstoqueSuficiente(idProduto, new BigDecimal(quantidadeNecessaria));
     }
 
-    public List<EstoqueModel> buscarPorNomeProduto(String nomeProduto) {
+    public List<EstoqueModel> getByNomeProduto(String nomeProduto) { // Renamed from buscarPorNomeProduto
         List<EstoqueModel> estoqueList = new ArrayList<>();
         String sql = "SELECT e.* FROM estoque e " +
                 "JOIN produto p ON e.idproduto = p.idproduto " +
@@ -252,7 +246,7 @@ public class EstoqueDAL {
         return estoqueList;
     }
 
-    public List<EstoqueModel> buscarPorTipoProduto(Integer idTipoProduto) {
+    public List<EstoqueModel> getByTipoProduto(Integer idTipoProduto) {
         List<EstoqueModel> estoqueList = new ArrayList<>();
         String sql = "SELECT e.* FROM estoque e " +
                 "JOIN produto p ON e.idproduto = p.idproduto " +
@@ -274,5 +268,18 @@ public class EstoqueDAL {
             e.printStackTrace();
         }
         return estoqueList;
+    }
+
+    public boolean inicializarEstoqueComConexao(Integer idProduto, Connection conn) throws SQLException {
+        String sql = "INSERT INTO estoque (idproduto, quantidade) VALUES (?, ?)";
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, idProduto);
+            stmt.setBigDecimal(2, BigDecimal.ZERO);
+
+            int rowsAffected = stmt.executeUpdate();
+            System.out.println("Estoque inicializado para produto ID " + idProduto + " - Linhas afetadas: " + rowsAffected);
+            return rowsAffected > 0;
+        }
     }
 }

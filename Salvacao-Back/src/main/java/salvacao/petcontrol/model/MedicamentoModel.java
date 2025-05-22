@@ -1,8 +1,13 @@
 package salvacao.petcontrol.model;
 
+import org.springframework.stereotype.Repository;
+import salvacao.petcontrol.dao.MedicamentoDAO;
+
+@Repository
 public class MedicamentoModel {
     private Integer idproduto;
     private String composicao;
+    private MedicamentoDAO medDAO;
 
     public MedicamentoModel(Integer idproduto, String composicao) {
         this.idproduto = idproduto;
@@ -14,7 +19,7 @@ public class MedicamentoModel {
     }
 
     public MedicamentoModel() {
-        this(0, "");
+        medDAO = new MedicamentoDAO();
     }
 
     public Integer getIdproduto() {
@@ -31,5 +36,9 @@ public class MedicamentoModel {
 
     public void setComposicao(String composicao) {
         this.composicao = composicao;
+    }
+
+    public MedicamentoDAO getMedDAO(){
+        return medDAO;
     }
 }

@@ -8,6 +8,12 @@ class MedicamentoService {
   async listarTodos() {
     try {
       const response = await fetch(`${this.baseUrl}${this.endpoint}/listar`);
+      if (response.status === 404) {
+        console.warn(
+          "Nenhum medicamento encontrado (status 404). Retornando array vazio."
+        );
+        return [];
+      }
       if (!response.ok) {
         throw new Error(`Erro ${response.status}: ${await response.text()}`);
       }

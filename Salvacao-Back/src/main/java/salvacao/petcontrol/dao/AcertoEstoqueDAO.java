@@ -1,4 +1,4 @@
-package salvacao.petcontrol.dal;
+package salvacao.petcontrol.dao;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -18,12 +18,12 @@ import java.util.List;
 import java.math.BigDecimal;
 
 @Repository
-public class AcertoEstoqueDAL {
+public class AcertoEstoqueDAO {
 
     @Autowired
-    private EstoqueDAL estoqueDAL;
+    private EstoqueModel estoqueModel = new EstoqueModel();
 
-    public AcertoEstoqueModel findById(Integer id) {
+    public AcertoEstoqueModel getId(Integer id) { // Renamed from findById
         AcertoEstoqueModel acerto = null;
         String sql = "SELECT * FROM acertoestoque WHERE idacerto = ?";
 
@@ -49,7 +49,7 @@ public class AcertoEstoqueDAL {
         return acerto;
     }
 
-    public List<AcertoEstoqueModel> findAll() {
+    public List<AcertoEstoqueModel> getAll() { // Renamed from findAll
         List<AcertoEstoqueModel> acertosList = new ArrayList<>();
         String sql = "SELECT * FROM acertoestoque ORDER BY data DESC";
 
@@ -76,7 +76,7 @@ public class AcertoEstoqueDAL {
     }
 
 
-    public List<AcertoEstoqueModel> findByPeriodo(LocalDate dataInicio, LocalDate dataFim) {
+    public List<AcertoEstoqueModel> getByPeriodo(LocalDate dataInicio, LocalDate dataFim) { // Renamed from findByPeriodo
         List<AcertoEstoqueModel> acertosList = new ArrayList<>();
         String sql = "SELECT * FROM acertoestoque WHERE data BETWEEN ? AND ? ORDER BY data DESC";
 
@@ -105,7 +105,7 @@ public class AcertoEstoqueDAL {
     }
 
 
-    public List<AcertoEstoqueModel> findByUsuario(Integer usuarioId) {
+    public List<AcertoEstoqueModel> getByUsuario(Integer usuarioId) { // Renamed from findByUsuario
         List<AcertoEstoqueModel> acertosList = new ArrayList<>();
         String sql = "SELECT * FROM acertoestoque WHERE usuario_pessoa_id = ? ORDER BY data DESC";
 
@@ -133,7 +133,7 @@ public class AcertoEstoqueDAL {
     }
 
 
-    public AcertoEstoqueModel inserirAcerto(AcertoEstoqueModel acerto) throws SQLException {
+    public AcertoEstoqueModel gravarAcerto(AcertoEstoqueModel acerto) throws SQLException { // Renamed from inserirAcerto
         String sql = "INSERT INTO acertoestoque (data, usuario_pessoa_id, motivo, observacao) VALUES (?, ?, ?, ?)";
 
         try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -162,7 +162,7 @@ public class AcertoEstoqueDAL {
     }
 
 
-    public List<ItemAcertoEstoqueModel> findItensAcerto(Integer acertoId) {
+    public List<ItemAcertoEstoqueModel> getItensAcerto(Integer acertoId) { // Renamed from findItensAcerto
         List<ItemAcertoEstoqueModel> itensList = new ArrayList<>();
         String sql = "SELECT * FROM itemacertoestoque WHERE acerto_id = ?";
 
@@ -188,7 +188,7 @@ public class AcertoEstoqueDAL {
     }
 
 
-    public ItemAcertoEstoqueModel inserirItemAcerto(ItemAcertoEstoqueModel item) throws SQLException {
+    public ItemAcertoEstoqueModel gravarItemAcerto(ItemAcertoEstoqueModel item) throws SQLException { // Renamed from inserirItemAcerto
         String sql = "INSERT INTO itemacertoestoque (acerto_id, produto_id, quantidade_antes, " +
                 "quantidade_depois, tipoajuste) VALUES (?, ?, ?, ?, ?)";
 
@@ -219,12 +219,12 @@ public class AcertoEstoqueDAL {
         SingletonDB.getConexao().getConnection().setAutoCommit(false);
 
         try {
-            AcertoEstoqueModel acertoInserido = inserirAcerto(acerto);
+            AcertoEstoqueModel acertoInserido = gravarAcerto(acerto);
 
             for (ItemAcertoEstoqueModel item : itens) {
                 item.setAcerto_id(acertoInserido.getIdacerto());
 
-                EstoqueModel estoque = estoqueDAL.findByProdutoId(item.getProduto_id());
+                EstoqueModel estoque = estoqueModel.getEstDAO().getByProdutoId(item.getProduto_id());
                 if (estoque == null) {
                     throw new SQLException("Produto não encontrado no estoque: " + item.getProduto_id());
                 }
@@ -238,13 +238,13 @@ public class AcertoEstoqueDAL {
                 }
 
                 estoque.setQuantidade(item.getQuantidade_depois());
-                boolean estoqueAtualizado = estoqueDAL.atualizarEstoque(estoque);
+                boolean estoqueAtualizado = estoqueModel.getEstDAO().alterar(estoque);
 
                 if (!estoqueAtualizado) {
                     throw new SQLException("Falha ao atualizar estoque para o produto: " + item.getProduto_id());
                 }
 
-                inserirItemAcerto(item);
+                gravarItemAcerto(item); // Updated method call
             }
 
             SingletonDB.getConexao().getConnection().commit();
@@ -257,4 +257,5 @@ public class AcertoEstoqueDAL {
             SingletonDB.getConexao().getConnection().setAutoCommit(true);
         }
     }
+
 }
