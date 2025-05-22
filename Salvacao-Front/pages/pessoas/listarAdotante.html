@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PetControl - Listar Adotantes</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css"
+    />
+    <link rel="stylesheet" href="../../assets/css/style.css" />
+    <script src="../../assets/js/components/sidebar.js" defer></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header d-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3" style="color: var(--vermelho-escuro)">Adotantes</h1>
+        <a href="cadastrarAdotante.html" class="btn btn-primary">
+          <i class="bi bi-plus-lg"></i> Novo Adotante
+        </a>
+      </div>
+
+      <div class="card shadow">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="input-group" style="max-width: 300px">
+              <input
+                type="text"
+                class="form-control"
+                placeholder="Buscar adotante..."
+                id="buscarAdotante"
+              />
+              <button class="btn btn-outline-secondary" type="button">
+                <i class="bi bi-search"></i>
+              </button>
+            </div>
+            <div class="dropdown">
+              <button
+                class="btn btn-outline-secondary dropdown-toggle"
+                type="button"
+                id="dropdownFiltro"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                <i class="bi bi-funnel"></i> Filtrar
+              </button>
+              <ul class="dropdown-menu" aria-labelledby="dropdownFiltro">
+                <li><a class="dropdown-item" href="#">Todos</a></li>
+                <li><a class="dropdown-item" href="#">Ordem alfabética</a></li>
+                <li><a class="dropdown-item" href="#">Mais recentes</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>CPF</th>
+                  <th>Nome</th>
+                  <th>Telefone</th>
+                  <th>E-mail</th>
+                  <th>Endereço</th>
+                  <th class="text-center">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tabelaAdotantes">
+                <!-- Dados serão carregados dinamicamente -->
+                <tr class="sem-resultados" style="display: none">
+                  <td colspan="6" class="text-center py-3">
+                    Nenhum adotante encontrado
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mt-3">
+            <div class="text-muted small">
+              Exibindo <span id="totalRegistros">0</span> adotantes
+            </div>
+            <nav aria-label="Paginação">
+              <ul class="pagination pagination-sm mb-0">
+                <li class="page-item disabled">
+                  <a class="page-link" href="#" tabindex="-1">Anterior</a>
+                </li>
+                <li class="page-item active">
+                  <a class="page-link" href="#">1</a>
+                </li>
+                <li class="page-item">
+                  <a class="page-link" href="#">2</a>
+                </li>
+                <li class="page-item">
+                  <a class="page-link" href="#">3</a>
+                </li>
+                <li class="page-item">
+                  <a class="page-link" href="#">Próximo</a>
+                </li>
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Confirmação de Exclusão -->
+    <div
+      class="modal fade"
+      id="confirmarExclusao"
+      tabindex="-1"
+      aria-labelledby="confirmarExclusaoLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="confirmarExclusaoLabel">
+              Confirmar Exclusão
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Fechar"
+            ></button>
+          </div>
+          <div class="modal-body">
+            Tem certeza que deseja excluir o adotante
+            <strong id="nomeAdotanteExclusao"></strong>?
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Cancelar
+            </button>
+            <button type="button" class="btn btn-danger" id="btnConfirmarExclusao">
+              Excluir
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Visualização de Detalhes -->
+    <div
+      class="modal fade"
+      id="modalDetalhes"
+      tabindex="-1"
+      aria-labelledby="modalDetalhesLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalDetalhesLabel">
+              Detalhes do Adotante
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Fechar"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <h6>CPF</h6>
+                <p id="detalheCpf"></p>
+              </div>
+              <div class="col-md-6 mb-3">
+                <h6>Nome</h6>
+                <p id="detalheNome"></p>
+              </div>
+              <div class="col-md-6 mb-3">
+                <h6>Telefone</h6>
+                <p id="detalheTelefone"></p>
+              </div>
+              <div class="col-md-6 mb-3">
+                <h6>E-mail</h6>
+                <p id="detalheEmail"></p>
+              </div>
+              <div class="col-12 mb-3">
+                <h6>Endereço</h6>
+                <p id="detalheEndereco"></p>
+              </div>
+            </div>
+            <div class="border-top pt-3 mt-3">
+              <h6>Animais Adotados</h6>
+              <div id="listaAnimaisAdotados">
+                <p class="text-muted">Nenhum animal adotado ainda.</p>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Fechar
+            </button>
+            <button type="button" class="btn btn-primary" id="btnEditarAdotante">
+              Editar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+      import { pessoaController } from "../../assets/js/controllers/PessoaController.js";
+
+      document.addEventListener("DOMContentLoaded", () => {
+        pessoaController.inicializarListagem();
+        
+        // Configurar busca
+        const campoBusca = document.getElementById("buscarPessoa");
+        if (campoBusca) {
+          campoBusca.addEventListener("input", (e) => {
+            pessoaController.filtrarPessoas(e.target.value);
+          });
+        }
+
+        // Botão de confirmação de exclusão
+        const btnConfirmarExclusao = document.getElementById("btnConfirmarExclusao");
+        if (btnConfirmarExclusao) {
+          btnConfirmarExclusao.addEventListener("click", () => {
+            const id = btnConfirmarExclusao.dataset.id;
+            pessoaController.excluirPessoa(id);
+          });
+        }
+
+        // Botão de edição no modal
+        const btnEditarPessoa = document.getElementById("btnEditarPessoa");
+        if (btnEditarPessoa) {
+          btnEditarPessoa.addEventListener("click", () => {
+            const id = btnEditarPessoa.dataset.id;
+            window.location.href = `cadastro-pessoa.html?id=${id}`;
+          });
+        }
+      });
+      
+    </script>
+  </body>
+</html>
