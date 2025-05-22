@@ -46,11 +46,11 @@ public class MedicamentoService {
             throw new Exception("Composição do medicamento é obrigatória");
         }
 
-        if (tipoProdutoDAO.getId(dto.getProduto().getIdtipoproduto()) == null) { // Updated method call
+        if (tipoProdutoDAO.getId(dto.getProduto().getIdtipoproduto()) == null) {
             throw new Exception("Tipo de produto não encontrado");
         }
 
-        if (unidadeMedidaDAO.getId(dto.getProduto().getIdunidademedida()) == null) { // Updated method call
+        if (unidadeMedidaDAO.getId(dto.getProduto().getIdunidademedida()) == null) {
             throw new Exception("Unidade de medida não encontrada");
         }
 
@@ -76,11 +76,11 @@ public class MedicamentoService {
             throw new Exception("Medicamento não encontrado");
         }
 
-        if (tipoProdutoDAO.getId(dto.getProduto().getIdtipoproduto()) == null) { // Updated method call
+        if (tipoProdutoDAO.getId(dto.getProduto().getIdtipoproduto()) == null) {
             throw new Exception("Tipo de produto não encontrado");
         }
 
-        if (unidadeMedidaDAO.getId(dto.getProduto().getIdunidademedida()) == null) { // Updated method call
+        if (unidadeMedidaDAO.getId(dto.getProduto().getIdunidademedida()) == null) {
             throw new Exception("Unidade de medida não encontrada");
         }
 

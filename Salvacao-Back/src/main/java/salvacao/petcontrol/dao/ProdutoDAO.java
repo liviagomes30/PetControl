@@ -96,7 +96,7 @@ public class ProdutoDAO {
         return dto;
     }
 
-    public ProdutoModel gravar(ProdutoModel produto) { 
+    public ProdutoModel gravar(ProdutoModel produto) {
         String sql = "INSERT INTO produto (nome, idtipoproduto, idunidademedida, fabricante, preco, estoque_minimo, data_cadastro) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING idproduto";
 

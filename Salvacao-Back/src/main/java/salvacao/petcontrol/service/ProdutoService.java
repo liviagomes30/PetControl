@@ -1,3 +1,4 @@
+// salvacao.petcontrol.service.ProdutoService.java
 package salvacao.petcontrol.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -5,17 +6,17 @@ import org.springframework.stereotype.Service;
 import salvacao.petcontrol.dao.ProdutoDAO;
 import salvacao.petcontrol.dao.TipoProdutoDAO;
 import salvacao.petcontrol.dao.UnidadeMedidaDAO;
-import salvacao.petcontrol.dao.EstoqueDAO; // Import EstoqueDAO
+import salvacao.petcontrol.dao.EstoqueDAO;
 import salvacao.petcontrol.dto.ProdutoCompletoDTO;
-import salvacao.petcontrol.model.EstoqueModel; // Import EstoqueModel
+import salvacao.petcontrol.model.EstoqueModel;
 import salvacao.petcontrol.model.ProdutoModel;
 import salvacao.petcontrol.util.ResultadoOperacao;
 
-import java.math.BigDecimal; // Import BigDecimal
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
-import salvacao.petcontrol.config.SingletonDB; // Import SingletonDB for transaction management
+import salvacao.petcontrol.config.SingletonDB;
 
 @Service
 public class ProdutoService {
@@ -30,7 +31,7 @@ public class ProdutoService {
     private UnidadeMedidaDAO unidadeMedidaDAO;
 
     @Autowired
-    private EstoqueDAO estoqueDAO; // Autowire EstoqueDAO here
+    private EstoqueDAO estoqueDAO;
 
     public ProdutoCompletoDTO getId(Integer id) {
         return produtoDAO.findProdutoCompleto(id);
@@ -64,31 +65,31 @@ public class ProdutoService {
         if (unidadeMedidaDAO.getId(dto.getProduto().getIdunidademedida()) == null) {
             throw new Exception("Unidade de medida não encontrada");
         }
-
         Connection conn = SingletonDB.getConexao().getConnection();
         boolean autoCommitOriginal = true;
         try {
             autoCommitOriginal = conn.getAutoCommit();
-            conn.setAutoCommit(false); // Start transaction
+            conn.setAutoCommit(false);
 
-            // 1. Gravar o produto (ProdutoDAO only handles product insertion)
             ProdutoModel novoProduto = produtoDAO.gravar(dto.getProduto());
 
-            // 2. Criar um registro inicial de estoque para o novo produto
             EstoqueModel newStock = new EstoqueModel();
             newStock.setIdproduto(novoProduto.getIdproduto());
-            newStock.setQuantidade(BigDecimal.ZERO); // Quantidade inicial 0
+            newStock.setQuantidade(BigDecimal.ZERO);
 
-            // 3. Chamar o EstoqueDAO para gravar o novo registro de estoque
-            estoqueDAO.gravar(newStock);
+            EstoqueModel estoqueSalvo = estoqueDAO.gravar(newStock);
 
-            conn.commit(); // Commit transaction
+            if (estoqueSalvo == null) {
+                throw new Exception();
+            }
+
+            conn.commit();
             return novoProduto;
 
         } catch (SQLException e) {
             try {
                 if (conn != null) {
-                    conn.rollback(); // Rollback transaction on error
+                    conn.rollback();
                 }
             } catch (SQLException ex) {
                 ex.printStackTrace();
@@ -97,7 +98,7 @@ public class ProdutoService {
         } finally {
             try {
                 if (conn != null) {
-                    conn.setAutoCommit(autoCommitOriginal); // Restore original auto-commit state
+                    conn.setAutoCommit(autoCommitOriginal);
                 }
             } catch (SQLException ex) {
                 ex.printStackTrace();

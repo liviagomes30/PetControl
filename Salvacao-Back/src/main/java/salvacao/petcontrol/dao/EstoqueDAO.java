@@ -14,12 +14,12 @@ import java.util.List;
 import java.math.BigDecimal;
 
 @Repository
-public class EstoqueDAO { // Renamed from EstoqueDAL
+public class EstoqueDAO {
 
     @Autowired
-    private ProdutoDAO produtoDAO; // Updated from ProdutoDAL
+    private ProdutoDAO produtoDAO;
 
-    public EstoqueModel getId(Integer id) { // Renamed from findById
+    public EstoqueModel getId(Integer id) {
         EstoqueModel estoque = null;
         String sql = "SELECT * FROM estoque WHERE idestoque = ?";
 
@@ -82,7 +82,7 @@ public class EstoqueDAO { // Renamed from EstoqueDAL
         return estoqueList;
     }
 
-    public List<EstoqueModel> getEstoqueAbaixoMinimo() { // Renamed from findEstoqueAbaixoMinimo
+    public List<EstoqueModel> getEstoqueAbaixoMinimo() {
         List<EstoqueModel> estoqueList = new ArrayList<>();
         String sql = "SELECT e.* FROM estoque e " +
                 "JOIN produto p ON e.idproduto = p.idproduto " +
@@ -105,15 +105,15 @@ public class EstoqueDAO { // Renamed from EstoqueDAL
         return estoqueList;
     }
 
-    public EstoqueModel gravar(EstoqueModel estoque) throws SQLException { // Renamed from adicionarEstoque
+    public EstoqueModel gravar(EstoqueModel estoque) throws SQLException {
         String sql = "INSERT INTO estoque (idestoque, idproduto, quantidade) VALUES (nextval('seq_estoque'), ?, ?)";
 
         try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setInt(1, estoque.getIdproduto());
             stmt.setBigDecimal(2, estoque.getQuantidade());
 
-            int linhasMod = stmt.executeUpdate();
-            if (linhasMod > 0) {
+            ResultSet linhasMod = stmt.executeQuery();
+            if (linhasMod.next()) {
                 ResultSet rs = stmt.getGeneratedKeys();
                 if (rs.next()) {
                     estoque.setIdestoque(rs.getInt(1));
@@ -125,7 +125,7 @@ public class EstoqueDAO { // Renamed from EstoqueDAL
         return estoque;
     }
 
-    public boolean alterar(EstoqueModel estoque) { // Renamed from atualizarEstoque
+    public boolean alterar(EstoqueModel estoque) {
         String sql = "UPDATE estoque SET quantidade = ? WHERE idestoque = ?";
 
         try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
@@ -140,7 +140,7 @@ public class EstoqueDAO { // Renamed from EstoqueDAL
         }
     }
 
-    public boolean apagar(Integer id) { // Renamed from removerEstoque
+    public boolean apagar(Integer id) {
         String sql = "DELETE FROM estoque WHERE idestoque = ?";
 
         try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
@@ -155,13 +155,13 @@ public class EstoqueDAO { // Renamed from EstoqueDAL
     }
 
     public boolean decrementarEstoque(Integer idProduto, BigDecimal quantidade) {
-        EstoqueModel estoque = getByProdutoId(idProduto); // Calls refactored method
+        EstoqueModel estoque = getByProdutoId(idProduto);
         if (estoque == null) {
             return false;
         }
 
         if (estoque.getQuantidade().compareTo(quantidade) < 0) {
-            return false; // Não há estoque suficiente
+            return false;
         }
 
         String sql = "UPDATE estoque SET quantidade = quantidade - ? WHERE idproduto = ?";
@@ -215,7 +215,7 @@ public class EstoqueDAO { // Renamed from EstoqueDAL
     }
 
     public boolean verificarEstoqueSuficiente(Integer idProduto, BigDecimal quantidadeNecessaria) {
-        EstoqueModel estoque = getByProdutoId(idProduto); // Calls refactored method
+        EstoqueModel estoque = getByProdutoId(idProduto);
 
         if (estoque == null) {
             return false;
@@ -252,7 +252,7 @@ public class EstoqueDAO { // Renamed from EstoqueDAL
         return estoqueList;
     }
 
-    public List<EstoqueModel> getByTipoProduto(Integer idTipoProduto) { // Renamed from buscarPorTipoProduto
+    public List<EstoqueModel> getByTipoProduto(Integer idTipoProduto) {
         List<EstoqueModel> estoqueList = new ArrayList<>();
         String sql = "SELECT e.* FROM estoque e " +
                 "JOIN produto p ON e.idproduto = p.idproduto " +
