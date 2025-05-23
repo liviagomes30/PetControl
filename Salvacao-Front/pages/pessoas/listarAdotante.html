@@ -17,95 +17,90 @@
   </head>
   <body>
     <div class="container">
-      <div class="header d-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3" style="color: var(--vermelho-escuro)">Adotantes</h1>
+      <div class="content-header">
+        <h1>Adotantes</h1>
         <a href="cadastrarAdotante.html" class="btn btn-primary">
-          <i class="bi bi-plus-lg"></i> Novo Adotante
+            <i class="bi bi-plus-lg"></i> Novo Adotante
         </a>
       </div>
 
-      <div class="card shadow">
-        <div class="card-body">
-          <div class="d-flex align-items-center justify-content-between mb-3">
-            <div class="input-group" style="max-width: 300px">
+      <div class="search-container">
+          <div class="search-input-group">
               <input
-                type="text"
-                class="form-control"
-                placeholder="Buscar adotante..."
-                id="buscarAdotante"
+                  type="text"
+                  class="search-input"
+                  placeholder="Buscar adotante..."
+                  id="buscarAdotante"
               />
-              <button class="btn btn-outline-secondary" type="button">
-                <i class="bi bi-search"></i>
+              <button class="search-button" type="button">
+                  <i class="bi bi-search"></i>
               </button>
-            </div>
-            <div class="dropdown">
-              <button
-                class="btn btn-outline-secondary dropdown-toggle"
-                type="button"
-                id="dropdownFiltro"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-              >
-                <i class="bi bi-funnel"></i> Filtrar
-              </button>
-              <ul class="dropdown-menu" aria-labelledby="dropdownFiltro">
-                <li><a class="dropdown-item" href="#">Todos</a></li>
-                <li><a class="dropdown-item" href="#">Ordem alfabética</a></li>
-                <li><a class="dropdown-item" href="#">Mais recentes</a></li>
-              </ul>
-            </div>
           </div>
+          
+          <div class="filter-dropdown">
+              <button
+                  class="btn btn-outline-secondary"
+                  type="button"
+                  id="dropdownFiltro"
+                  onclick="toggleDropdown()"
+              >
+                  <i class="bi bi-funnel"></i> Filtrar
+              </button>
+              <div class="dropdown-content" id="dropdownMenu">
+                  <a class="dropdown-item" href="#" onclick="filtrar('todos')">Todos</a>
+                  <a class="dropdown-item" href="#" onclick="filtrar('alfabetica')">Ordem alfabética</a>
+                  <a class="dropdown-item" href="#" onclick="filtrar('recentes')">Mais recentes</a>
+              </div>
+          </div>
+      </div>
 
-          <div class="table-responsive">
-            <table class="table table-hover">
+      <div class="table-container">
+          <table>
               <thead>
-                <tr>
-                  <th>CPF</th>
-                  <th>Nome</th>
-                  <th>Telefone</th>
-                  <th>E-mail</th>
-                  <th>Endereço</th>
-                  <th class="text-center">Ações</th>
-                </tr>
+                  <tr>
+                      <th>CPF</th>
+                      <th>Nome</th>
+                      <th>Telefone</th>
+                      <th>E-mail</th>
+                      <th>Endereço</th>
+                      <th style="text-align: center;">Ações</th>
+                  </tr>
               </thead>
               <tbody id="tabelaAdotantes">
-                <!-- Dados serão carregados dinamicamente -->
-                <tr class="sem-resultados" style="display: none">
-                  <td colspan="6" class="text-center py-3">
-                    Nenhum adotante encontrado
-                  </td>
-                </tr>
+                  <!-- Dados de exemplo -->
+                  <!-- Linha para quando não há resultados -->
+                  <tr class="no-data" style="display: none;">
+                      <td colspan="6">Nenhum adotante encontrado</td>
+                  </tr>
               </tbody>
-            </table>
+          </table>
+          
+          <div class="table-footer">
+              <div class="text-muted">
+                  Exibindo <span id="totalRegistros">3</span> adotantes
+              </div>
+              <nav>
+                  <ul class="pagination">
+                      <li class="page-item disabled">
+                          <a class="page-link" href="#" tabindex="-1">Anterior</a>
+                      </li>
+                      <li class="page-item active">
+                          <a class="page-link" href="#">1</a>
+                      </li>
+                      <li class="page-item">
+                          <a class="page-link" href="#">2</a>
+                      </li>
+                      <li class="page-item">
+                          <a class="page-link" href="#">3</a>
+                      </li>
+                      <li class="page-item">
+                          <a class="page-link" href="#">Próximo</a>
+                      </li>
+                  </ul>
+              </nav>
           </div>
-
-          <div class="d-flex justify-content-between align-items-center mt-3">
-            <div class="text-muted small">
-              Exibindo <span id="totalRegistros">0</span> adotantes
-            </div>
-            <nav aria-label="Paginação">
-              <ul class="pagination pagination-sm mb-0">
-                <li class="page-item disabled">
-                  <a class="page-link" href="#" tabindex="-1">Anterior</a>
-                </li>
-                <li class="page-item active">
-                  <a class="page-link" href="#">1</a>
-                </li>
-                <li class="page-item">
-                  <a class="page-link" href="#">2</a>
-                </li>
-                <li class="page-item">
-                  <a class="page-link" href="#">3</a>
-                </li>
-                <li class="page-item">
-                  <a class="page-link" href="#">Próximo</a>
-                </li>
-              </ul>
-            </nav>
-          </div>
-        </div>
       </div>
-    </div>
+    </div><!-- //div container// -->
 
     <!-- Modal de Confirmação de Exclusão -->
     <div
@@ -234,8 +229,8 @@
         const btnConfirmarExclusao = document.getElementById("btnConfirmarExclusao");
         if (btnConfirmarExclusao) {
           btnConfirmarExclusao.addEventListener("click", () => {
-            const id = btnConfirmarExclusao.dataset.id;
-            pessoaController.excluirPessoa(id);
+            const cpf = btnConfirmarExclusao.dataset.cpf;
+            pessoaController.excluir(cpf);
           });
         }
 

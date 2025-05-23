@@ -19,15 +19,15 @@ class PessoaService{
     }
   }
 
-  async buscarPorId(id) {
+  async buscarPorCPF(cpf) {
     try {
-      const response = await fetch(`${this.baseUrl}${this.endpoint}/${id}`);
+      const response = await fetch(`${this.baseUrl}${this.endpoint}/${cpf}`);
       if (!response.ok) {
         throw new Error(`Erro ${response.status}: ${await response.text()}`);
       }
       return await response.json();
     } catch (error) {
-      console.error(`Erro ao buscar medicamento ${id}:`, error);
+      console.error(`Erro ao buscar adotante ${cpf}:`, error);
       throw error;
     }
   }
@@ -49,7 +49,7 @@ class PessoaService{
 
       return await response.json();
     } catch (error) {
-      console.error("Erro ao cadastrar medicamento:", error);
+      console.error("Erro ao cadastrar adotante:", error);
       throw error;
     }
   }
@@ -71,13 +71,21 @@ class PessoaService{
 
       return (await response.text()) || {};
     } catch (error) {
-      console.error(`Erro ao atualizar adotante ${id}:`, error);
+      console.error("Erro ao atualizar adotante:", pessoaData, error);
       throw error;
     }
   }
 
   async excluir(cpf) {
     try {
+      console.log("CPF:", cpf);
+      console.log("URL:", `${this.baseUrl}${this.endpoint}/${cpf}`);
+
+      if (!cpf) {
+        console.warn("Tentativa de exclusão com CPF inválido:", cpf);
+        return;
+      }
+      
       const response = await fetch(`${this.baseUrl}${this.endpoint}/${cpf}`, {
         method: "DELETE",
       });
@@ -87,12 +95,16 @@ class PessoaService{
         throw new Error(errorText);
       }
 
-      return await response.json();
+      const text = await response.text();
+      console.log("Resposta:", text);
+      return text ? JSON.parse(text) : null;
+
     } catch (error) {
-      console.error(`Erro ao excluir medicamento ${cpf}:`, error);
+      console.error(`Erro ao excluir adotante ${cpf}:`, error);
       throw error;
     }
   }
+
 }
 
 export default PessoaService;
