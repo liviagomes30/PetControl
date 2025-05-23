@@ -1,4 +1,7 @@
 package salvacao.petcontrol.util;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 public class Validation {
 
@@ -30,4 +33,43 @@ public class Validation {
 
         return resto == Character.getNumericValue(cpf.charAt(10));
     }
+
+    public static boolean isDataAdocaoValida(LocalDate dataAdocao) {
+        if (dataAdocao == null) {
+            return false;
+        }
+
+        // Verifica se a data não está no futuro
+        return !dataAdocao.isAfter(LocalDate.now());
+    }
+
+    public static boolean isAnimalDisponivel(int idAnimal) {
+        // Aqui você poderia adicionar uma verificação no banco para confirmar
+        // se o animal está com status "Disponível"
+        return idAnimal > 0;
+    }
+
+    public static boolean isAdotanteValido(int idAdotante) {
+        // Aqui você poderia adicionar uma verificação no banco para confirmar
+        // se o adotante existe
+        return idAdotante > 0;
+    }
+
+    public static boolean isStatusAcompanhamentoValido(String status) {
+        if (status == null || status.trim().isEmpty()) {
+            return true; // Campo opcional
+        }
+
+        // Lista de status válidos
+        String[] statusValidos = {"Pendente", "Em andamento", "Concluído", "Cancelado"};
+
+        for (String s : statusValidos) {
+            if (s.equalsIgnoreCase(status)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
 }

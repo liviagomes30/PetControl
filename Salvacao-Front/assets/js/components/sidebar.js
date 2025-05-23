@@ -35,7 +35,12 @@ document.addEventListener("DOMContentLoaded", function () {
         <i class="bi bi-chevron-down sidebar-item-arrow"></i>
       </div>
       <ul id="animaisSubmenu" class="sidebar-submenu">
-        <a href="${getBasePath()}pages/animal/gerenciarAnimal.html" class="sidebar-submenu-item" id="submenu-animais-gerenciar">Gerenciar Animais</a>
+        <li>
+          <a href="${getBasePath()}pages/animal/gerenciarAnimal.html" class="sidebar-submenu-item" id="submenu-animais-gerenciar">Gerenciar Animais</a>
+        </li>
+        <li>
+          <a href="${getBasePath()}pages/eventos/gerenciarEvento.html" class="sidebar-submenu-item" id="submenu-eventos-gerenciar">Gerenciar Eventos</a>
+        </li>
       </ul>
       
       <div class="sidebar-item" id="menu-medicacao" onclick="toggleSubmenu('medicacaoSubmenu')">

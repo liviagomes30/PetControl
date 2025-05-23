@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PetControl - Lista de Adoções</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <link rel="stylesheet" href="../../assets/css/style.css" />
+    <script src="../../assets/js/components/sidebar.js" defer></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header d-flex justify-content-between align-items-center">
+        <h1 class="h3" style="color: var(--vermelho-escuro)">
+          Lista de Adoções
+        </h1>
+        <a href="cadastrarDoacao.html" class="btn btn-primary"
+          >Nova Adoção</a
+        >
+      </div>
+     
+      <div class="container mt-3">
+        <div class="row g-2 align-items-center">
+            <!-- Campo de pesquisa -->
+            <div class="col">
+                <input class="form-control form-control-sm" type="search" placeholder="Pesquisar" aria-label="Pesquisar" id="inputBusca">
+            </div>
+            <!-- Select -->
+            <div class="col-auto">
+                <select class="form-select form-select-sm" style="background-color: rgb(73, 71, 71); color: lightgray; border-radius: 10px; width: auto;" aria-label="Filtro" id="selectFiltro">
+                    <option value="1" selected>Nome do Animal</option>
+                    <option value="2">Nome do Adotante</option>
+                    <option value="3">Status</option>
+                    <option value="4">Data de Adoção</option>
+                </select>
+            </div>
+        </div>
+      </div>
+      <br>
+
+      <!-- Tabela de Adoções -->
+      <div class="bg-white shadow rounded p-4">
+        <table class="table table-hover">
+          <thead class="table-header">
+            <tr>
+              <th>ID</th>
+              <th>Animal</th>
+              <th>Adotante</th>
+              <th>Data Adoção</th>
+              <th>Status Acompanhamento</th>
+              <th>Data Acompanhamento</th>
+              <th>Observações</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-adocoes">
+            <!-- Conteúdo será carregado dinamicamente -->
+            <tr>
+              <td colspan="8" class="text-center">Carregando adoções...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Modal de Confirmação de Exclusão -->
+    <div class="modal fade" id="modalConfirmacaoExclusao" tabindex="-1" aria-labelledby="modalConfirmacaoExclusaoLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalConfirmacaoExclusaoLabel">Confirmar Exclusão</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            Tem certeza que deseja excluir esta adoção? Esta ação não pode ser desfeita.
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-danger" id="btnConfirmarExclusao">Excluir</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+      import { adocaoController } from "../../assets/js/controllers/AdocaoController.js";
+
+      document.addEventListener("DOMContentLoaded", () => {
+          console.log("Inicializando listagem de adoções");
+          adocaoController.inicializarListagem();
+
+          const inputBusca = document.querySelector('#inputBusca');
+          const selectFiltro = document.querySelector('#selectFiltro');
+
+          const aplicarFiltro = () => {
+              const termo = inputBusca.value.trim();
+              const filtro = selectFiltro.value;
+              console.log("Filtro: " + termo);
+              adocaoController.filtrarAdocoes(termo, filtro);
+          };
+
+          // Evento ao digitar
+          inputBusca.addEventListener("input", aplicarFiltro);
+
+          // Evento ao mudar o select
+          selectFiltro.addEventListener("change", aplicarFiltro);
+      });
+
+      // Verificar mensagem na URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const mensagem = urlParams.get("message");
+
+      if (mensagem) {
+          // import("../../assets/js/components/uiComponents.js").then(({ default: UIComponents }) => {
+          //     UIComponents.Toast.sucesso(mensagem);
+          //     // Remove o parâmetro ?message da URL sem recarregar a página
+          //     const url = new URL(window.location);
+          //     url.searchParams.delete("message");
+          //     window.history.replaceState({}, document.title, url);
+          // });
+          
+          // Simulação de toast de sucesso
+          console.log("Mensagem de sucesso:", mensagem);
+      }
+
+      // Funções globais para ações da tabela
+      window.editarAdocao = function(idAdocao) {
+          window.location.href = `editarAdocao.html?id=${idAdocao}`;
+      };
+
+      window.excluirAdocao = function(idAdocao) {
+          const modal = new bootstrap.Modal(document.getElementById('modalConfirmacaoExclusao'));
+          document.getElementById('btnConfirmarExclusao').onclick = function() {
+              // adocaoController.excluir(idAdocao);
+              console.log("Excluindo adoção ID:", idAdocao);
+              modal.hide();
+          };
+          modal.show();
+      };
+
+      // Simulação de dados para teste
+      /* setTimeout(() => {
+          const tabela = document.getElementById("tabela-adocoes");
+          tabela.innerHTML = `
+              <tr>
+                  <td>1</td>
+                  <td>Rex</td>
+                  <td>João Silva</td>
+                  <td>15/12/2024</td>
+                  <td><span class="badge bg-success">Aprovado</span></td>
+                  <td>20/12/2024</td>
+                  <td>Animal adaptado bem à nova família</td>
+                  <td>
+                      <button class="btn btn-sm btn-outline-primary me-1" onclick="editarAdocao(1)">
+                          Editar
+                      </button>
+                      <button class="btn btn-sm btn-outline-danger" onclick="excluirAdocao(1)">
+                          Excluir
+                      </button>
+                  </td>
+              </tr>
+              <tr>
+                  <td>2</td>
+                  <td>Luna</td>
+                  <td>Maria Santos</td>
+                  <td>10/12/2024</td>
+                  <td><span class="badge bg-warning">Em Acompanhamento</span></td>
+                  <td>12/12/2024</td>
+                  <td>Primeira visita realizada com sucesso</td>
+                  <td>
+                      <button class="btn btn-sm btn-outline-primary me-1" onclick="editarAdocao(2)">
+                          Editar
+                      </button>
+                      <button class="btn btn-sm btn-outline-danger" onclick="excluirAdocao(2)">
+                          Excluir
+                      </button>
+                  </td>
+              </tr>
+          `;
+      }, 500);
+ */
+      // window.adocaoController = adocaoController;
+    </script>
+  </body>
+</html>
