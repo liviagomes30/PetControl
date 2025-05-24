@@ -50,16 +50,41 @@ class AdocaoController {
                 <td>${adocao.data_acompanhamento ? adocao.formatarData(adocao.data_acompanhamento) : '-'}</td>
                 <td>${adocao.obs ? (adocao.obs.length > 50 ? adocao.obs.substring(0, 50) + '...' : adocao.obs) : '-'}</td>
                 <td>
-                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editarAdocao(${adocao.idadocao})">
-                        Editar
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="adocaoController.confirmarExclusao(${adocao.idadocao})">
-                        Excluir
-                    </button>
+                    <button class="btn btn-sm btn-outline-primary me-1 btn-editar" data-id="${adocao.idadocao}">Editar</button>
+                    <button class="btn btn-sm btn-outline-danger btn-excluir" data-id="${adocao.idadocao}">Excluir</button>
                 </td>
             `;
             tabela.appendChild(linha);
         });
+    }
+
+    async receberElementos() {
+        try {
+            // Selecionando elementos do HTML
+            const formulario = document.getElementById('form-adocao');
+            const campoAnimal = document.getElementById('animal');
+            const campoAdotante = document.getElementById('adotante');
+            const campoDataAdocao = document.getElementById('dataAdocao');
+            const campoStatus = document.getElementById('statusAcompanhamento');
+            const campoDataAcompanhamento = document.getElementById('dataAcompanhamento');
+            const campoObservacoes = document.getElementById('observacoes');
+
+            // Criando objeto com os valores dos campos
+            const dadosAdocao = {
+                idAnimal: campoAnimal.value,
+                idAdotante: campoAdotante.value,
+                dataAdocao: campoDataAdocao.value,
+                statusAcompanhamento: campoStatus.value,
+                dataAcompanhamento: campoDataAcompanhamento.value,
+                obs: campoObservacoes.value
+            };
+
+            return dadosAdocao;
+
+        } catch (erro) {
+            console.error("Erro ao receber elementos do formulário:", erro);
+            throw erro;
+        }
     }
 
     async cadastrar(event) {
@@ -213,8 +238,6 @@ class AdocaoController {
         
         this.renderizarTabela(this.adocoesFiltradas);
     }
-
-
 
     // Método para exibir erros de validação
     exibirErrosValidacao(erros) {

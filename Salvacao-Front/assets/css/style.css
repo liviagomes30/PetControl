@@ -1173,4 +1173,12 @@ td {
     left: 0;
     min-width: 100%;
   }
+
+  .animal-foto {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 0.5rem;
+  }
+
 }
