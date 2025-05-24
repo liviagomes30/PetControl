@@ -1158,16 +1158,16 @@ td {
   .search-container {
     gap: var(--spacing-sm);
   }
-  
+
   .filter-dropdown {
     align-self: stretch;
   }
-  
+
   .filter-dropdown .btn {
     width: 100%;
     justify-content: center;
   }
-  
+
   .dropdown-content {
     right: auto;
     left: 0;

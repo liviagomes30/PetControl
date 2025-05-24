@@ -1,7 +1,10 @@
 package salvacao.petcontrol.model;
 
+import org.springframework.stereotype.Repository;
+
 import java.math.BigDecimal;
 
+@Repository
 public class ItemAcertoEstoqueModel {
     private Integer iditem;
     private Integer acerto_id;

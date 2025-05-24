@@ -1,4 +1,4 @@
-package salvacao.petcontrol.dal;
+package salvacao.petcontrol.dao;
 
 import org.springframework.stereotype.Repository;
 import salvacao.petcontrol.config.SingletonDB;
@@ -14,7 +14,7 @@ import java.util.List;
 import java.sql.Date;
 
 @Repository
-public class AnimalDAL {
+public class AnimalDAO {
 
     public AnimalModel gravar(AnimalModel animal){
         String sql = "INSERT INTO animal(\n" +
@@ -34,7 +34,6 @@ public class AnimalDAL {
             stmt.setString(6, animal.getSexo());
             stmt.setString(7, animal.getStatus());
 
-            // Se dataresgate puder ser nulo, trate-o aqui:
             if (animal.getDataresgate() != null) {
                 stmt.setDate(8, java.sql.Date.valueOf(animal.getDataresgate()));
             } else {

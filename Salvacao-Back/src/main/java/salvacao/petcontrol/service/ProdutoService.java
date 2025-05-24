@@ -1,46 +1,55 @@
+// salvacao.petcontrol.service.ProdutoService.java
 package salvacao.petcontrol.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import salvacao.petcontrol.dal.ProdutoDAL;
-import salvacao.petcontrol.dal.TipoProdutoDAL;
-import salvacao.petcontrol.dal.UnidadeMedidaDAL;
 import salvacao.petcontrol.dto.ProdutoCompletoDTO;
+import salvacao.petcontrol.model.EstoqueModel;
 import salvacao.petcontrol.model.ProdutoModel;
+import salvacao.petcontrol.model.UnidadeMedidaModel;
+import salvacao.petcontrol.model.TipoProdutoModel;
 import salvacao.petcontrol.util.ResultadoOperacao;
 
+import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
+import salvacao.petcontrol.config.SingletonDB;
 
 @Service
 public class ProdutoService {
 
     @Autowired
-    private ProdutoDAL produtoDAL;
+    private ProdutoModel produtoModel = new ProdutoModel();
 
     @Autowired
-    private TipoProdutoDAL tipoProdutoDAL;
+    private TipoProdutoModel TipoProdutoModel = new TipoProdutoModel();
 
     @Autowired
-    private UnidadeMedidaDAL unidadeMedidaDAL;
+    private UnidadeMedidaModel UnidadeMedidaModel = new UnidadeMedidaModel();
 
-    public ProdutoCompletoDTO getProdutoById(Integer id) {
-        return produtoDAL.findProdutoCompleto(id);
+    @Autowired
+    private EstoqueModel estoqueModel = new EstoqueModel();
+
+
+    public ProdutoCompletoDTO getId(Integer id) {
+        return produtoModel.getProdDAO().findProdutoCompleto(id);
     }
 
-    public List<ProdutoCompletoDTO> getAllProdutos() {
-        return produtoDAL.getAllProdutos();
+    public List<ProdutoCompletoDTO> getAll() {
+        return produtoModel.getProdDAO().getAllProdutos();
     }
 
     public List<ProdutoCompletoDTO> getProdutosByTipo(Integer idTipo) {
-        return produtoDAL.getProdutosByTipo(idTipo);
+        return produtoModel.getProdDAO().getProdutosByTipo(idTipo);
     }
 
     public List<ProdutoCompletoDTO> getByName(String searchTerm) {
-        return produtoDAL.getByName(searchTerm);
+        return produtoModel.getProdDAO().getByName(searchTerm);
     }
 
-    public ProdutoModel addProduto(ProdutoCompletoDTO dto) throws Exception {
+    public ProdutoModel gravar(ProdutoCompletoDTO dto) throws Exception {
         if (dto.getProduto() == null) {
             throw new Exception("Dados do produto incompletos");
         }
@@ -49,18 +58,23 @@ public class ProdutoService {
             throw new Exception("Nome do produto é obrigatório");
         }
 
-        if (tipoProdutoDAL.findById(dto.getProduto().getIdtipoproduto()) == null) {
+        if (TipoProdutoModel.getTpDAO().getId(dto.getProduto().getIdtipoproduto()) == null) {
             throw new Exception("Tipo de produto não encontrado");
         }
 
-        if (unidadeMedidaDAL.findById(dto.getProduto().getIdunidademedida()) == null) {
+        if (UnidadeMedidaModel.getUnDAO().getId(dto.getProduto().getIdunidademedida()) == null) {
             throw new Exception("Unidade de medida não encontrada");
         }
 
-        return produtoDAL.addProduto(dto.getProduto());
+        try {
+            return produtoModel.getProdDAO().gravar(dto.getProduto());
+        } catch (RuntimeException e) {
+            throw new Exception("Erro ao adicionar produto: " + e.getMessage(), e);
+        }
     }
 
-    public boolean updateProduto(Integer id, ProdutoCompletoDTO dto) throws Exception {
+
+    public boolean alterar(Integer id, ProdutoCompletoDTO dto) throws Exception {
         if (dto.getProduto() == null) {
             throw new Exception("Dados do produto incompletos");
         }
@@ -69,33 +83,24 @@ public class ProdutoService {
             throw new Exception("Nome do produto é obrigatório");
         }
 
-        ProdutoCompletoDTO existente = produtoDAL.findProdutoCompleto(id);
+        ProdutoCompletoDTO existente = produtoModel.getProdDAO().findProdutoCompleto(id);
         if (existente == null) {
             throw new Exception("Produto não encontrado");
         }
 
-        if (tipoProdutoDAL.findById(dto.getProduto().getIdtipoproduto()) == null) {
+        if (TipoProdutoModel.getTpDAO().getId(dto.getProduto().getIdtipoproduto()) == null) {
             throw new Exception("Tipo de produto não encontrado");
         }
 
-        if (unidadeMedidaDAL.findById(dto.getProduto().getIdunidademedida()) == null) {
+        if (UnidadeMedidaModel.getUnDAO().getId(dto.getProduto().getIdunidademedida()) == null) {
             throw new Exception("Unidade de medida não encontrada");
         }
 
-        return produtoDAL.updateProduto(id, dto.getProduto());
+        return produtoModel.getProdDAO().alterar(id, dto.getProduto());
     }
 
-    public boolean deleteProduto(Integer id) throws Exception {
-        ProdutoCompletoDTO existente = produtoDAL.findProdutoCompleto(id);
-        if (existente == null) {
-            throw new Exception("Produto não encontrado");
-        }
-
-        return produtoDAL.deleteProduto(id);
-    }
-
-    public ResultadoOperacao gerenciarExclusaoProduto(Integer id) throws Exception {
-        ProdutoCompletoDTO existente = produtoDAL.findProdutoCompleto(id);
+    public ResultadoOperacao apagarProduto(Integer id) throws Exception {
+        ProdutoCompletoDTO existente = produtoModel.getProdDAO().findProdutoCompleto(id);
         if (existente == null) {
             throw new Exception("Produto não encontrado");
         }
@@ -103,10 +108,10 @@ public class ProdutoService {
         ResultadoOperacao resultado = new ResultadoOperacao();
 
         try {
-            boolean podeExcluir = produtoDAL.produtoPodeSerExcluido(id);
+            boolean podeExcluir = produtoModel.getProdDAO().produtoPodeSerExcluido(id);
 
             if (podeExcluir) {
-                boolean sucesso = produtoDAL.deleteProduto(id);
+                boolean sucesso = produtoModel.getProdDAO().apagar(id);
                 resultado.setOperacao("excluido");
                 resultado.setSucesso(sucesso);
 
@@ -116,7 +121,7 @@ public class ProdutoService {
                     resultado.setMensagem("Falha ao excluir o produto");
                 }
             } else {
-                boolean sucesso = produtoDAL.desativarProduto(id);
+                boolean sucesso = produtoModel.getProdDAO().desativarProduto(id);
                 resultado.setOperacao("desativado");
                 resultado.setSucesso(sucesso);
 
@@ -136,19 +141,19 @@ public class ProdutoService {
     }
 
     public boolean reativarProduto(Integer id) throws Exception {
-        ProdutoCompletoDTO existente = produtoDAL.findProdutoCompleto(id);
+        ProdutoCompletoDTO existente = produtoModel.getProdDAO().findProdutoCompleto(id);
         if (existente == null) {
             throw new Exception("Produto não encontrado");
         }
 
-        return produtoDAL.reativarProduto(id);
+        return produtoModel.getProdDAO().reativarProduto(id);
     }
 
     public List<ProdutoCompletoDTO> getByFabricante(String filtro) {
-        return produtoDAL.getByFabricante(filtro);
+        return produtoModel.getProdDAO().getByFabricante(filtro);
     }
 
     public List<ProdutoCompletoDTO> getByTipoDescricao(String filtro) {
-        return produtoDAL.getByTipoDescricao(filtro);
+        return produtoModel.getProdDAO().getByTipoDescricao(filtro);
     }
 }

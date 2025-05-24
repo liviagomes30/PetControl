@@ -46,33 +46,26 @@ class MedicamentoController {
     }
 
     medicamentos.forEach((med) => {
-      // Verificação robusta dos objetos necessários
       if (!med.produto) {
         console.warn("Produto não encontrado no medicamento:", med);
-        med.produto = {}; // Criar um objeto vazio para evitar erros
+        med.produto = {};
       }
 
       if (!med.medicamento) {
         console.warn("Dados do medicamento não encontrados:", med);
-        med.medicamento = {}; // Criar um objeto vazio para evitar erros
+        med.medicamento = {};
       }
 
-      // Obter nome do produto com fallback para valor padrão
       const nome = med.produto.nome || "-";
 
-      // Obter composição do medicamento com fallback para valor padrão
       const composicao = med.medicamento.composicao || "-";
 
-      // Obter tipo do produto com fallback para valor padrão
       const tipoProduto = med.tipoProduto?.descricao || "-";
 
-      // Obter unidade de medida com fallback para valor padrão
       const unidadeMedida = med.unidadeMedida?.descricao || "-";
 
-      // Obter fabricante com fallback para valor padrão
       const fabricante = med.produto.fabricante || "-";
 
-      // Formatação robusta do preço
       let precoFormatado = "-";
       if (med.produto.preco !== null && med.produto.preco !== undefined) {
         try {
@@ -85,11 +78,9 @@ class MedicamentoController {
         }
       }
 
-      // Formatação robusta da data de cadastro
       let dataCadastro = "-";
       if (med.produto.dataCadastro) {
         try {
-          // A data pode vir em diferentes formatos do backend
           const data = new Date(med.produto.dataCadastro);
           if (!isNaN(data.getTime())) {
             dataCadastro = data.toLocaleDateString("pt-BR");
@@ -99,7 +90,6 @@ class MedicamentoController {
         }
       }
 
-      // Formatação robusta do estoque mínimo
       let estoqueMinimo = "-";
       if (
         med.produto.estoqueMinimo !== null &&
@@ -115,10 +105,8 @@ class MedicamentoController {
         }
       }
 
-      // ID do produto para ações (editar/excluir)
       const idProduto = med.produto.idproduto || 0;
 
-      // Criação da linha da tabela com todos os dados formatados
       const tr = document.createElement("tr");
       tr.innerHTML = `
       <td>${nome}</td>
@@ -142,7 +130,6 @@ class MedicamentoController {
     UIComponents.ModalConfirmacao.mostrar(
       "Confirmar exclusão",
       MensagensPadroes.CONFIRMACAO.EXCLUSAO,
-      // Callback de confirmação
       () => {
         this.excluir(id).catch((error) => {
           console.error("Erro ao excluir:", error);

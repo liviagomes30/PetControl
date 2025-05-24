@@ -1,3 +1,4 @@
+// salvacao.petcontrol.control.AcertoEstoqueController.java
 package salvacao.petcontrol.control;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,9 +24,9 @@ public class AcertoEstoqueController {
     private AcertoEstoqueService acertoEstoqueService;
 
     @GetMapping("/{id}")
-    public ResponseEntity<Object> getAcertoById(@PathVariable Integer id) {
+    public ResponseEntity<Object> getId(@PathVariable Integer id) { // Renamed from getAcertoById
         try {
-            AcertoEstoqueCompletoDTO acerto = acertoEstoqueService.getAcertoById(id);
+            AcertoEstoqueCompletoDTO acerto = acertoEstoqueService.getId(id); // Calls service.getId()
             return ResponseEntity.ok(acerto);
         } catch (Exception e) {
             ResultadoOperacao resultado = new ResultadoOperacao("buscar", false, e.getMessage());
@@ -34,8 +35,8 @@ public class AcertoEstoqueController {
     }
 
     @GetMapping
-    public ResponseEntity<Object> getAllAcertos() {
-        List<AcertoEstoqueModel> acertos = acertoEstoqueService.getAllAcertos();
+    public ResponseEntity<Object> getAll() { // Renamed from getAllAcertos
+        List<AcertoEstoqueModel> acertos = acertoEstoqueService.getAll(); // Calls service.getAll()
         if (!acertos.isEmpty()) {
             return ResponseEntity.ok(acertos);
         }
@@ -44,11 +45,11 @@ public class AcertoEstoqueController {
     }
 
     @GetMapping("/periodo")
-    public ResponseEntity<Object> getAcertosByPeriodo(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim) {
+    public ResponseEntity<Object> getByPeriodo( // Renamed from getAcertosByPeriodo
+                                                @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+                                                @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim) {
 
-        List<AcertoEstoqueModel> acertos = acertoEstoqueService.getAcertosByPeriodo(dataInicio, dataFim);
+        List<AcertoEstoqueModel> acertos = acertoEstoqueService.getByPeriodo(dataInicio, dataFim); // Calls service.getByPeriodo()
         if (!acertos.isEmpty()) {
             return ResponseEntity.ok(acertos);
         }
@@ -57,8 +58,8 @@ public class AcertoEstoqueController {
     }
 
     @GetMapping("/usuario/{usuarioId}")
-    public ResponseEntity<Object> getAcertosByUsuario(@PathVariable Integer usuarioId) {
-        List<AcertoEstoqueModel> acertos = acertoEstoqueService.getAcertosByUsuario(usuarioId);
+    public ResponseEntity<Object> getByUsuario(@PathVariable Integer usuarioId) { // Renamed from getAcertosByUsuario
+        List<AcertoEstoqueModel> acertos = acertoEstoqueService.getByUsuario(usuarioId); // Calls service.getByUsuario()
         if (!acertos.isEmpty()) {
             return ResponseEntity.ok(acertos);
         }
@@ -67,9 +68,9 @@ public class AcertoEstoqueController {
     }
 
     @PostMapping
-    public ResponseEntity<Object> efetuarAcertoEstoque(@RequestBody AcertoEstoqueRequestDTO request) {
+    public ResponseEntity<Object> gravar(@RequestBody AcertoEstoqueRequestDTO request) { // Renamed from efetuarAcertoEstoque
         try {
-            ResultadoOperacao resultado = acertoEstoqueService.efetuarAcertoEstoque(request);
+            ResultadoOperacao resultado = acertoEstoqueService.gravar(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
         } catch (Exception e) {
             ResultadoOperacao resultado = new ResultadoOperacao("acertoEstoque", false, e.getMessage());

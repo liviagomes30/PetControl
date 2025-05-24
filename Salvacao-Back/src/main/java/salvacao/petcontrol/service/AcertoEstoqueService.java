@@ -2,12 +2,7 @@ package salvacao.petcontrol.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import salvacao.petcontrol.dal.AcertoEstoqueDAL;
-import salvacao.petcontrol.dal.EstoqueDAL;
-import salvacao.petcontrol.dal.ProdutoDAL;
-import salvacao.petcontrol.dal.UsuarioDAL;
-import salvacao.petcontrol.dal.TipoProdutoDAL;
-import salvacao.petcontrol.dal.UnidadeMedidaDAL;
+
 import salvacao.petcontrol.dto.AcertoEstoqueCompletoDTO;
 import salvacao.petcontrol.dto.AcertoEstoqueRequestDTO;
 import salvacao.petcontrol.dto.ItemAcertoEstoqueDTO;
@@ -30,39 +25,39 @@ import java.math.BigDecimal;
 public class AcertoEstoqueService {
 
     @Autowired
-    private AcertoEstoqueDAL acertoEstoqueDAL;
+    private AcertoEstoqueModel acertoEstoqueModel = new AcertoEstoqueModel();
 
     @Autowired
-    private EstoqueDAL estoqueDAL;
+    private EstoqueModel estoqueModel = new EstoqueModel();
 
     @Autowired
-    private ProdutoDAL produtoDAL;
+    private ProdutoModel produtoModel = new ProdutoModel();
 
     @Autowired
-    private UsuarioDAL usuarioDAL;
+    private UsuarioModel usuarioModel = new UsuarioModel();
 
     @Autowired
-    private TipoProdutoDAL tipoProdutoDAL;
+    private TipoProdutoModel tipoProdutoModel = new TipoProdutoModel();
 
     @Autowired
-    private UnidadeMedidaDAL unidadeMedidaDAL;
+    private UnidadeMedidaModel unidadeMedidaModel = new UnidadeMedidaModel();
 
 
-    public AcertoEstoqueCompletoDTO getAcertoById(Integer id) throws Exception {
-        AcertoEstoqueModel acerto = acertoEstoqueDAL.findById(id);
+    public AcertoEstoqueCompletoDTO getId(Integer id) throws Exception {
+        AcertoEstoqueModel acerto = acertoEstoqueModel.getAcDAO().getId(id);
         if (acerto == null) {
             throw new Exception("Acerto de estoque não encontrado");
         }
 
-        UsuarioModel usuario = usuarioDAL.findById(acerto.getUsuario_pessoa_id());
+        UsuarioModel usuario = usuarioModel.getUsuDAO().getId(acerto.getUsuario_pessoa_id());
 
-        List<ItemAcertoEstoqueModel> itensModel = acertoEstoqueDAL.findItensAcerto(id);
+        List<ItemAcertoEstoqueModel> itensModel = acertoEstoqueModel.getAcDAO().getItensAcerto(id);
         List<ItemAcertoEstoqueDTO> itensDTO = new ArrayList<>();
 
         for (ItemAcertoEstoqueModel item : itensModel) {
-            ProdutoModel produto = produtoDAL.findById(item.getProduto_id());
-            TipoProdutoModel tipoProduto = tipoProdutoDAL.findById(produto.getIdtipoproduto());
-            UnidadeMedidaModel unidadeMedida = unidadeMedidaDAL.findById(produto.getIdunidademedida());
+            ProdutoModel produto = produtoModel.getProdDAO().getId(item.getProduto_id());
+            TipoProdutoModel tipoProduto = tipoProdutoModel.getTpDAO().getId(produto.getIdtipoproduto());
+            UnidadeMedidaModel unidadeMedida = unidadeMedidaModel.getUnDAO().getId(produto.getIdunidademedida());
 
             ItemAcertoEstoqueDTO itemDTO = new ItemAcertoEstoqueDTO(
                     item,
@@ -78,23 +73,22 @@ public class AcertoEstoqueService {
     }
 
 
-    public List<AcertoEstoqueModel> getAllAcertos() {
-        return acertoEstoqueDAL.findAll();
+    public List<AcertoEstoqueModel> getAll() {
+        return acertoEstoqueModel.getAcDAO().getAll();
     }
 
 
-    public List<AcertoEstoqueModel> getAcertosByPeriodo(LocalDate dataInicio, LocalDate dataFim) {
-        return acertoEstoqueDAL.findByPeriodo(dataInicio, dataFim);
+    public List<AcertoEstoqueModel> getByPeriodo(LocalDate dataInicio, LocalDate dataFim) {
+        return acertoEstoqueModel.getAcDAO().getByPeriodo(dataInicio, dataFim);
     }
 
 
-    public List<AcertoEstoqueModel> getAcertosByUsuario(Integer usuarioId) {
-        return acertoEstoqueDAL.findByUsuario(usuarioId);
+    public List<AcertoEstoqueModel> getByUsuario(Integer usuarioId) {
+        return acertoEstoqueModel.getAcDAO().getByUsuario(usuarioId);
     }
 
 
-    public ResultadoOperacao efetuarAcertoEstoque(AcertoEstoqueRequestDTO request) throws Exception {
-        // Validações
+    public ResultadoOperacao gravar(AcertoEstoqueRequestDTO request) throws Exception {
         if (request.getUsuario_pessoa_id() == null) {
             throw new Exception("Usuário é obrigatório");
         }
@@ -107,21 +101,21 @@ public class AcertoEstoqueService {
             throw new Exception("É necessário ao menos um item para acerto de estoque");
         }
 
-        UsuarioModel usuario = usuarioDAL.findById(request.getUsuario_pessoa_id());
+        UsuarioModel usuario = usuarioModel.getUsuDAO().getId(request.getUsuario_pessoa_id());
         if (usuario == null) {
             throw new Exception("Usuário não encontrado");
         }
 
-        AcertoEstoqueModel acerto = new AcertoEstoqueModel();
-        acerto.setData(LocalDate.now());
-        acerto.setUsuario_pessoa_id(request.getUsuario_pessoa_id());
-        acerto.setMotivo(request.getMotivo());
-        acerto.setObservacao(request.getObservacao());
+
+        acertoEstoqueModel.setData(LocalDate.now());
+        acertoEstoqueModel.setUsuario_pessoa_id(request.getUsuario_pessoa_id());
+        acertoEstoqueModel.setMotivo(request.getMotivo());
+        acertoEstoqueModel.setObservacao(request.getObservacao());
 
         List<ItemAcertoEstoqueModel> itens = new ArrayList<>();
 
         for (AcertoEstoqueRequestDTO.ItemAcertoRequestDTO itemRequest : request.getItens()) {
-            EstoqueModel estoque = estoqueDAL.findByProdutoId(itemRequest.getProduto_id());
+            EstoqueModel estoque = estoqueModel.getEstDAO().getByProdutoId(itemRequest.getProduto_id());
             if (estoque == null) {
                 throw new Exception("Produto ID " + itemRequest.getProduto_id() + " não encontrado no estoque");
             }
@@ -139,9 +133,8 @@ public class AcertoEstoqueService {
         }
 
         try {
-            AcertoEstoqueModel acertoRealizado = acertoEstoqueDAL.efetuarAcertoEstoque(acerto, itens);
+            AcertoEstoqueModel acertoRealizado = acertoEstoqueModel.getAcDAO().efetuarAcertoEstoque(acertoEstoqueModel, itens);
 
-            // Retornar resultado positivo
             ResultadoOperacao resultado = new ResultadoOperacao();
             resultado.setOperacao("acertoEstoque");
             resultado.setSucesso(true);

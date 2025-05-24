@@ -1,7 +1,11 @@
 package salvacao.petcontrol.model;
 
+import org.springframework.stereotype.Repository;
+import salvacao.petcontrol.dao.AnimalDAO;
+
 import java.time.LocalDate;
 
+@Repository
 public class AnimalModel {
     private Integer id;
     private String nome;
@@ -15,6 +19,7 @@ public class AnimalModel {
     private String foto;
     private boolean castrado;
     private String cor;
+    private AnimalDAO animalDAO;
 
 
     public AnimalModel(Integer id, String nome, String especie, LocalDate datanascimento, String raca, String porte, String sexo, String status, LocalDate dataresgate, String foto, boolean castrado, String cor) {
@@ -47,6 +52,7 @@ public class AnimalModel {
     }
 
     public AnimalModel() {
+        animalDAO = new AnimalDAO();
     }
 
     public Integer getId() {
@@ -143,5 +149,9 @@ public class AnimalModel {
 
     public void setCor(String cor) {
         this.cor = cor;
+    }
+
+    public AnimalDAO getAnimalDAO() {
+        return animalDAO;
     }
 }
