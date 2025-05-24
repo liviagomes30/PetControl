@@ -73,7 +73,7 @@ document.addEventListener("DOMContentLoaded", function () {
       </div>
       <ul id="pessoasSubmenu" class="sidebar-submenu">
         <a href="${getBasePath()}pages/pessoas/listarAdotante.html" class="sidebar-submenu-item" id="submenu-pessoas-gerenciar">Gerenciar Adotante</a>
-        <a href="${getBasePath()}pages/pessoas/cadastrarAdocao.html" class="sidebar-submenu-item" id="submenu-pessoas-cadastrar">Cadastrar Adoção</a>
+        <a href="${getBasePath()}pages/doacao/listarDoacao.html" class="sidebar-submenu-item" id="submenu-pessoas-cadastrar">Gerenciar Adoção</a>
       </ul>
       
       <div class="sidebar-item" id="menu-produtos" onclick="toggleSubmenu('produtosSubmenu')">
