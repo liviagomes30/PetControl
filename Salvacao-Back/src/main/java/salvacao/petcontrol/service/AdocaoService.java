@@ -2,7 +2,7 @@ package salvacao.petcontrol.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import salvacao.petcontrol.dal.AdocaoDAL;
+import salvacao.petcontrol.dao.AdocaoDAL;
 import salvacao.petcontrol.model.AdocaoModel;
 import salvacao.petcontrol.util.Validation;
 

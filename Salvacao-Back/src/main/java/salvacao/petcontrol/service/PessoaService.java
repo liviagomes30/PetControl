@@ -1,7 +1,7 @@
 package salvacao.petcontrol.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import salvacao.petcontrol.dal.PessoaDAL;
+import salvacao.petcontrol.dao.AdocaoDAL;
 import salvacao.petcontrol.model.PessoaModel;
 import salvacao.petcontrol.util.Validation;
 
@@ -11,7 +11,7 @@ import java.util.List;
 public class PessoaService
 {
     @Autowired
-    private PessoaDAL pessoaDAL;
+    private AdocaoDAL.PessoaDAL pessoaDAL;
 
     public PessoaModel addPessoa(PessoaModel pessoa) throws Exception
     {
