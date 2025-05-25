@@ -27,15 +27,28 @@
       </div>
 
       <div class="filtro-container mt-3">
-        <form id="formFiltroAcerto">
+        <form id="formFiltroAcerto" class="needs-validation" novalidate>
           <div class="row g-2 align-items-end">
             <div class="col-md-3">
-              <label for="dataInicio" class="form-label">Data Início</label>
-              <input type="date" class="form-control" id="dataInicio" />
+              <label for="dataInicio" class="form-label required"
+                >Data Início</label
+              >
+              <input
+                type="date"
+                class="form-control"
+                id="dataInicio"
+                required
+              />
+              <div class="invalid-feedback">
+                Por favor, informe a data de início.
+              </div>
             </div>
             <div class="col-md-3">
-              <label for="dataFim" class="form-label">Data Fim</label>
-              <input type="date" class="form-control" id="dataFim" />
+              <label for="dataFim" class="form-label required">Data Fim</label>
+              <input type="date" class="form-control" id="dataFim" required />
+              <div class="invalid-feedback">
+                Por favor, informe a data de fim.
+              </div>
             </div>
             <div class="col-md-2">
               <button type="submit" class="btn btn-primary w-100">
@@ -89,7 +102,12 @@
         if (formFiltro) {
           formFiltro.addEventListener("submit", (e) => {
             e.preventDefault();
-            acertoEstoqueController.aplicarFiltro(e);
+            if (!formFiltro.checkValidity()) {
+              e.stopPropagation();
+            } else {
+              acertoEstoqueController.aplicarFiltro(e);
+            }
+            formFiltro.classList.add("was-validated");
           });
         }
 
@@ -98,6 +116,7 @@
           btnLimpar.addEventListener("click", () => {
             document.getElementById("dataInicio").value = "";
             document.getElementById("dataFim").value = "";
+            formFiltro.classList.remove("was-validated");
             acertoEstoqueController.inicializarListagem();
           });
         }
