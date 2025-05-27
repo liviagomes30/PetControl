@@ -1,7 +1,5 @@
-// salvacao.petcontrol.dal.MedicamentoDAO.java
 package salvacao.petcontrol.dao;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import salvacao.petcontrol.config.SingletonDB;
 import salvacao.petcontrol.dto.MedicamentoCompletoDTO;
@@ -16,9 +14,6 @@ import java.util.List;
 
 @Repository
 public class MedicamentoDAO {
-
-    @Autowired
-    private ProdutoModel produtoModel = new ProdutoModel();
 
     public MedicamentoModel getId(Integer id) {
         MedicamentoModel medicamento = null;
@@ -91,171 +86,84 @@ public class MedicamentoDAO {
         return dto;
     }
 
-    public MedicamentoModel gravar(MedicamentoModel medicamento, ProdutoModel produto) {
-        Connection conn = null;
-        try {
-            conn = SingletonDB.getConexao().getConnection();
-            conn.setAutoCommit(false);
+    public MedicamentoModel gravar(MedicamentoModel medicamento, ProdutoModel produtoModel, Connection conn) throws SQLException {
+        // Access ProdutoDAO via the provided ProdutoModel instance
+        ProdutoModel novoProduto = produtoModel.getProdDAO().gravar(produtoModel, conn);
 
-            ProdutoModel novoProduto = produtoModel.getProdDAO().gravarComConexao(produto,conn);
-            if (novoProduto == null || novoProduto.getIdproduto() == null) {
-                throw new RuntimeException("Erro ao gravar produto - ID não gerado");
-            }
-
-            String sql = "INSERT INTO medicamento (idproduto, composicao) VALUES (?, ?)";
-            try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
-                stmt.setInt(1, novoProduto.getIdproduto());
-                stmt.setString(2, medicamento.getComposicao());
-
-                if (stmt.executeUpdate() > 0) {
-                    medicamento.setIdproduto(novoProduto.getIdproduto());
-                    SingletonDB.getConexao().getConnection().commit();
-                } else {
-                    SingletonDB.getConexao().getConnection().rollback();
-                    throw new RuntimeException("Falha ao inserir medicamento");
-                }
-            }
-
-            SingletonDB.getConexao().getConnection().setAutoCommit(true);
-
-        } catch (SQLException e) {
-            try {
-                SingletonDB.getConexao().getConnection().rollback();
-                SingletonDB.getConexao().getConnection().setAutoCommit(true);
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
-            throw new RuntimeException("Erro ao adicionar medicamento: " + e.getMessage(), e);
+        if (novoProduto == null || novoProduto.getIdproduto() == null) {
+            throw new SQLException("Erro ao gravar produto - ID não gerado");
         }
 
+        String sql = "INSERT INTO medicamento (idproduto, composicao) VALUES (?, ?)";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, novoProduto.getIdproduto());
+            stmt.setString(2, medicamento.getComposicao());
+
+            if (stmt.executeUpdate() > 0) {
+                medicamento.setIdproduto(novoProduto.getIdproduto());
+            } else {
+                throw new SQLException("Falha ao inserir medicamento");
+            }
+        } catch (SQLException e) {
+            throw e;
+        }
         return medicamento;
     }
 
-    public boolean alterar(Integer id, MedicamentoModel medicamento, ProdutoModel produto) {
-        try {
-            SingletonDB.getConexao().getConnection().setAutoCommit(false);
+    public boolean alterar(Integer id, MedicamentoModel medicamento, ProdutoModel produtoModel, Connection conn) throws SQLException {
+        // Access ProdutoDAO via the provided ProdutoModel instance
+        boolean produtoAtualizado = produtoModel.getProdDAO().alterar(id, produtoModel);
 
-            boolean produtoAtualizado = produtoModel.getProdDAO().alterar(id, produto); // Updated method call
+        if (!produtoAtualizado) {
+            throw new SQLException("Não foi possível atualizar o produto associado ao medicamento.");
+        }
 
-            if (!produtoAtualizado) {
-                SingletonDB.getConexao().getConnection().rollback();
-                SingletonDB.getConexao().getConnection().setAutoCommit(true);
-                return false;
+        String sql = "UPDATE medicamento SET composicao = ? WHERE idproduto = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, medicamento.getComposicao());
+            stmt.setInt(2, id);
+
+            boolean result = stmt.executeUpdate() > 0;
+            if (!result) {
+                throw new SQLException("Falha ao atualizar medicamento");
             }
-
-            String sql = "UPDATE medicamento SET composicao = ? WHERE idproduto = ?";
-            try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
-                stmt.setString(1, medicamento.getComposicao());
-                stmt.setInt(2, id);
-
-                boolean result = stmt.executeUpdate() > 0;
-
-                if (result) {
-                    SingletonDB.getConexao().getConnection().commit();
-                } else {
-                    SingletonDB.getConexao().getConnection().rollback();
-                }
-
-                SingletonDB.getConexao().getConnection().setAutoCommit(true);
-
-                return result;
-            }
-
+            return result;
         } catch (SQLException e) {
-            try {
-                SingletonDB.getConexao().getConnection().rollback();
-                SingletonDB.getConexao().getConnection().setAutoCommit(true);
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
-            e.printStackTrace();
-            return false;
+            throw e;
         }
     }
 
-
-    public boolean apagar(Integer id) {
-        try {
-            if (!medicamentoPodeSerExcluido(id)) {
-                throw new RuntimeException("Este medicamento não pode ser excluído porque está sendo utilizado em medicações ou movimentações de estoque. Use a função de desativação em vez de exclusão.");
-            }
-
-            boolean autoCommitOriginal = SingletonDB.getConexao().getConnection().getAutoCommit();
-
-            try {
-                SingletonDB.getConexao().getConnection().setAutoCommit(false);
-
-                String sqlPosologia = "DELETE FROM posologia WHERE medicamento_idproduto = ?";
-                int posologiasExcluidas = 0;
-                try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sqlPosologia)) {
-                    stmt.setInt(1, id);
-                    posologiasExcluidas = stmt.executeUpdate();
-                    System.out.println("Posologias excluídas: " + posologiasExcluidas);
-                }
-
-                String sqlEstoque = "DELETE FROM estoque WHERE idproduto = ?";
-                int estoquesExcluidos = 0;
-                try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sqlEstoque)) {
-                    stmt.setInt(1, id);
-                    estoquesExcluidos = stmt.executeUpdate();
-                    System.out.println("Registros de estoque excluídos: " + estoquesExcluidos);
-                }
-
-                String sqlMedicamento = "DELETE FROM medicamento WHERE idproduto = ?";
-                int medicamentoExcluido = 0;
-                try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sqlMedicamento)) {
-                    stmt.setInt(1, id);
-                    medicamentoExcluido = stmt.executeUpdate();
-                    System.out.println("Medicamento excluído: " + (medicamentoExcluido > 0 ? "Sim" : "Não"));
-
-                    if (medicamentoExcluido <= 0) {
-                        System.out.println("Medicamento não encontrado, realizando rollback");
-                        SingletonDB.getConexao().getConnection().rollback();
-                        return false;
-                    }
-                }
-
-                boolean produtoDeletado = produtoModel.getProdDAO().apagar(id); // Updated method call
-                System.out.println("Produto excluído: " + (produtoDeletado ? "Sim" : "Não"));
-
-                if (produtoDeletado) {
-                    System.out.println("Exclusão concluída com sucesso, realizando commit");
-                    SingletonDB.getConexao().getConnection().commit();
-                } else {
-                    System.out.println("Falha ao excluir produto, realizando rollback");
-                    SingletonDB.getConexao().getConnection().rollback();
-                }
-
-                return produtoDeletado;
-
-            } finally {
-                try {
-                    SingletonDB.getConexao().getConnection().setAutoCommit(autoCommitOriginal);
-                    System.out.println("AutoCommit restaurado para: " + autoCommitOriginal);
-                } catch (SQLException ex) {
-                    System.out.println("Erro ao restaurar autoCommit: " + ex.getMessage());
-                    ex.printStackTrace();
-                }
-            }
-
-        } catch (SQLException e) {
-            try {
-                System.out.println("Erro durante exclusão: " + e.getMessage() + ", realizando rollback");
-                if (!SingletonDB.getConexao().getConnection().getAutoCommit()) {
-                    SingletonDB.getConexao().getConnection().rollback();
-                    System.out.println("Rollback executado após erro");
-                }
-
-                SingletonDB.getConexao().getConnection().setAutoCommit(true);
-                System.out.println("AutoCommit restaurado para true após erro");
-
-            } catch (SQLException ex) {
-                System.out.println("Erro durante rollback: " + ex.getMessage());
-                ex.printStackTrace();
-            }
-            e.printStackTrace();
-            throw new RuntimeException("Erro ao excluir medicamento: " + e.getMessage(), e);
+    public boolean apagar(Integer id, ProdutoModel produtoModel, Connection conn) throws SQLException {
+        if (!medicamentoPodeSerExcluido(id)) {
+            throw new SQLException("Este medicamento não pode ser excluído porque está sendo utilizado em medicações ou movimentações de estoque. Use a função de desativação em vez de exclusão.");
         }
+
+        String sqlPosologia = "DELETE FROM posologia WHERE medicamento_idproduto = ?";
+        int posologiasExcluidas = 0;
+        try (PreparedStatement stmt = conn.prepareStatement(sqlPosologia)) {
+            stmt.setInt(1, id);
+            posologiasExcluidas = stmt.executeUpdate();
+            System.out.println("Posologias excluídas: " + posologiasExcluidas);
+        }
+
+        String sqlMedicamento = "DELETE FROM medicamento WHERE idproduto = ?";
+        int medicamentoExcluido = 0;
+        try (PreparedStatement stmt = conn.prepareStatement(sqlMedicamento)) {
+            stmt.setInt(1, id);
+            medicamentoExcluido = stmt.executeUpdate();
+            System.out.println("Medicamento excluído: " + (medicamentoExcluido > 0 ? "Sim" : "Não"));
+            if (medicamentoExcluido <= 0) {
+                throw new SQLException("Medicamento não encontrado para exclusão.");
+            }
+        }
+
+        // Access ProdutoDAO via the provided ProdutoModel instance
+        boolean produtoDeletado = produtoModel.getProdDAO().apagar(id, conn);
+        if (!produtoDeletado) {
+            throw new SQLException("Falha ao excluir o produto associado ao medicamento.");
+        }
+
+        return true;
     }
 
     public boolean desativarMedicamento(Integer id) {
@@ -362,7 +270,7 @@ public class MedicamentoDAO {
             ResultSet rs = stmt.executeQuery();
             if (rs.next() && rs.getInt(1) > 0) {
                 System.out.println("Medicamento possui " + rs.getInt(1) + " medicações associadas");
-                return false; // Não pode ser excluído, pois está em medicações
+                return false;
             }
         }
 
@@ -381,7 +289,7 @@ public class MedicamentoDAO {
             ResultSet rs = stmt.executeQuery();
             if (rs.next() && rs.getInt(1) > 0) {
                 System.out.println("Medicamento possui " + rs.getInt(1) + " itens de movimentação associados");
-                return false; // Não pode ser excluído, pois está em movimentações
+                return false;
             }
         }
         String sqlAcerto = "SELECT COUNT(*) FROM itemacertoestoque WHERE produto_id = ?";
@@ -390,7 +298,7 @@ public class MedicamentoDAO {
             ResultSet rs = stmt.executeQuery();
             if (rs.next() && rs.getInt(1) > 0) {
                 System.out.println("Medicamento possui " + rs.getInt(1) + " itens de acerto de estoque associados");
-                return false; // Não pode ser excluído, pois está em acertos de estoque
+                return false;
             }
         }
 

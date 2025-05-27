@@ -3,39 +3,49 @@ package salvacao.petcontrol.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import salvacao.petcontrol.config.SingletonDB; // Import SingletonDB
-import salvacao.petcontrol.model.UnidadeMedidaModel;
+import salvacao.petcontrol.model.PessoaModel;
+import salvacao.petcontrol.model.UsuarioModel; // Import UsuarioModel for dependency check
 
 import java.sql.Connection; // Import Connection
 import java.sql.SQLException; // Import SQLException
 import java.util.List;
 
 @Service
-public class UnidadeMedidaService {
+public class PessoaService {
+    @Autowired
+    private PessoaModel pessoaModel = new PessoaModel(); // Autowire the Model
 
     @Autowired
-    private UnidadeMedidaModel unidadeMedidaModel = new UnidadeMedidaModel(); // Autowire the Model
+    private UsuarioModel usuarioModel = new UsuarioModel(); // Autowire UsuarioModel for dependency check
 
-    public UnidadeMedidaModel getId(Integer id) {
-        return unidadeMedidaModel.getUnDAO().getId(id);
+    public PessoaModel getId(Integer id){
+        return pessoaModel.getPessoaDAO().getId(id);
     }
 
-    public List<UnidadeMedidaModel> getAll() {
-        return unidadeMedidaModel.getUnDAO().getAll();
+    public List<PessoaModel> getAll(){
+        return pessoaModel.getPessoaDAO().getAll();
+    }
+    public List<PessoaModel> getByNome(String filtro){
+        return pessoaModel.getPessoaDAO().getByNome(filtro);
+    }
+    public List<PessoaModel> getByCpf(String filtro){
+        return pessoaModel.getPessoaDAO().getByCpf(filtro);
+    }
+    public List<PessoaModel> getByEmail(String filtro){
+        return pessoaModel.getPessoaDAO().getByEmail(filtro);
+    }
+    public List<PessoaModel> getByTelefone(String filtro){
+        return pessoaModel.getPessoaDAO().getByTelefone(filtro);
     }
 
-    public UnidadeMedidaModel gravar(UnidadeMedidaModel unidadeMedida) throws Exception {
-        if (unidadeMedida.getDescricao() == null || unidadeMedida.getDescricao().trim().isEmpty()) {
-            throw new Exception("A descrição é obrigatória.");
+    public PessoaModel gravar(PessoaModel pessoa) throws Exception{
+        if (pessoa.getNome() == null || pessoa.getNome().trim().isEmpty()) {
+            throw new Exception("Nome da pessoa é obrigatório.");
         }
-        if (unidadeMedida.getDescricao().length() > 100) {
-            throw new Exception("A descrição não pode ter mais de 100 caracteres.");
+        if (pessoa.getCpf() == null || pessoa.getCpf().trim().isEmpty()) {
+            throw new Exception("CPF da pessoa é obrigatório.");
         }
-        if (unidadeMedida.getSigla() == null || unidadeMedida.getSigla().trim().isEmpty()) {
-            throw new Exception("A sigla é obrigatória.");
-        }
-        if (unidadeMedida.getSigla().length() > 10) {
-            throw new Exception("A sigla não pode ter mais de 10 caracteres.");
-        }
+        // Add more comprehensive validation for CPF, email, phone format etc.
 
         Connection conn = null;
         boolean autoCommitOriginal = true;
@@ -45,10 +55,10 @@ public class UnidadeMedidaService {
             conn.setAutoCommit(false); // Start transaction
 
             // Access DAO via Model instance and pass connection
-            UnidadeMedidaModel novaUnidadeMedida = unidadeMedidaModel.getUnDAO().gravar(unidadeMedida, conn);
+            PessoaModel novaPessoa = pessoaModel.getPessoaDAO().gravar(pessoa, conn);
 
             conn.commit(); // Commit transaction if successful
-            return novaUnidadeMedida;
+            return novaPessoa;
         } catch (SQLException e) {
             if (conn != null) {
                 try {
@@ -57,7 +67,7 @@ public class UnidadeMedidaService {
                     ex.printStackTrace();
                 }
             }
-            throw new Exception("Erro ao cadastrar unidade de medida: " + e.getMessage(), e);
+            throw new Exception("Erro ao gravar pessoa: " + e.getMessage(), e);
         } finally {
             if (conn != null) {
                 try {
@@ -69,24 +79,19 @@ public class UnidadeMedidaService {
         }
     }
 
-    public boolean alterar(UnidadeMedidaModel unidadeMedida) throws Exception {
-        if (unidadeMedida.getDescricao() == null || unidadeMedida.getDescricao().trim().isEmpty()) {
-            throw new Exception("A descrição é obrigatória.");
+    public boolean alterar(PessoaModel pessoa) throws Exception{
+        if (pessoa.getIdpessoa() == null) {
+            throw new Exception("ID da pessoa é obrigatório para alteração.");
         }
-        if (unidadeMedida.getDescricao().length() > 100) {
-            throw new Exception("A descrição não pode ter mais de 100 caracteres.");
+        if (pessoa.getNome() == null || pessoa.getNome().trim().isEmpty()) {
+            throw new Exception("Nome da pessoa é obrigatório.");
         }
-        if (unidadeMedida.getSigla() == null || unidadeMedida.getSigla().trim().isEmpty()) {
-            throw new Exception("A sigla é obrigatória.");
-        }
-        if (unidadeMedida.getSigla().length() > 10) {
-            throw new Exception("A sigla não pode ter mais de 10 caracteres.");
-        }
+        // Add more validation as needed
 
-        // Access DAO via Model instance
-        UnidadeMedidaModel existente = unidadeMedidaModel.getUnDAO().getId(unidadeMedida.getIdUnidadeMedida());
+        // Access DAO via Model instance to check if it exists
+        PessoaModel existente = pessoaModel.getPessoaDAO().getId(pessoa.getIdpessoa());
         if (existente == null) {
-            throw new Exception("Unidade de medida não encontrada para atualização.");
+            throw new Exception("Pessoa não encontrada para atualização.");
         }
 
         Connection conn = null;
@@ -97,7 +102,7 @@ public class UnidadeMedidaService {
             conn.setAutoCommit(false); // Start transaction
 
             // Access DAO via Model instance and pass connection
-            boolean atualizado = unidadeMedidaModel.getUnDAO().alterar(unidadeMedida, conn);
+            boolean atualizado = pessoaModel.getPessoaDAO().alterar(pessoa, conn);
 
             if (atualizado) {
                 conn.commit(); // Commit transaction if successful
@@ -113,7 +118,7 @@ public class UnidadeMedidaService {
                     ex.printStackTrace();
                 }
             }
-            throw new Exception("Erro ao atualizar unidade de medida: " + e.getMessage(), e);
+            throw new Exception("Erro ao alterar pessoa: " + e.getMessage(), e);
         } finally {
             if (conn != null) {
                 try {
@@ -125,11 +130,11 @@ public class UnidadeMedidaService {
         }
     }
 
-    public boolean apagar(Integer id) throws Exception {
-        // Access DAO via Model instance
-        UnidadeMedidaModel existente = unidadeMedidaModel.getUnDAO().getId(id);
+    public boolean apagar(Integer id) throws Exception{
+        // Access DAO via Model instance to check if it exists
+        PessoaModel existente = pessoaModel.getPessoaDAO().getId(id);
         if (existente == null) {
-            throw new Exception("Unidade de medida não encontrada para exclusão.");
+            throw new Exception("Pessoa não encontrada para exclusão.");
         }
 
         Connection conn = null;
@@ -139,8 +144,16 @@ public class UnidadeMedidaService {
             autoCommitOriginal = conn.getAutoCommit();
             conn.setAutoCommit(false); // Start transaction
 
+            // Check for dependencies within the same transaction to prevent issues
+            // Access UsuarioDAO via UsuarioModel instance
+            boolean isAssociatedWithUser = usuarioModel.getUsuDAO().getId(id, pessoaModel) != null;
+            if (isAssociatedWithUser) {
+                throw new SQLException("Pessoa não pode ser excluída pois está associada a um usuário.");
+            }
+            // Add other dependency checks here if Pessoa is linked to other entities (e.g., animals, adoptions etc.)
+
             // Access DAO via Model instance and pass connection
-            boolean deletado = unidadeMedidaModel.getUnDAO().apagar(id, conn);
+            boolean deletado = pessoaModel.getPessoaDAO().apagar(id, conn);
 
             if (deletado) {
                 conn.commit(); // Commit transaction if successful
@@ -156,7 +169,7 @@ public class UnidadeMedidaService {
                     ex.printStackTrace();
                 }
             }
-            throw new Exception("Erro ao excluir unidade de medida: " + e.getMessage(), e);
+            throw new Exception("Erro ao excluir pessoa: " + e.getMessage(), e);
         } finally {
             if (conn != null) {
                 try {
@@ -166,9 +179,5 @@ public class UnidadeMedidaService {
                 }
             }
         }
-    }
-
-    public List<UnidadeMedidaModel> getByDescricaoSigla(String filtro) {
-        return unidadeMedidaModel.getUnDAO().getByDescricaoSigla(filtro);
     }
 }

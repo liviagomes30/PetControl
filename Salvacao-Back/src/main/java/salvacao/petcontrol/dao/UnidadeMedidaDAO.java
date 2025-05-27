@@ -1,4 +1,3 @@
-// salvacao.petcontrol.dal.UnidadeMedidaDAO.java
 package salvacao.petcontrol.dao;
 
 import org.springframework.stereotype.Repository;
@@ -11,6 +10,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.sql.Connection; // Import Connection
 
 @Repository
 public class UnidadeMedidaDAO {
@@ -53,9 +53,9 @@ public class UnidadeMedidaDAO {
         return list;
     }
 
-    public UnidadeMedidaModel gravar(UnidadeMedidaModel unidadeMedida) { // Added gravar method
+    public UnidadeMedidaModel gravar(UnidadeMedidaModel unidadeMedida, Connection conn) throws SQLException {
         String sql = "INSERT INTO unidadedemedida (descricao, sigla) VALUES (?, ?)";
-        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) { // Use provided connection
             stmt.setString(1, unidadeMedida.getDescricao());
             stmt.setString(2, unidadeMedida.getSigla());
             int linhasMod = stmt.executeUpdate();
@@ -64,34 +64,36 @@ public class UnidadeMedidaDAO {
                 if (rs.next()) {
                     unidadeMedida.setIdUnidadeMedida(rs.getInt(1));
                 }
+            } else {
+                throw new SQLException("Falha ao adicionar unidade de medida."); // Propagate exception
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Erro ao adicionar unidade de medida: " + e.getMessage(), e);
+            throw e; // Re-throw to be caught by the service for rollback
         }
         return unidadeMedida;
     }
 
-    public boolean alterar(UnidadeMedidaModel unidadeMedida) { // Added alterar method
+    public boolean alterar(UnidadeMedidaModel unidadeMedida, Connection conn) throws SQLException {
         String sql = "UPDATE unidadedemedida SET descricao = ?, sigla = ? WHERE idunidademedida = ?";
-        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) { // Use provided connection
             stmt.setString(1, unidadeMedida.getDescricao());
             stmt.setString(2, unidadeMedida.getSigla());
             stmt.setInt(3, unidadeMedida.getIdUnidadeMedida());
             int linhasMod = stmt.executeUpdate();
             if (linhasMod == 0) {
-                throw new RuntimeException("Nenhuma unidade de medida foi atualizada.");
+                return false; // Indicate no row was updated
             } else {
                 return true;
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Erro ao atualizar unidade de medida: " + e.getMessage(), e);
+            throw e; // Re-throw to be caught by the service for rollback
         }
     }
 
-    public boolean apagar(Integer id) throws SQLException { // Added apagar method
+    public boolean apagar(Integer id, Connection conn) throws SQLException {
         // Check if UnidadeMedida is referenced by any Produto
         String sqlCheck = "SELECT COUNT(*) FROM produto WHERE idunidademedida = ?";
-        try (PreparedStatement stmtCheck = SingletonDB.getConexao().getPreparedStatement(sqlCheck)) {
+        try (PreparedStatement stmtCheck = conn.prepareStatement(sqlCheck)) { // Use provided connection
             stmtCheck.setInt(1, id);
             ResultSet rs = stmtCheck.executeQuery();
             if (rs.next() && rs.getInt(1) > 0) {
@@ -100,16 +102,14 @@ public class UnidadeMedidaDAO {
         }
 
         String sql = "DELETE FROM unidadedemedida WHERE idunidademedida = ?";
-        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) { // Use provided connection
             stmt.setInt(1, id);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+            throw e; // Re-throw to be caught by the service for rollback
         }
     }
 
-    // Example of a search method (if needed, mirroring AnimalDAO's getNome/getEspecie/getRaca)
     public List<UnidadeMedidaModel> getByDescricaoSigla(String filtro) {
         List<UnidadeMedidaModel> list = new ArrayList<>();
         String sql = "SELECT * FROM unidadedemedida WHERE UPPER(descricao) LIKE UPPER(?) OR UPPER(sigla) LIKE UPPER(?)";

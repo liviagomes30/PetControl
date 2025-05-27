@@ -2,25 +2,36 @@ package salvacao.petcontrol.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import salvacao.petcontrol.config.SingletonDB;
 import salvacao.petcontrol.dto.MedicamentoCompletoDTO;
 import salvacao.petcontrol.model.MedicamentoModel;
+import salvacao.petcontrol.model.ProdutoModel;
 import salvacao.petcontrol.model.TipoProdutoModel;
 import salvacao.petcontrol.model.UnidadeMedidaModel;
+import salvacao.petcontrol.model.EstoqueModel; // Import EstoqueModel
 import salvacao.petcontrol.util.ResultadoOperacao;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 
 @Service
 public class MedicamentoService {
 
     @Autowired
-    private MedicamentoModel medicamentoModel = new MedicamentoModel();
+    private MedicamentoModel medicamentoModel;
 
     @Autowired
-    private TipoProdutoModel tipoProdutoModel = new TipoProdutoModel();
+    private ProdutoModel produtoModel;
 
     @Autowired
-    private UnidadeMedidaModel unidadeMedidaModel = new UnidadeMedidaModel();
+    private TipoProdutoModel tipoProdutoModel;
+
+    @Autowired
+    private UnidadeMedidaModel unidadeMedidaModel;
+
+    @Autowired
+    private EstoqueModel estoqueModel; // Autowire EstoqueModel
 
     public MedicamentoCompletoDTO getId(Integer id) {
         return medicamentoModel.getMedDAO().findMedicamentoCompleto(id);
@@ -46,12 +57,51 @@ public class MedicamentoService {
         if (tipoProdutoModel.getTpDAO().getId(dto.getProduto().getIdtipoproduto()) == null) {
             throw new Exception("Tipo de produto não encontrado");
         }
-
         if (unidadeMedidaModel.getUnDAO().getId(dto.getProduto().getIdunidademedida()) == null) {
             throw new Exception("Unidade de medida não encontrada");
         }
 
-        return medicamentoModel.getMedDAO().gravar(dto.getMedicamento(), dto.getProduto());
+        Connection conn = null;
+        boolean autoCommitOriginal = true;
+        MedicamentoModel novoMedicamento = null; // Declare here to be accessible in finally block
+        try {
+            conn = SingletonDB.getConexao().getConnection();
+            autoCommitOriginal = conn.getAutoCommit();
+            conn.setAutoCommit(false); // Start transaction
+
+            // 1. Gravar o medicamento (que internamente grava o produto)
+            novoMedicamento = medicamentoModel.getMedDAO().gravar(dto.getMedicamento(), dto.getProduto(), conn);
+
+            // CRUCIAL FIX: Initialize stock for the newly created product
+            // Ensure novoMedicamento.getIdproduto() is available after the gravar call
+            if (novoMedicamento != null && novoMedicamento.getIdproduto() != null) {
+                if (!estoqueModel.getEstDAO().inicializarEstoqueComConexao(novoMedicamento.getIdproduto(), conn)) {
+                    throw new SQLException("Erro ao inicializar estoque para o novo medicamento.");
+                }
+            } else {
+                throw new SQLException("ID do produto não obtido após a gravação do medicamento.");
+            }
+
+            conn.commit(); // Commit transaction if successful
+            return novoMedicamento;
+        } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback(); // Rollback on error
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            throw new Exception("Erro ao adicionar medicamento e inicializar estoque: " + e.getMessage(), e);
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(autoCommitOriginal); // Restore auto-commit state
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
     }
 
     public boolean alterar(Integer id, MedicamentoCompletoDTO dto) throws Exception {
@@ -80,7 +130,39 @@ public class MedicamentoService {
             throw new Exception("Unidade de medida não encontrada");
         }
 
-        return medicamentoModel.getMedDAO().alterar(id, dto.getMedicamento(), dto.getProduto());
+        Connection conn = null;
+        boolean autoCommitOriginal = true;
+        try {
+            conn = SingletonDB.getConexao().getConnection();
+            autoCommitOriginal = conn.getAutoCommit();
+            conn.setAutoCommit(false); // Start transaction
+
+            boolean atualizado = medicamentoModel.getMedDAO().alterar(id, dto.getMedicamento(), dto.getProduto(), conn);
+
+            if (atualizado) {
+                conn.commit(); // Commit transaction if successful
+            } else {
+                conn.rollback(); // Rollback if update failed
+            }
+            return atualizado;
+        } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback(); // Rollback on error
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            throw new Exception("Erro ao atualizar medicamento: " + e.getMessage(), e);
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(autoCommitOriginal); // Restore auto-commit state
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
     }
 
     public ResultadoOperacao apagarMedicamento(Integer id) throws Exception {
@@ -90,15 +172,31 @@ public class MedicamentoService {
         }
 
         ResultadoOperacao resultado = new ResultadoOperacao();
+        Connection conn = null;
+        boolean autoCommitOriginal = true;
 
         try {
             boolean podeExcluir = medicamentoModel.getMedDAO().medicamentoPodeSerExcluido(id);
 
             if (podeExcluir) {
-                boolean sucesso = medicamentoModel.getMedDAO().apagar(id);
-                resultado.setOperacao("excluido");
-                resultado.setSucesso(sucesso);
-                resultado.setMensagem(sucesso ? "Medicamento excluído com sucesso" : "Falha ao excluir o medicamento");
+                conn = SingletonDB.getConexao().getConnection();
+                autoCommitOriginal = conn.getAutoCommit();
+                conn.setAutoCommit(false); // Start transaction
+
+                // Pass produtoModel to apagar as it needs its DAO to delete the base product
+                boolean sucesso = medicamentoModel.getMedDAO().apagar(id, produtoModel, conn);
+
+                if (sucesso) {
+                    conn.commit(); // Commit transaction
+                    resultado.setOperacao("excluido");
+                    resultado.setSucesso(true);
+                    resultado.setMensagem("Medicamento excluído com sucesso");
+                } else {
+                    conn.rollback(); // Rollback if deletion failed in DAO
+                    resultado.setOperacao("excluido");
+                    resultado.setSucesso(false);
+                    resultado.setMensagem("Falha ao excluir o medicamento");
+                }
             } else {
                 boolean sucesso = medicamentoModel.getMedDAO().desativarMedicamento(id);
                 resultado.setOperacao("desativado");
@@ -110,9 +208,23 @@ public class MedicamentoService {
 
             return resultado;
 
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new Exception("Erro ao processar a exclusão: " + e.getMessage());
+        } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback(); // Rollback on any SQL Exception
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            throw new Exception("Erro ao processar a exclusão: " + e.getMessage(), e);
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(autoCommitOriginal); // Restore auto-commit state
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
         }
     }
 
@@ -124,7 +236,6 @@ public class MedicamentoService {
 
         return medicamentoModel.getMedDAO().reativarMedicamento(id);
     }
-
 
     public List<MedicamentoCompletoDTO> getNome(String filtro){
         return medicamentoModel.getMedDAO().getNome(filtro);

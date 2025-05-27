@@ -1,7 +1,11 @@
 package salvacao.petcontrol.model;
 
+import org.springframework.stereotype.Repository;
+import salvacao.petcontrol.dao.ReceitaMedicamentoDAO; // Import ReceitaMedicamentoDAO
+
 import java.time.LocalDate;
 
+@Repository
 public class ReceitaMedicamentoModel {
     private Integer idreceita;
     private LocalDate data;
@@ -9,8 +13,10 @@ public class ReceitaMedicamentoModel {
     private String clinica;
     private Integer animal_idanimal;
 
+    private ReceitaMedicamentoDAO receitaMedicamentoDAO; // DAO instance
 
     public ReceitaMedicamentoModel() {
+        this.receitaMedicamentoDAO = new ReceitaMedicamentoDAO(); // Instantiate DAO in default constructor
     }
 
     public ReceitaMedicamentoModel(Integer idreceita, LocalDate data, String medico, String clinica, Integer animal_idanimal) {
@@ -19,8 +25,10 @@ public class ReceitaMedicamentoModel {
         this.medico = medico;
         this.clinica = clinica;
         this.animal_idanimal = animal_idanimal;
+        this.receitaMedicamentoDAO = new ReceitaMedicamentoDAO(); // Instantiate DAO in parameterized constructor
     }
 
+    // Getters and Setters
     public Integer getIdreceita() {
         return idreceita;
     }
@@ -59,5 +67,10 @@ public class ReceitaMedicamentoModel {
 
     public void setAnimal_idanimal(Integer animal_idanimal) {
         this.animal_idanimal = animal_idanimal;
+    }
+
+    // Getter for DAO
+    public ReceitaMedicamentoDAO getRmDAO() {
+        return receitaMedicamentoDAO;
     }
 }

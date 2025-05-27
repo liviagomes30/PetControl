@@ -1,17 +1,13 @@
 package salvacao.petcontrol.dao;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import salvacao.petcontrol.config.SingletonDB;
 import salvacao.petcontrol.model.AcertoEstoqueModel;
 import salvacao.petcontrol.model.ItemAcertoEstoqueModel;
-import salvacao.petcontrol.model.EstoqueModel;
+import salvacao.petcontrol.model.EstoqueModel; // EstoqueModel will be passed from service to access its DAO
+import salvacao.petcontrol.model.ProdutoModel; // ProdutoModel will be passed from service to access its DAO
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Date;
+import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,10 +16,10 @@ import java.math.BigDecimal;
 @Repository
 public class AcertoEstoqueDAO {
 
-    @Autowired
-    private EstoqueModel estoqueModel = new EstoqueModel();
+    // Removed @Autowired EstoqueModel estoqueModel = new EstoqueModel();
+    // It will be passed from the service.
 
-    public AcertoEstoqueModel getId(Integer id) { // Renamed from findById
+    public AcertoEstoqueModel getId(Integer id) {
         AcertoEstoqueModel acerto = null;
         String sql = "SELECT * FROM acertoestoque WHERE idacerto = ?";
 
@@ -49,7 +45,7 @@ public class AcertoEstoqueDAO {
         return acerto;
     }
 
-    public List<AcertoEstoqueModel> getAll() { // Renamed from findAll
+    public List<AcertoEstoqueModel> getAll() {
         List<AcertoEstoqueModel> acertosList = new ArrayList<>();
         String sql = "SELECT * FROM acertoestoque ORDER BY data DESC";
 
@@ -76,7 +72,7 @@ public class AcertoEstoqueDAO {
     }
 
 
-    public List<AcertoEstoqueModel> getByPeriodo(LocalDate dataInicio, LocalDate dataFim) { // Renamed from findByPeriodo
+    public List<AcertoEstoqueModel> getByPeriodo(LocalDate dataInicio, LocalDate dataFim) {
         List<AcertoEstoqueModel> acertosList = new ArrayList<>();
         String sql = "SELECT * FROM acertoestoque WHERE data BETWEEN ? AND ? ORDER BY data DESC";
 
@@ -105,7 +101,7 @@ public class AcertoEstoqueDAO {
     }
 
 
-    public List<AcertoEstoqueModel> getByUsuario(Integer usuarioId) { // Renamed from findByUsuario
+    public List<AcertoEstoqueModel> getByUsuario(Integer usuarioId) {
         List<AcertoEstoqueModel> acertosList = new ArrayList<>();
         String sql = "SELECT * FROM acertoestoque WHERE usuario_pessoa_id = ? ORDER BY data DESC";
 
@@ -133,10 +129,10 @@ public class AcertoEstoqueDAO {
     }
 
 
-    public AcertoEstoqueModel gravarAcerto(AcertoEstoqueModel acerto) throws SQLException { // Renamed from inserirAcerto
+    public AcertoEstoqueModel gravarAcerto(AcertoEstoqueModel acerto, Connection conn) throws SQLException {
         String sql = "INSERT INTO acertoestoque (data, usuario_pessoa_id, motivo, observacao) VALUES (?, ?, ?, ?)";
 
-        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) { // Use provided connection
 
             if (acerto.getData() != null) {
                 stmt.setDate(1, java.sql.Date.valueOf(acerto.getData()));
@@ -162,7 +158,7 @@ public class AcertoEstoqueDAO {
     }
 
 
-    public List<ItemAcertoEstoqueModel> getItensAcerto(Integer acertoId) { // Renamed from findItensAcerto
+    public List<ItemAcertoEstoqueModel> getItensAcerto(Integer acertoId) {
         List<ItemAcertoEstoqueModel> itensList = new ArrayList<>();
         String sql = "SELECT * FROM itemacertoestoque WHERE acerto_id = ?";
 
@@ -188,11 +184,11 @@ public class AcertoEstoqueDAO {
     }
 
 
-    public ItemAcertoEstoqueModel gravarItemAcerto(ItemAcertoEstoqueModel item) throws SQLException { // Renamed from inserirItemAcerto
+    public ItemAcertoEstoqueModel gravarItemAcerto(ItemAcertoEstoqueModel item, Connection conn) throws SQLException {
         String sql = "INSERT INTO itemacertoestoque (acerto_id, produto_id, quantidade_antes, " +
                 "quantidade_depois, tipoajuste) VALUES (?, ?, ?, ?, ?)";
 
-        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) { // Use provided connection
             stmt.setInt(1, item.getAcerto_id());
             stmt.setInt(2, item.getProduto_id());
             stmt.setBigDecimal(3, item.getQuantidade_antes());
@@ -212,50 +208,7 @@ public class AcertoEstoqueDAO {
         return item;
     }
 
-
-    public AcertoEstoqueModel efetuarAcertoEstoque(AcertoEstoqueModel acerto,
-                                                   List<ItemAcertoEstoqueModel> itens) throws SQLException {
-
-        SingletonDB.getConexao().getConnection().setAutoCommit(false);
-
-        try {
-            AcertoEstoqueModel acertoInserido = gravarAcerto(acerto);
-
-            for (ItemAcertoEstoqueModel item : itens) {
-                item.setAcerto_id(acertoInserido.getIdacerto());
-
-                EstoqueModel estoque = estoqueModel.getEstDAO().getByProdutoId(item.getProduto_id());
-                if (estoque == null) {
-                    throw new SQLException("Produto não encontrado no estoque: " + item.getProduto_id());
-                }
-
-                item.setQuantidade_antes(estoque.getQuantidade());
-
-                if (item.getQuantidade_depois().compareTo(item.getQuantidade_antes()) > 0) {
-                    item.setTipoajuste("ENTRADA");
-                } else {
-                    item.setTipoajuste("SAIDA");
-                }
-
-                estoque.setQuantidade(item.getQuantidade_depois());
-                boolean estoqueAtualizado = estoqueModel.getEstDAO().alterar(estoque);
-
-                if (!estoqueAtualizado) {
-                    throw new SQLException("Falha ao atualizar estoque para o produto: " + item.getProduto_id());
-                }
-
-                gravarItemAcerto(item); // Updated method call
-            }
-
-            SingletonDB.getConexao().getConnection().commit();
-            return acertoInserido;
-
-        } catch (SQLException e) {
-            SingletonDB.getConexao().getConnection().rollback();
-            throw e;
-        } finally {
-            SingletonDB.getConexao().getConnection().setAutoCommit(true);
-        }
-    }
-
+    // This method is no longer responsible for transaction management.
+    // It's broken down into smaller, single-responsibility methods to be orchestrated by the Service.
+    // The previous 'efetuarAcertoEstoque' logic is now in AcertoEstoqueService.gravar.
 }

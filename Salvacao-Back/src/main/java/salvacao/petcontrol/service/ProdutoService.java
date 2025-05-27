@@ -1,8 +1,8 @@
-// salvacao.petcontrol.service.ProdutoService.java
 package salvacao.petcontrol.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import salvacao.petcontrol.config.SingletonDB;
 import salvacao.petcontrol.dto.ProdutoCompletoDTO;
 import salvacao.petcontrol.model.EstoqueModel;
 import salvacao.petcontrol.model.ProdutoModel;
@@ -10,28 +10,24 @@ import salvacao.petcontrol.model.UnidadeMedidaModel;
 import salvacao.petcontrol.model.TipoProdutoModel;
 import salvacao.petcontrol.util.ResultadoOperacao;
 
-import java.math.BigDecimal;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
-import salvacao.petcontrol.config.SingletonDB;
 
 @Service
 public class ProdutoService {
 
     @Autowired
-    private ProdutoModel produtoModel = new ProdutoModel();
+    private ProdutoModel produtoModel = new ProdutoModel(); // Autowire the Model, not the DAO
 
     @Autowired
-    private TipoProdutoModel TipoProdutoModel = new TipoProdutoModel();
+    private TipoProdutoModel tipoProdutoModel = new TipoProdutoModel(); // Autowire the Model
 
     @Autowired
-    private UnidadeMedidaModel UnidadeMedidaModel = new UnidadeMedidaModel();
+    private UnidadeMedidaModel unidadeMedidaModel = new UnidadeMedidaModel(); // Autowire the Model
 
     @Autowired
-    private EstoqueModel estoqueModel = new EstoqueModel();
-
+    private EstoqueModel estoqueModel = new EstoqueModel(); // Autowire the Model
 
     public ProdutoCompletoDTO getId(Integer id) {
         return produtoModel.getProdDAO().findProdutoCompleto(id);
@@ -58,18 +54,54 @@ public class ProdutoService {
             throw new Exception("Nome do produto é obrigatório");
         }
 
-        if (TipoProdutoModel.getTpDAO().getId(dto.getProduto().getIdtipoproduto()) == null) {
+        // Access DAO via Model instance
+        if (tipoProdutoModel.getTpDAO().getId(dto.getProduto().getIdtipoproduto()) == null) {
             throw new Exception("Tipo de produto não encontrado");
         }
 
-        if (UnidadeMedidaModel.getUnDAO().getId(dto.getProduto().getIdunidademedida()) == null) {
+        // Access DAO via Model instance
+        if (unidadeMedidaModel.getUnDAO().getId(dto.getProduto().getIdunidademedida()) == null) {
             throw new Exception("Unidade de medida não encontrada");
         }
 
+        Connection conn = null;
+        boolean autoCommitOriginal = true;
         try {
-            return produtoModel.getProdDAO().gravar(dto.getProduto());
-        } catch (RuntimeException e) {
-            throw new Exception("Erro ao adicionar produto: " + e.getMessage(), e);
+            conn = SingletonDB.getConexao().getConnection();
+            autoCommitOriginal = conn.getAutoCommit();
+            conn.setAutoCommit(false); // Start transaction
+
+            // Access DAO via Model instance and pass connection
+            ProdutoModel novoProduto = produtoModel.getProdDAO().gravar(dto.getProduto(), conn);
+
+            if (novoProduto != null && novoProduto.getIdproduto() != null) {
+                // Access EstoqueDAO via EstoqueModel instance and pass connection
+                if (!estoqueModel.getEstDAO().inicializarEstoqueComConexao(novoProduto.getIdproduto(), conn)) {
+                    throw new SQLException("Erro ao gravar estoque inicial");
+                }
+                conn.commit(); // Commit transaction if all successful
+                return novoProduto;
+            } else {
+                conn.rollback(); // Rollback if product couldn't be saved
+                return null;
+            }
+        } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback(); // Rollback on any SQL Exception
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            throw new Exception("Erro ao adicionar produto e inicializar estoque: " + e.getMessage(), e);
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(autoCommitOriginal); // Restore original auto-commit state
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
         }
     }
 
@@ -83,16 +115,19 @@ public class ProdutoService {
             throw new Exception("Nome do produto é obrigatório");
         }
 
+        // Access DAO via Model instance
         ProdutoCompletoDTO existente = produtoModel.getProdDAO().findProdutoCompleto(id);
         if (existente == null) {
             throw new Exception("Produto não encontrado");
         }
 
-        if (TipoProdutoModel.getTpDAO().getId(dto.getProduto().getIdtipoproduto()) == null) {
+        // Access DAO via Model instance
+        if (tipoProdutoModel.getTpDAO().getId(dto.getProduto().getIdtipoproduto()) == null) {
             throw new Exception("Tipo de produto não encontrado");
         }
 
-        if (UnidadeMedidaModel.getUnDAO().getId(dto.getProduto().getIdunidademedida()) == null) {
+        // Access DAO via Model instance
+        if (unidadeMedidaModel.getUnDAO().getId(dto.getProduto().getIdunidademedida()) == null) {
             throw new Exception("Unidade de medida não encontrada");
         }
 
@@ -100,27 +135,41 @@ public class ProdutoService {
     }
 
     public ResultadoOperacao apagarProduto(Integer id) throws Exception {
+        // Access DAO via Model instance
         ProdutoCompletoDTO existente = produtoModel.getProdDAO().findProdutoCompleto(id);
         if (existente == null) {
             throw new Exception("Produto não encontrado");
         }
 
         ResultadoOperacao resultado = new ResultadoOperacao();
+        Connection conn = null;
+        boolean autoCommitOriginal = true;
 
         try {
+            // Access DAO via Model instance
             boolean podeExcluir = produtoModel.getProdDAO().produtoPodeSerExcluido(id);
 
             if (podeExcluir) {
-                boolean sucesso = produtoModel.getProdDAO().apagar(id);
-                resultado.setOperacao("excluido");
-                resultado.setSucesso(sucesso);
+                conn = SingletonDB.getConexao().getConnection();
+                autoCommitOriginal = conn.getAutoCommit();
+                conn.setAutoCommit(false); // Start transaction
+
+                // Access DAO via Model instance and pass connection
+                boolean sucesso = produtoModel.getProdDAO().apagar(id, conn);
 
                 if (sucesso) {
+                    conn.commit(); // Commit transaction
+                    resultado.setOperacao("excluido");
+                    resultado.setSucesso(true);
                     resultado.setMensagem("Produto excluído com sucesso");
                 } else {
+                    conn.rollback(); // Rollback if deletion failed in DAO
+                    resultado.setOperacao("excluido");
+                    resultado.setSucesso(false);
                     resultado.setMensagem("Falha ao excluir o produto");
                 }
             } else {
+                // Access DAO via Model instance
                 boolean sucesso = produtoModel.getProdDAO().desativarProduto(id);
                 resultado.setOperacao("desativado");
                 resultado.setSucesso(sucesso);
@@ -131,16 +180,30 @@ public class ProdutoService {
                     resultado.setMensagem("Falha ao desativar o produto");
                 }
             }
-
             return resultado;
 
         } catch (SQLException e) {
-            e.printStackTrace();
-            throw new Exception("Erro ao processar a exclusão: " + e.getMessage());
+            if (conn != null) {
+                try {
+                    conn.rollback(); // Rollback on any SQL Exception
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            throw new Exception("Erro ao processar a exclusão: " + e.getMessage(), e);
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(autoCommitOriginal); // Restore auto-commit state
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
         }
     }
 
     public boolean reativarProduto(Integer id) throws Exception {
+        // Access DAO via Model instance
         ProdutoCompletoDTO existente = produtoModel.getProdDAO().findProdutoCompleto(id);
         if (existente == null) {
             throw new Exception("Produto não encontrado");

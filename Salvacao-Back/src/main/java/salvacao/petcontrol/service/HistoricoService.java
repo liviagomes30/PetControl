@@ -3,39 +3,55 @@ package salvacao.petcontrol.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import salvacao.petcontrol.config.SingletonDB; // Import SingletonDB
-import salvacao.petcontrol.model.UnidadeMedidaModel;
+import salvacao.petcontrol.model.HistoricoModel;
 
 import java.sql.Connection; // Import Connection
 import java.sql.SQLException; // Import SQLException
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
-public class UnidadeMedidaService {
-
+public class HistoricoService {
     @Autowired
-    private UnidadeMedidaModel unidadeMedidaModel = new UnidadeMedidaModel(); // Autowire the Model
+    private HistoricoModel historicoModel = new HistoricoModel(); // Autowire the Model
 
-    public UnidadeMedidaModel getId(Integer id) {
-        return unidadeMedidaModel.getUnDAO().getId(id);
+    public HistoricoModel getId(Integer id){
+        return historicoModel.getHistDAO().getId(id);
     }
 
-    public List<UnidadeMedidaModel> getAll() {
-        return unidadeMedidaModel.getUnDAO().getAll();
+    public List<HistoricoModel> getAll(){
+        return historicoModel.getHistDAO().getAll();
+    }
+    public List<HistoricoModel> getByAnimal(Integer idAnimal){
+        return historicoModel.getHistDAO().getByAnimal(idAnimal);
+    }
+    public List<HistoricoModel> getByAnimalAndPeriodo(Integer idAnimal, LocalDate dataInicio, LocalDate dataFim){
+        return historicoModel.getHistDAO().getByAnimalAndPeriodo(idAnimal, dataInicio, dataFim);
+    }
+    public List<HistoricoModel> getByVacinacao(Integer idVacinacao){
+        return historicoModel.getHistDAO().getByVacinacao(idVacinacao);
+    }
+    public List<HistoricoModel> getByMedicacao(Integer idMedicacao){
+        return historicoModel.getHistDAO().getByMedicacao(idMedicacao);
+    }
+    public List<HistoricoModel> getByPeriodo(LocalDate dataInicio, LocalDate dataFim){
+        return historicoModel.getHistDAO().getByPeriodo(dataInicio, dataFim);
+    }
+    public boolean existeHistoricoPorAnimal(int idAnimal){
+        return historicoModel.getHistDAO().existeHistoricoPorAnimal(idAnimal);
+    }
+    public List<HistoricoModel> getByDescricao(String filtro){
+        return historicoModel.getHistDAO().getByDescricao(filtro);
     }
 
-    public UnidadeMedidaModel gravar(UnidadeMedidaModel unidadeMedida) throws Exception {
-        if (unidadeMedida.getDescricao() == null || unidadeMedida.getDescricao().trim().isEmpty()) {
+    public HistoricoModel gravar(HistoricoModel historico) throws Exception{
+        if (historico.getDescricao() == null || historico.getDescricao().trim().isEmpty()) {
             throw new Exception("A descrição é obrigatória.");
         }
-        if (unidadeMedida.getDescricao().length() > 100) {
-            throw new Exception("A descrição não pode ter mais de 100 caracteres.");
+        if (historico.getAnimal_idanimal() == null) {
+            throw new Exception("O animal é obrigatório para o histórico.");
         }
-        if (unidadeMedida.getSigla() == null || unidadeMedida.getSigla().trim().isEmpty()) {
-            throw new Exception("A sigla é obrigatória.");
-        }
-        if (unidadeMedida.getSigla().length() > 10) {
-            throw new Exception("A sigla não pode ter mais de 10 caracteres.");
-        }
+        // Additional validation for description length could be added here if needed
 
         Connection conn = null;
         boolean autoCommitOriginal = true;
@@ -45,10 +61,10 @@ public class UnidadeMedidaService {
             conn.setAutoCommit(false); // Start transaction
 
             // Access DAO via Model instance and pass connection
-            UnidadeMedidaModel novaUnidadeMedida = unidadeMedidaModel.getUnDAO().gravar(unidadeMedida, conn);
+            HistoricoModel novoHistorico = historicoModel.getHistDAO().gravar(historico, conn);
 
             conn.commit(); // Commit transaction if successful
-            return novaUnidadeMedida;
+            return novoHistorico;
         } catch (SQLException e) {
             if (conn != null) {
                 try {
@@ -57,7 +73,7 @@ public class UnidadeMedidaService {
                     ex.printStackTrace();
                 }
             }
-            throw new Exception("Erro ao cadastrar unidade de medida: " + e.getMessage(), e);
+            throw new Exception("Erro ao gravar histórico: " + e.getMessage(), e);
         } finally {
             if (conn != null) {
                 try {
@@ -69,24 +85,21 @@ public class UnidadeMedidaService {
         }
     }
 
-    public boolean alterar(UnidadeMedidaModel unidadeMedida) throws Exception {
-        if (unidadeMedida.getDescricao() == null || unidadeMedida.getDescricao().trim().isEmpty()) {
+    public boolean alterar(HistoricoModel historico) throws Exception{
+        if (historico.getIdhistorico() == null) {
+            throw new Exception("ID do histórico é obrigatório para alteração.");
+        }
+        if (historico.getDescricao() == null || historico.getDescricao().trim().isEmpty()) {
             throw new Exception("A descrição é obrigatória.");
         }
-        if (unidadeMedida.getDescricao().length() > 100) {
-            throw new Exception("A descrição não pode ter mais de 100 caracteres.");
-        }
-        if (unidadeMedida.getSigla() == null || unidadeMedida.getSigla().trim().isEmpty()) {
-            throw new Exception("A sigla é obrigatória.");
-        }
-        if (unidadeMedida.getSigla().length() > 10) {
-            throw new Exception("A sigla não pode ter mais de 10 caracteres.");
+        if (historico.getAnimal_idanimal() == null) {
+            throw new Exception("O animal é obrigatório para o histórico.");
         }
 
-        // Access DAO via Model instance
-        UnidadeMedidaModel existente = unidadeMedidaModel.getUnDAO().getId(unidadeMedida.getIdUnidadeMedida());
+        // Access DAO via Model instance to check if it exists
+        HistoricoModel existente = historicoModel.getHistDAO().getId(historico.getIdhistorico());
         if (existente == null) {
-            throw new Exception("Unidade de medida não encontrada para atualização.");
+            throw new Exception("Histórico não encontrado para atualização.");
         }
 
         Connection conn = null;
@@ -97,7 +110,7 @@ public class UnidadeMedidaService {
             conn.setAutoCommit(false); // Start transaction
 
             // Access DAO via Model instance and pass connection
-            boolean atualizado = unidadeMedidaModel.getUnDAO().alterar(unidadeMedida, conn);
+            boolean atualizado = historicoModel.getHistDAO().alterar(historico, conn);
 
             if (atualizado) {
                 conn.commit(); // Commit transaction if successful
@@ -113,7 +126,7 @@ public class UnidadeMedidaService {
                     ex.printStackTrace();
                 }
             }
-            throw new Exception("Erro ao atualizar unidade de medida: " + e.getMessage(), e);
+            throw new Exception("Erro ao alterar histórico: " + e.getMessage(), e);
         } finally {
             if (conn != null) {
                 try {
@@ -125,11 +138,11 @@ public class UnidadeMedidaService {
         }
     }
 
-    public boolean apagar(Integer id) throws Exception {
-        // Access DAO via Model instance
-        UnidadeMedidaModel existente = unidadeMedidaModel.getUnDAO().getId(id);
+    public boolean apagar(Integer id) throws Exception{
+        // Access DAO via Model instance to check if it exists
+        HistoricoModel existente = historicoModel.getHistDAO().getId(id);
         if (existente == null) {
-            throw new Exception("Unidade de medida não encontrada para exclusão.");
+            throw new Exception("Histórico não encontrado para exclusão.");
         }
 
         Connection conn = null;
@@ -140,7 +153,7 @@ public class UnidadeMedidaService {
             conn.setAutoCommit(false); // Start transaction
 
             // Access DAO via Model instance and pass connection
-            boolean deletado = unidadeMedidaModel.getUnDAO().apagar(id, conn);
+            boolean deletado = historicoModel.getHistDAO().apagar(id, conn);
 
             if (deletado) {
                 conn.commit(); // Commit transaction if successful
@@ -156,7 +169,7 @@ public class UnidadeMedidaService {
                     ex.printStackTrace();
                 }
             }
-            throw new Exception("Erro ao excluir unidade de medida: " + e.getMessage(), e);
+            throw new Exception("Erro ao excluir histórico: " + e.getMessage(), e);
         } finally {
             if (conn != null) {
                 try {
@@ -166,9 +179,5 @@ public class UnidadeMedidaService {
                 }
             }
         }
-    }
-
-    public List<UnidadeMedidaModel> getByDescricaoSigla(String filtro) {
-        return unidadeMedidaModel.getUnDAO().getByDescricaoSigla(filtro);
     }
 }
