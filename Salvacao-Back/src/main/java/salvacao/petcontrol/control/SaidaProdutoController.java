@@ -10,6 +10,7 @@ import salvacao.petcontrol.model.EstoqueModel;
 import salvacao.petcontrol.model.RegistroModel;
 import salvacao.petcontrol.service.EntradaProdutoService;
 import salvacao.petcontrol.dto.ItensEntradaDTO;
+import salvacao.petcontrol.service.SaidaProdutoService;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -17,10 +18,14 @@ import java.util.List;
 
 @CrossOrigin(origins = "*")
 @RestController
-@RequestMapping("/entrada-produto")
-public class EntradaProdutoController {
+@RequestMapping("/saida-produto")
+public class SaidaProdutoController {
+
     @Autowired
     private EntradaProdutoService entradaProdutoService;
+
+    @Autowired
+    private SaidaProdutoService saidaProdutoService;
 
     @GetMapping()
     public ResponseEntity<Object> getAll(){
@@ -33,7 +38,7 @@ public class EntradaProdutoController {
 
     @GetMapping("/registro")
     public ResponseEntity<Object> getAllRegistro(){
-        List<RegistroModel> registrosList = entradaProdutoService.getRegistros();
+        List<RegistroModel> registrosList = saidaProdutoService.getRegistros();
         if (!registrosList.isEmpty())
             return ResponseEntity.ok(registrosList);
         else
@@ -75,7 +80,7 @@ public class EntradaProdutoController {
             LocalDate fim = LocalDate.parse(dataFim);
 
             // Chama o serviço que faz a busca
-            List<RegistroModel> resultado = entradaProdutoService.getRegistrosPeriodo(inicio,fim);
+            List<RegistroModel> resultado = saidaProdutoService.getRegistrosPeriodo(inicio,fim);
 
             if (resultado.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Nenhuma movimentação encontrada no período.");
@@ -95,7 +100,7 @@ public class EntradaProdutoController {
     @PostMapping()
     public ResponseEntity<Object> addRegistroEntrada(@RequestBody EntradaProdutoModel registro){
         try {
-            entradaProdutoService.addRegistro(registro);
+            saidaProdutoService.addRegistro(registro);
             return ResponseEntity.ok(registro);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -106,7 +111,7 @@ public class EntradaProdutoController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> apagarRegistro(@PathVariable Integer id){
         try {
-            if (entradaProdutoService.apagar(id))
+            if (saidaProdutoService.apagar(id))
                 return ResponseEntity.ok("Registro excluído com sucesso");
             else
                 return ResponseEntity.badRequest().body("Erro ao excluir registros");

@@ -2,9 +2,6 @@ package salvacao.petcontrol.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import salvacao.petcontrol.dto.EntradaProdutoDTO;
-import salvacao.petcontrol.dto.ItensEntradaDTO;
-import salvacao.petcontrol.dto.ProdutoCompletoDTO;
 import salvacao.petcontrol.model.*;
 
 import java.math.BigDecimal;
@@ -15,13 +12,11 @@ import java.util.List;
 import java.sql.*;
 import salvacao.petcontrol.config.SingletonDB;
 
+
 @Service
-public class EntradaProdutoService {
+public class SaidaProdutoService {
     @Autowired
     private EstoqueModel estoqueModel = new EstoqueModel();
-
-    @Autowired
-    private ProdutoModel produtoModel = new ProdutoModel();
 
     @Autowired
     private  MotivoMovimentacaoModel motivoMovimentacaoModel = new MotivoMovimentacaoModel();
@@ -38,21 +33,6 @@ public class EntradaProdutoService {
     @Autowired
     private PessoaModel pessoaModel = new PessoaModel();
 
-    public List<EntradaProdutoDTO> getPoduto(){
-        List<ProdutoCompletoDTO> produtoDTO = produtoModel.getProdDAO().getAllProdutos();
-        List<EntradaProdutoDTO> entradalist = new ArrayList<>();
-
-        for(ProdutoCompletoDTO prod : produtoDTO)
-            entradalist.add(new EntradaProdutoDTO(prod,
-                    estoqueModel.getEstDAO().getByProdutoId(prod.getProduto().getIdproduto())));
-
-        return  entradalist;
-    }
-
-    public EstoqueModel getEstoque(Integer id){
-        EstoqueModel estoque = estoqueModel.getEstDAO().getByProdutoId(id);
-        return estoque;
-    }
 
     public boolean addRegistro(EntradaProdutoModel registro) throws Exception {
         Connection conn = SingletonDB.getConexao().getConnection();
@@ -62,7 +42,7 @@ public class EntradaProdutoService {
             // Iniciar transação
             conn.setAutoCommit(false);
 
-            MotivoMovimentacaoModel motivo = motivoMovimentacaoModel.getMotivoMovimentacaoDAO().getTipo("ENTRADA");
+            MotivoMovimentacaoModel motivo = motivoMovimentacaoModel.getMotivoMovimentacaoDAO().getTipo("SAIDA");
 
             // Pegar ID_usuario do token de login
             UsuarioModel usuario = usuarioModel.getUsuDAO().getId(registro.getUsuarioId());
@@ -93,11 +73,15 @@ public class EntradaProdutoService {
                     EstoqueModel estoque = estoqueModel.getEstDAO().getByProdutoId(registro.getItens().get(i).getProdutoId());
                     if (novoItem != null) {
                         BigDecimal valorAdd = new BigDecimal(Double.toString(registro.getItens().get(i).getQuantidade()));
-                        estoque.setQuantidade(estoque.getQuantidade().add(valorAdd));
-
-                        if (!estoqueModel.getEstDAO().alterar(estoque)) {
+                        if (valorAdd.compareTo(estoque.getQuantidade()) <= 0) {
+                            estoque.setQuantidade(estoque.getQuantidade().subtract(valorAdd));
+                            if (!estoqueModel.getEstDAO().alterar(estoque)) {
+                                sucesso = false;
+                                throw new Exception("Erro ao atualizar estoque. Rollback executado.");
+                            }
+                        } else {
                             sucesso = false;
-                            throw new Exception("Erro ao atualizar estoque. Rollback executado.");
+                            throw new Exception("Erro ao atualizar estoque.\nQuantidade a ser retirada menor que quantidade existente\nRollback executado.");
                         }
                     }
                     else
@@ -134,7 +118,7 @@ public class EntradaProdutoService {
     }
 
     public List<RegistroModel> getRegistros(){
-        List<MovimentacaoEstoqueModel> movimentacoes = movimentacaoEstoqueModel.getMovimentacaoEstoqueDAO().getTipo("ENTRADA");
+        List<MovimentacaoEstoqueModel> movimentacoes = movimentacaoEstoqueModel.getMovimentacaoEstoqueDAO().getTipo("SAIDA");
         PessoaModel pessoa=null;
         RegistroModel registro = null;
         List<RegistroModel> registros = new ArrayList<>();
@@ -154,7 +138,7 @@ public class EntradaProdutoService {
     }
 
     public List<RegistroModel> getRegistrosPeriodo(LocalDate ini, LocalDate fim){
-        List<MovimentacaoEstoqueModel> movimentacoes = movimentacaoEstoqueModel.getMovimentacaoEstoqueDAO().buscarPorPeriodo(ini,fim,"ENTRADA");
+        List<MovimentacaoEstoqueModel> movimentacoes = movimentacaoEstoqueModel.getMovimentacaoEstoqueDAO().buscarPorPeriodo(ini,fim, "SAIDA");
         PessoaModel pessoa=null;
         RegistroModel registro = null;
         List<RegistroModel> registros = new ArrayList<>();
@@ -173,35 +157,6 @@ public class EntradaProdutoService {
         return  registros;
     }
 
-    public ItensEntradaDTO getItem(Integer id){
-        MovimentacaoEstoqueModel movimentacao = movimentacaoEstoqueModel.getMovimentacaoEstoqueDAO().getId(id);
-        List<ItemMovimentacaoModel> itens = itemMovimentacaoModel.getItemMovimentacaoDAO().getIdMovimentacao(id);
-        List<ItensModel> itensModel = new ArrayList<>();
-        ItensModel item = null;
-        ProdutoCompletoDTO produto = null;
-        PessoaModel pessoa = null;
-        ItensEntradaDTO itensEntrada = null;
-
-        for(ItemMovimentacaoModel  it:itens){
-            produto = produtoModel.getProdDAO().findProdutoCompleto(it.getProdutoId());
-
-            item = new ItensModel(produto.getProduto().getNome(),
-                    produto.getTipoProduto().getDescricao(),
-                    produto.getUnidadeMedida().getSigla(),
-                    it.getQuantidade());
-
-            itensModel.add(item);
-        }
-
-        pessoa = pessoaModel.getPessoaDAO().getId(movimentacao.getUsuarioPessoaId());
-        itensEntrada = new ItensEntradaDTO(id,
-                pessoa.getNome(),
-                movimentacao.getData(),
-                movimentacao.getObs(),
-                itensModel);
-
-        return  itensEntrada;
-    }
 
     public boolean apagar(Integer id) throws Exception {
         Connection conn = SingletonDB.getConexao().getConnection();
@@ -220,17 +175,14 @@ public class EntradaProdutoService {
                 while (i < itens.size() && sucesso) {
                     estoque = estoqueModel.getEstDAO().getByProdutoId(itens.get(i).getProdutoId());
                     BigDecimal valorAdd = new BigDecimal(Double.toString(itens.get(i).getQuantidade()));
+                    estoque.setQuantidade(estoque.getQuantidade().add(valorAdd));
 
-                    if (valorAdd.compareTo(estoque.getQuantidade()) <= 0) {
-                        estoque.setQuantidade(estoque.getQuantidade().subtract(valorAdd));
-                        if (!estoqueModel.getEstDAO().alterar(estoque)) {
-                            sucesso = false;
-                            erro = "Erro ao atualizar estoque. Rollback executado.";
-                        }
-                    } else {
+                    if (!estoqueModel.getEstDAO().alterar(estoque)) {
                         sucesso = false;
-                        erro = "Erro ao atualizar estoque.\nQuantidade a ser retirada menor que quantidade existente\nRollback executado.";
+                        System.out.println("AQUI 2");
+                        erro = "Erro ao atualizar estoque. Rollback executado.";
                     }
+
                     i++;
                 }
             }

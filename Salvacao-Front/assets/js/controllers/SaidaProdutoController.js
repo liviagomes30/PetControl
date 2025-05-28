@@ -1,12 +1,12 @@
-import EntradaProdutoService from "../services/EntradaProdutoService.js";
+import SaidaProdutoService from "../services/SaidaProdutoService.js";
 import EntradaProdutoModel from "../models/EntradaProdutoModel.js";
 import MensagensPadroes from "../utils/mensagensPadroes.js";
 import UIComponents from "../components/uiComponents.js";
 
-class EntradaProdutoController{
+class SaidaProdutoController{
     constructor(){
-        this.service = new EntradaProdutoService();
-        this.itensEntrada = [];
+        this.service = new SaidaProdutoService();
+        this.itensSaida = [];
         this.produtosCarregados = [];
     }
 
@@ -51,11 +51,11 @@ class EntradaProdutoController{
         }
     }
 
-    async carregarDetalhesEntrada(id){
+    async carregarDetalhesSaida(id){
         try{
-            UIComponents.Loading.mostrar("Carregando detalhes da entrada...");
+            UIComponents.Loading.mostrar("Carregando detalhes da saída...");
             const itens = await this.service.listarItens(id);
-            const tabela = document.getElementById("itensEntrada");
+            const tabela = document.getElementById("itensSaida");
 
             if (!tabela) return;
 
@@ -91,9 +91,9 @@ class EntradaProdutoController{
 
     
             }catch (error) {
-                console.error("Erro ao carregar detalhes da entrada:", error);
+                console.error("Erro ao carregar detalhes da saída:", error);
                 UIComponents.ModalErro.mostrar(
-                "Não foi possível carregar os detalhes da entrada."
+                "Não foi possível carregar os detalhes da saída."
                 );
                 UIComponents.Loading.esconder();
         }
@@ -164,7 +164,7 @@ class EntradaProdutoController{
             <td>${data || "-"}</td>
             <td>${reg.oboservacao || "-"}</td>
             <td>
-                <a href="detalhesEntrada.html?id=${
+                <a href="detalhesSaida.html?id=${
                     reg.id
                     }" class="btn btn-sm btn-primary">
                         <i class="bi bi-eye me-1"></i> Detalhes
@@ -232,11 +232,11 @@ class EntradaProdutoController{
 
     async inicializarFormulario() {
     try {
-        UIComponents.Validacao.limparErros("formEntrada");
+        UIComponents.Validacao.limparErros("formSaida");
 
-        const form = document.getElementById("formEntrada");
+        const form = document.getElementById("formSaida");
         if (form) {
-            form.addEventListener("submit", (e) => this.efetuarEntrada(e));
+            form.addEventListener("submit", (e) => this.efetuarSaida(e));
         }
 
         const btnAdicionarItem = document.getElementById("btnAdicionarItem");
@@ -282,70 +282,102 @@ class EntradaProdutoController{
     }
   }
 
-    async efetuarEntrada(event) {
-        event.preventDefault();
-        try {
-          UIComponents.Validacao.limparErros("formEntrada");
-          const observacao = document.getElementById("observacao")?.value || "";
-          const tbody = document.getElementById("itensEntrada");
-            const linhas = tbody.querySelectorAll("tr");
+  validarDataNaoFutura(elemento) {
+      const data = new Date(elemento);
+      const hoje = new Date();
+      
+      data.setHours(0, 0, 0, 0);
+      hoje.setHours(0, 0, 0, 0);
 
-            if (linhas.length === 1 && linhas[0].id === "nenhumItem") {
-                    UIComponents.Validacao.mostrarErro(
-                    "itensEntrada",
-                    "É necessario adicionar ao menos um item"
-                    );
-                 return;
-            }
-          const hoje = new Date();
-          hoje.setHours(0, 0, 0, 0);
+      if (data > hoje) {
+
+        UIComponents.Validacao.mostrarErro("dataUso","A data não pode ser futura");
+        return true;
+      }
+      else
+        return false;
+    }
+
+  async efetuarSaida(event) {
+      event.preventDefault();
+      try {
+          UIComponents.Validacao.limparErros("formSaida");
+          const observacao = document.getElementById("observacao")?.value || "";
+          const data = document.getElementById("dataUso")?.value || "";
+
+          console.log("data: ",data);
+          if(!data)
+          {
+                  console.log("data: ",data);
+                  UIComponents.Validacao.mostrarErro(
+                  "dataUso",
+                      "É necessario informar a data de uso"
+                  );
+                  return;
+          }
+
+          if(this.validarDataNaoFutura(data)){
+            return;
+          }
+          
+          const tbody = document.getElementById("itensSaida");
+          const linhas = tbody.querySelectorAll("tr");
+
+          if (linhas.length === 1 && linhas[0].id === "nenhumItem") {
+                  UIComponents.Validacao.mostrarErro(
+                  "itensSaida",
+                  "É adicionar ao menos um item"
+                  );
+                return;
+          }
+          
           const entradaProdutos = new EntradaProdutoModel({
-            usuario_pessoa_id: 1,
-            observacao: observacao,
-            data: hoje,
-            itens: this.itensEntrada
+              usuario_pessoa_id: 1,
+              observacao: observacao,
+              data: data,
+              itens: this.itensSaida
           });
 
-          console.log("Aqui: ",hoje);
+          
           
           UIComponents.ModalConfirmacao.mostrar(
-            "Confirmar entrada de produtos",
-            "Deseja confirmar a entrada de produtos?",
-            async () => {
+              "Confirmar saída de produtos",
+              "Deseja confirmar a saída de produtos?",
+              async () => {
               try {
-                UIComponents.Loading.mostrar("Processando entrada de produtos...");
-                const resultado = await this.service.cadastrar(
+                  UIComponents.Loading.mostrar("Processando saída de produtos...");
+                  const resultado = await this.service.cadastrar(
                   entradaProdutos
-                );
-                console.log("Resultado da entrada de produtos:", resultado);
-                UIComponents.Toast.sucesso(
-                  "Entrada de produtos realizada com sucesso!"
-                );
-                window.location.href =
-                  "listarregistros.html?message=Entrada de produtos realizado com sucesso!";
+                  );
+                  console.log("Resultado da saída de produtos:", resultado);
+                  UIComponents.Toast.sucesso(
+                  "Saída de produtos realizada com sucesso!"
+                  );
+                  window.location.href =
+                  "listarregistros.html?message=Saída de produtos realizado com sucesso!";
               } catch (error) {
-                console.error("Erro ao efetuar entrada:", error);
-                UIComponents.ModalErro.mostrar(
-                  "Não foi possível efetuar a entrada de produtos: " +
-                    (error.message || "")
-                );
-                UIComponents.Loading.esconder();
+                  console.error("Erro ao efetuar saída:", error);
+                  UIComponents.ModalErro.mostrar(
+                  "Não foi possível efetuar a saída de produtos: " +
+                      (error.message || "")
+                  );
+                  UIComponents.Loading.esconder();
               }
-            }
+              }
           );
-        } catch (error) {
-          console.error("Erro ao processar entrada:", error);
-          UIComponents.ModalErro.mostrar(
-            "Erro ao processar a entrada de produtos: " + (error.message || "")
-          );
-        }
+      } catch (error) {
+        console.error("Erro ao processar saída:", error);
+        UIComponents.ModalErro.mostrar(
+          "Erro ao processar a saída de produtos: " + (error.message || "")
+        );
       }
+    }
 
     atualizarTabelaItens() {
-        const tabela = document.getElementById("itensEntrada");
+        const tabela = document.getElementById("itensSaida");
         if (!tabela) return;
         tabela.innerHTML = "";
-        if (this.itensEntrada.length === 0) {
+        if (this.itensSaida.length === 0) {
           tabela.innerHTML = ` 
             <tr id="nenhumItem"> 
               <td colspan="5" class="text-center">Nenhum item adicionado</td> 
@@ -353,7 +385,7 @@ class EntradaProdutoController{
           `;
           return;
         }
-        this.itensEntrada.forEach((item, index) => {
+        this.itensSaida.forEach((item, index) => {
           const tr = document.createElement("tr");
          
           tr.innerHTML = ` 
@@ -378,9 +410,11 @@ class EntradaProdutoController{
       }
 
     adicionarItem() {
-        UIComponents.Validacao.limparErros("formEntrada");
+        UIComponents.Validacao.limparErros("formSaida");
         const produtoId = document.getElementById("selectProduto")?.value;
         const novaQuantidade = document.getElementById("quantidade")?.value;
+        var estoque = document.getElementById("quantidadeAtual")?.value;
+        estoque = parseFloat(estoque.replace(',', '.'));
         let adicionado = false;
         let valido = true;
         if (!produtoId) {
@@ -413,26 +447,47 @@ class EntradaProdutoController{
               "Informe um valor numérico válido"
             );
             valido = false;
-          } else if (novaQtdNum <= 0) {
-            UIComponents.Validacao.mostrarErro(
-              "quantidade",
-              "A quantidade não pode ser zero ou negativa"
-            );
-            valido = false;
-          }
+          } 
+          else {
+                if (novaQtdNum <= 0) {
+                    UIComponents.Validacao.mostrarErro(
+                    "quantidade",
+                    "A quantidade não pode ser zero ou negativa"
+                    );
+                    valido = false;
+                }
+                else {
+                    if(novaQtdNum > estoque){
+                        UIComponents.Validacao.mostrarErro(
+                        "quantidade",
+                        "A quantidade não pode ser maior que o total em estoque"
+                        );
+                        valido = false;
+                    }
+                }
+            }
         }
         console.log(novaQtdNum);
         if (!valido) return;
-        const produtoExistente = this.itensEntrada.find(
+        const produtoExistente = this.itensSaida.find(
           (item) => item.produtoId === parseInt(produtoId)
         );
         if (produtoExistente) {
-          // Soma a nova quantidade à existente
-          produtoExistente.quantidade += novaQtdNum;
-          console.log("quantidade: ",produtoExistente.quantidade);
-          // Atualiza a tabela
-          this.atualizarTabelaItens();
-          adicionado = true;
+            if((novaQtdNum+produtoExistente.quantidade) > estoque){
+                UIComponents.Validacao.mostrarErro(
+                "quantidade",
+                "A quantidade não pode ser maior que o total em estoque"
+                );
+                valido = false;
+                return;
+            }
+            else{
+                produtoExistente.quantidade += novaQtdNum;
+                console.log("quantidade: ",produtoExistente.quantidade);
+                
+                this.atualizarTabelaItens();
+                adicionado = true;
+            }
         }
         const produtoSelecionado = this.produtosCarregados.find(
             (p) => p.produto.produto.idproduto === parseInt(produtoId)
@@ -442,15 +497,15 @@ class EntradaProdutoController{
           UIComponents.ModalErro.mostrar("Produto não encontrado");
           return;
         }
-        
+
         if(!adicionado){
-          const novoItem = {
-            produtoId: parseInt(produtoId),
-            nome: produtoSelecionado.produto.produto.nome,
-            quantidade: novaQtdNum
-          };
-          this.itensEntrada.push(novoItem);
-          this.atualizarTabelaItens();
+            const novoItem = {
+                produtoId: parseInt(produtoId),
+                nome: produtoSelecionado.produto.produto.nome,
+                quantidade: novaQtdNum
+            };
+            this.itensSaida.push(novoItem);
+            this.atualizarTabelaItens();
         }
     
         const modalElement = document.getElementById("modalItem");
@@ -464,7 +519,7 @@ class EntradaProdutoController{
     }
 
     removerItem(index) {
-        this.itensEntrada.splice(index, 1);
+        this.itensSaida.splice(index, 1);
         this.atualizarTabelaItens();
         UIComponents.Toast.sucesso("Item removido com sucesso");
       }
@@ -522,8 +577,8 @@ class EntradaProdutoController{
 
 }
 
-const entradaProdutoController = new EntradaProdutoController();
-window.entradaProdutoController = entradaProdutoController;
+const saidaProdutoController = new SaidaProdutoController();
+window.saidaProdutoController = saidaProdutoController;
 
-export { entradaProdutoController };
-export default EntradaProdutoController;
+export { saidaProdutoController };
+export default SaidaProdutoController;

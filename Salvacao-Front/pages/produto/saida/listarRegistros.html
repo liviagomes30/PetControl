@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PetControl - Listar Registros de entrada</title>
+    <title>PetControl - Listar Registros de saída</title>
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
@@ -19,15 +19,15 @@
     <div class="container">
       <div class="header d-flex justify-content-between align-items-center">
         <h1 class="h3" style="color: var(--vermelho-escuro)">
-          Registrar Entrada
+          Registrar Saída
         </h1>
-        <a href="registrarEntrada.html" class="btn btn-primary">
+        <a href="registrarSaida.html" class="btn btn-primary">
           Novo Registro
         </a>
       </div>
 
       <div class="filtro-container mt-3">
-        <form id="formFiltroEntrada" class="needs-validation" novalidate>
+        <form id="formFiltroSaida" class="needs-validation" novalidate>
           <div class="row g-2 align-items-end">
             <div class="col-md-3">
               <label for="dataInicio" class="form-label required"
@@ -74,7 +74,7 @@
             <tr>
               <th>ID</th>
               <th>Usuario</th>
-              <th>Data</th>
+              <th>Data do Uso</th>
               <th>Observação</th>
               <th>Ações</th>
             </tr>
@@ -94,10 +94,11 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script type="module">
-      import {entradaProdutoController} from "../../../assets/js/controllers/EntradaProdutoController.js";
+      import {saidaProdutoController} from "../../../assets/js/controllers/SaidaProdutoController.js";
       import UIComponents from "../../../assets/js/components/uiComponents.js";
 
       window.addEventListener("DOMContentLoaded", () => {
+        console.log("DOM carregado");
         const msg = localStorage.getItem("mensagemSucesso");
         if (msg) {
           UIComponents.Toast.sucesso(msg);
@@ -117,18 +118,20 @@
         }
       });
 
-      document.addEventListener("DOMContentLoaded", () => {
-        entradaProdutoController.inicializarListagemRegistros();
-        entradaProdutoController.inicializarListagemRegistros();
 
-        const formFiltro = document.getElementById("formFiltroEntrada");
+
+      document.addEventListener("DOMContentLoaded", () => {
+        saidaProdutoController.inicializarListagemRegistros();
+        saidaProdutoController.inicializarListagemRegistros();
+
+        const formFiltro = document.getElementById("formFiltroSaida");
         if (formFiltro) {
           formFiltro.addEventListener("submit", (e) => {
             e.preventDefault();
             if (!formFiltro.checkValidity()) {
               e.stopPropagation();
             } else {
-              entradaProdutoController.aplicarFiltro(e);
+              saidaProdutoController.aplicarFiltro(e);
             }
             formFiltro.classList.add("was-validated");
           });
@@ -140,7 +143,7 @@
             document.getElementById("dataInicio").value = "";
             document.getElementById("dataFim").value = "";
             formFiltro.classList.remove("was-validated");
-            entradaProdutoController.inicializarListagemRegistros();
+            saidaProdutoController.inicializarListagemRegistros();
           });
         }
 

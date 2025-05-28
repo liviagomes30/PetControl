@@ -122,35 +122,38 @@ public class MovimentacaoEstoqueDAO {
         }
     }
 
-    public List<MovimentacaoEstoqueModel> buscarPorPeriodo(LocalDate dataInicio, LocalDate dataFim) {
+    public List<MovimentacaoEstoqueModel> buscarPorPeriodo(LocalDate dataInicio, LocalDate dataFim, String tipoMovimentacao) {
         List<MovimentacaoEstoqueModel> lista = new ArrayList<>();
 
-        String sql = "SELECT * FROM movimentacaoestoque WHERE data BETWEEN ? AND ? ORDER BY data";
+        String sql = "SELECT * FROM movimentacaoestoque WHERE data BETWEEN ? AND ? AND tipomovimentacao = ? ORDER BY data";
         MovimentacaoEstoqueModel mov = null;
 
         try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
             stmt.setDate(1, java.sql.Date.valueOf(dataInicio));
             stmt.setDate(2, java.sql.Date.valueOf(dataFim));
+            stmt.setString(3, tipoMovimentacao);
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    mov = new MovimentacaoEstoqueModel(rs.getInt("idmovimentacao"),
+                    mov = new MovimentacaoEstoqueModel(
+                            rs.getInt("idmovimentacao"),
                             rs.getString("tipomovimentacao"),
                             rs.getDate("data").toLocalDate(),
                             rs.getInt("usuario_pessoa_id"),
                             rs.getString("obs"),
-                            rs.getString("fornecedor"));
+                            rs.getString("fornecedor")
+                    );
 
                     lista.add(mov);
                 }
             }
 
         } catch (SQLException e) {
-            System.err.println("Erro ao buscar movimentações por período: " + e.getMessage());
+            System.err.println("Erro ao buscar movimentações por período e tipo: " + e.getMessage());
         }
-
         return lista;
     }
+
 
 
 

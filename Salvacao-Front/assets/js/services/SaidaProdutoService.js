@@ -1,7 +1,7 @@
 class EntradaProdutoService{
     constructor(baseUrl = "http://localhost:8080") {
     this.baseUrl = baseUrl;
-    this.endpoint = "/entrada-produto";
+    this.endpoint = "/saida-produto";
   }
 
   async listarProdutos() {
