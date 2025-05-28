@@ -17,11 +17,6 @@ import java.util.List;
 @Repository
 public class ReceitaMedicamentoDAO {
 
-    /**
-     * Busca uma receita de medicamento pelo seu ID.
-     * @param id O ID da receita.
-     * @return O objeto ReceitaMedicamentoModel correspondente, ou null se não encontrado.
-     */
     public ReceitaMedicamentoModel getId(Integer id) {
         ReceitaMedicamentoModel receita = null;
         String sql = "SELECT * FROM receitamedicamento WHERE idreceita = ?";
@@ -46,13 +41,7 @@ public class ReceitaMedicamentoDAO {
         return receita;
     }
 
-    /**
-     * Grava uma nova receita de medicamento no banco de dados.
-     * @param receita O objeto ReceitaMedicamentoModel a ser gravado.
-     * @param conn A conexão JDBC a ser usada para a transação.
-     * @return O objeto ReceitaMedicamentoModel com o ID gerado pelo banco de dados.
-     * @throws SQLException Se ocorrer um erro de banco de dados.
-     */
+
     public ReceitaMedicamentoModel gravar(ReceitaMedicamentoModel receita, Connection conn) throws SQLException {
         String sql = "INSERT INTO receitamedicamento (data, medico, clinica, animal_idanimal) " +
                 "VALUES (?, ?, ?, ?)";
@@ -81,13 +70,6 @@ public class ReceitaMedicamentoDAO {
         return receita;
     }
 
-    /**
-     * Atualiza uma receita de medicamento existente no banco de dados.
-     * @param receita O objeto ReceitaMedicamentoModel com os dados a serem atualizados.
-     * @param conn A conexão JDBC a ser usada para a transação.
-     * @return true se a receita foi atualizada com sucesso, false caso contrário.
-     * @throws SQLException Se ocorrer um erro de banco de dados.
-     */
     public boolean alterar(ReceitaMedicamentoModel receita, Connection conn) throws SQLException {
         String sql = "UPDATE receitamedicamento SET data = ?, medico = ?, clinica = ?, animal_idanimal = ? " +
                 "WHERE idreceita = ?";
@@ -109,14 +91,7 @@ public class ReceitaMedicamentoDAO {
         }
     }
 
-    /**
-     * Exclui uma receita de medicamento do banco de dados pelo seu ID.
-     * Antes de excluir, verifica se a receita está associada a alguma posologia.
-     * @param id O ID da receita a ser excluída.
-     * @param conn A conexão JDBC a ser usada para a transação.
-     * @return true se a receita foi excluída com sucesso, false caso contrário.
-     * @throws SQLException Se a receita estiver associada a uma posologia ou ocorrer um erro de banco de dados.
-     */
+
     public boolean apagar(Integer id, Connection conn) throws SQLException {
         String sqlCheckPosologia = "SELECT COUNT(*) FROM posologia WHERE receitamedicamento_idreceita = ?";
         try (PreparedStatement stmtCheck = conn.prepareStatement(sqlCheckPosologia)) {

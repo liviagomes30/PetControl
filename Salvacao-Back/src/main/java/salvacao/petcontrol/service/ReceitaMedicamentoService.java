@@ -37,7 +37,6 @@ public class ReceitaMedicamentoService {
     }
 
     public ReceitaMedicamentoModel gravar(ReceitaMedicamentoModel receita) throws Exception {
-        // Basic validations
         if (receita.getAnimal_idanimal() == null) {
             throw new Exception("ID do animal é obrigatório para a receita.");
         }

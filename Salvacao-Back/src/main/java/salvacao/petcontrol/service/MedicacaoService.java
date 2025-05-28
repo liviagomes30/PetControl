@@ -210,14 +210,14 @@ public class MedicacaoService {
     public ResultadoOperacao efetuarMedicacao(
             Integer idAnimal,
             Integer idMedicamentoProduto,
-            Integer idReceitaMedicamento,
+            Integer idReceitaMedicamento, // Este pode ser nulo do Controller
             BigDecimal quantidadeAdministrada,
             LocalDate dataMedicao,
             String descricaoHistorico
     ) throws Exception {
-        // 1. Validações Iniciais
-        if (idAnimal == null || idMedicamentoProduto == null || idReceitaMedicamento == null || quantidadeAdministrada == null || quantidadeAdministrada.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new Exception("Dados obrigatórios incompletos para efetuar a medicação.");
+        // 1. Validações Iniciais (ajustadas para idReceitaMedicamento)
+        if (idAnimal == null || idMedicamentoProduto == null || quantidadeAdministrada == null || quantidadeAdministrada.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new Exception("Dados obrigatórios incompletos para efetuar a medicação: ID Animal, ID Medicamento, Quantidade Administrada.");
         }
 
         // Validate Animal existence
@@ -232,17 +232,24 @@ public class MedicacaoService {
             throw new Exception("Medicamento não encontrado ou dados incompletos.");
         }
 
-        // Validate ReceitaMedicamento existence
-        ReceitaMedicamentoModel receita = receitaMedicamentoModel.getRmDAO().getId(idReceitaMedicamento);
-        if (receita == null) {
-            throw new Exception("Receita médica não encontrada.");
+        // Validação de ReceitaMedicamento (agora condicional)
+        ReceitaMedicamentoModel receita = null;
+        if (idReceitaMedicamento != null) { // Somente busca e valida se um ID de receita foi fornecido
+            receita = receitaMedicamentoModel.getRmDAO().getId(idReceitaMedicamento);
+            if (receita == null) {
+                throw new Exception("Receita médica não encontrada para o ID fornecido.");
+            }
         }
 
-        // Validate Posologia existence
-        PosologiaModel posologia = posologiaModel.getPosDAO().getId(idMedicamentoProduto, idReceitaMedicamento);
-        if (posologia == null) {
-            throw new Exception("Posologia para o medicamento e receita especificados não encontrada.");
+        // Validação de Posologia (agora condicional se houver receita)
+        PosologiaModel posologia = null;
+        if (idReceitaMedicamento != null) { // Posologia só é relevante se houver receita
+            posologia = posologiaModel.getPosDAO().getId(idMedicamentoProduto, idReceitaMedicamento);
+            if (posologia == null) {
+                throw new Exception("Posologia para o medicamento e receita especificados não encontrada.");
+            }
         }
+
 
         // Check current stock
         EstoqueModel estoqueAtual = estoqueModel.getEstDAO().getByProdutoId(idMedicamentoProduto);
@@ -275,7 +282,12 @@ public class MedicacaoService {
             MedicacaoModel medicacao = new MedicacaoModel();
             medicacao.setIdanimal(idAnimal);
             medicacao.setPosologia_medicamento_idproduto(idMedicamentoProduto);
-            medicacao.setPosologia_receitamedicamento_idreceita(idReceitaMedicamento);
+            // Define o ID da receita apenas se ele não for nulo
+            if (idReceitaMedicamento != null) {
+                medicacao.setPosologia_receitamedicamento_idreceita(idReceitaMedicamento);
+            } else {
+                medicacao.setPosologia_receitamedicamento_idreceita(null); // Garante que será nulo no modelo
+            }
             medicacao.setData(dataMedicao);
 
             // Access MedicacaoDAO via MedicacaoModel instance and pass connection
