@@ -46,33 +46,26 @@ class MedicamentoController {
     }
 
     medicamentos.forEach((med) => {
-      // Verificação robusta dos objetos necessários
       if (!med.produto) {
         console.warn("Produto não encontrado no medicamento:", med);
-        med.produto = {}; // Criar um objeto vazio para evitar erros
+        med.produto = {};
       }
 
       if (!med.medicamento) {
         console.warn("Dados do medicamento não encontrados:", med);
-        med.medicamento = {}; // Criar um objeto vazio para evitar erros
+        med.medicamento = {};
       }
 
-      // Obter nome do produto com fallback para valor padrão
       const nome = med.produto.nome || "-";
 
-      // Obter composição do medicamento com fallback para valor padrão
       const composicao = med.medicamento.composicao || "-";
 
-      // Obter tipo do produto com fallback para valor padrão
       const tipoProduto = med.tipoProduto?.descricao || "-";
 
-      // Obter unidade de medida com fallback para valor padrão
       const unidadeMedida = med.unidadeMedida?.descricao || "-";
 
-      // Obter fabricante com fallback para valor padrão
       const fabricante = med.produto.fabricante || "-";
 
-      // Formatação robusta do preço
       let precoFormatado = "-";
       if (med.produto.preco !== null && med.produto.preco !== undefined) {
         try {
@@ -85,11 +78,9 @@ class MedicamentoController {
         }
       }
 
-      // Formatação robusta da data de cadastro
       let dataCadastro = "-";
       if (med.produto.dataCadastro) {
         try {
-          // A data pode vir em diferentes formatos do backend
           const data = new Date(med.produto.dataCadastro);
           if (!isNaN(data.getTime())) {
             dataCadastro = data.toLocaleDateString("pt-BR");
@@ -99,7 +90,6 @@ class MedicamentoController {
         }
       }
 
-      // Formatação robusta do estoque mínimo
       let estoqueMinimo = "-";
       if (
         med.produto.estoqueMinimo !== null &&
@@ -115,10 +105,8 @@ class MedicamentoController {
         }
       }
 
-      // ID do produto para ações (editar/excluir)
       const idProduto = med.produto.idproduto || 0;
 
-      // Criação da linha da tabela com todos os dados formatados
       const tr = document.createElement("tr");
       tr.innerHTML = `
       <td>${nome}</td>
@@ -142,7 +130,6 @@ class MedicamentoController {
     UIComponents.ModalConfirmacao.mostrar(
       "Confirmar exclusão",
       MensagensPadroes.CONFIRMACAO.EXCLUSAO,
-      // Callback de confirmação
       () => {
         this.excluir(id).catch((error) => {
           console.error("Erro ao excluir:", error);
@@ -171,7 +158,6 @@ class MedicamentoController {
             );
           }
 
-          // Atualizar a listagem
           await this.inicializarListagem();
           return resposta;
         } else {
@@ -290,7 +276,6 @@ class MedicamentoController {
       const selectTipo = document.getElementById("tipoProduto");
       const selectUnidade = document.getElementById("unidadeMedida");
 
-      // Limpar opções existentes, mantendo apenas a opção padrão
       if (selectTipo) {
         while (selectTipo.options.length > 1) {
           selectTipo.remove(1);
@@ -310,7 +295,6 @@ class MedicamentoController {
         }
 
         unidades.forEach((unidade) => {
-          // Ajuste para lidar com a diferença no nome da propriedade
           const id =
             unidade.idunidademedida !== undefined
               ? unidade.idunidademedida
@@ -344,7 +328,6 @@ class MedicamentoController {
         throw new Error("Dados do medicamento não encontrados ou incompletos");
       }
 
-      // Definir os valores dos campos
       const idField = document.getElementById("idproduto");
       const nomeField = document.getElementById("nome");
       const composicaoField = document.getElementById("composicao");
@@ -361,14 +344,11 @@ class MedicamentoController {
       if (fabricanteField)
         fabricanteField.value = data.produto.fabricante || "";
 
-      // Preencher os novos campos com formatação
       if (precoField) {
-        // Usar formatação monetária para o preço
         if (data.produto.preco !== null && data.produto.preco !== undefined) {
           precoField.value = UIComponents.InputMasks.formatarValorMonetario(
             data.produto.preco
           );
-          // Armazenar o valor numérico para recuperação posterior
           precoField.dataset.valor = data.produto.preco;
         } else {
           precoField.value = "";
@@ -387,12 +367,10 @@ class MedicamentoController {
         }
       }
 
-      // Definir valores dos selects
       if (tipoSelect && data.produto.idtipoproduto) {
         tipoSelect.value = data.produto.idtipoproduto;
       }
 
-      // Ajustar para possível diferença no nome da propriedade
       const idUnidadeMedida =
         data.produto.idunidademedida !== undefined
           ? data.produto.idunidademedida
@@ -423,7 +401,6 @@ class MedicamentoController {
     const { valido, erros } = medicamento.validar();
 
     if (!valido) {
-      // Exibir mensagens de erro
       for (const campo in erros) {
         const elementId = {
           nome: "nome",
@@ -453,7 +430,6 @@ class MedicamentoController {
     const precoElement = document.getElementById("preco");
     const estoqueElement = document.getElementById("estoqueMinimo");
 
-    // Verificar se os elementos obrigatórios existem
     if (
       !nomeElement ||
       !tipoProdutoElement ||
@@ -465,7 +441,6 @@ class MedicamentoController {
 
     const idproduto = idprodutoElement ? idprodutoElement.value : null;
 
-    // Processar valores numéricos usando o utilitário de máscaras
     let preco = UIComponents.InputMasks.obterValorNumerico(precoElement);
     let estoqueMinimo =
       UIComponents.InputMasks.obterValorNumerico(estoqueElement);
@@ -509,7 +484,6 @@ class MedicamentoController {
 
       UIComponents.Toast.sucesso(MensagensPadroes.SUCESSO.CADASTRO);
 
-      // Redirecionar após 2 segundos
       setTimeout(() => {
         window.location.href =
           "listarMedicamentos.html?message=" +
@@ -545,7 +519,6 @@ class MedicamentoController {
 
       UIComponents.Toast.sucesso(MensagensPadroes.SUCESSO.ATUALIZACAO);
 
-      // Redirecionar após 2 segundos
       setTimeout(() => {
         window.location.href =
           "listarMedicamentos.html?message=" +
@@ -566,15 +539,12 @@ class MedicamentoController {
     try {
       UIComponents.Loading.mostrar("Filtrando medicamentos...");
 
-      // Carrega todos os medicamentos primeiro
       const todosMedicamentos = await this.service.listarTodos();
       let medicamentosFiltrados = todosMedicamentos;
 
-      // Se o termo de busca não estiver vazio, aplica o filtro
       if (termo !== "") {
         const termoBusca = termo.toLowerCase();
 
-        // Filtra com base na opção selecionada
         switch (parseInt(filtro)) {
           case 1: // Nome
             medicamentosFiltrados = todosMedicamentos.filter((med) =>
@@ -603,7 +573,6 @@ class MedicamentoController {
 
       this.renderizarTabela(medicamentosFiltrados);
 
-      // Verificar mensagem na URL
       const urlParams = new URLSearchParams(window.location.search);
       const message = urlParams.get("message");
       if (message) {
@@ -618,7 +587,6 @@ class MedicamentoController {
   }
 }
 
-// Tornar o controlador disponível globalmente para os botões da tabela
 const medicamentoController = new MedicamentoController();
 window.medicamentoController = medicamentoController;
 

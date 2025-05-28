@@ -2,6 +2,7 @@ package salvacao.petcontrol.dao;
 
 import org.springframework.stereotype.Repository;
 import salvacao.petcontrol.config.SingletonDB;
+import salvacao.petcontrol.model.AnimalModel;
 import salvacao.petcontrol.model.MovimentacaoEstoqueModel;
 
 import java.sql.PreparedStatement;
@@ -110,6 +111,46 @@ public class MovimentacaoEstoqueDAO {
         return movimentacaoList;
     }
 
+    public boolean apagar(Integer id){
+        String sql = "DELETE FROM movimentacaoestoque WHERE idmovimentacao = ?";
+        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+            stmt.setInt(1, id);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public List<MovimentacaoEstoqueModel> buscarPorPeriodo(LocalDate dataInicio, LocalDate dataFim) {
+        List<MovimentacaoEstoqueModel> lista = new ArrayList<>();
+
+        String sql = "SELECT * FROM movimentacaoestoque WHERE data BETWEEN ? AND ? ORDER BY data";
+        MovimentacaoEstoqueModel mov = null;
+
+        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+            stmt.setDate(1, java.sql.Date.valueOf(dataInicio));
+            stmt.setDate(2, java.sql.Date.valueOf(dataFim));
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    mov = new MovimentacaoEstoqueModel(rs.getInt("idmovimentacao"),
+                            rs.getString("tipomovimentacao"),
+                            rs.getDate("data").toLocalDate(),
+                            rs.getInt("usuario_pessoa_id"),
+                            rs.getString("obs"),
+                            rs.getString("fornecedor"));
+
+                    lista.add(mov);
+                }
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Erro ao buscar movimentações por período: " + e.getMessage());
+        }
+
+        return lista;
+    }
 
 
 

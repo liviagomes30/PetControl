@@ -23,28 +23,24 @@
       </div>
 
       <div class="bg-white shadow rounded p-4">
-        <form id="formAnimal" class="needs-validation" novalidate>
+        <form id="formAnimal">
             <div class="row mb-3">
             <div class="col-md-6">
-              <label for="nome" class="form-label" style="color: red;">*Nome</label>
-              <div class="has-validation">
-                <input type="text" class="form-control" id="nome" required maxlength="100">
-                <div class="invalid-feedback">Por favor, insira um nome</div>
-              </div>
+                <label for="nome" class="form-label" style="color: red;">*Nome</label>
+                <input type="text" class="form-control" id="nome" required data-max-length="100" data-show-counter="true" />
+                <div id="nomeError" class="input-error"></div>
             </div>
 
             <div class="col-md-6">
-              <label for="especie" class="form-label" style="color: red;">*Espécie</label>
-              <div class="has-validation">
+                <label for="especie" class="form-label" style="color: red;">*Espécie</label>
                 <select class="form-select" id="especie" required>
-                  <option value="">Selecione</option>
-                  <option value="Canino">Canino</option>
-                  <option value="Felino">Felino</option>
+                <option value="">Selecione</option>
+                <option value="Canino">Canino</option>
+                <option value="Felino">Felino</option>
                 </select>
-                <div class="invalid-feedback">Por favor, selecione uma espécie.</div>
-              </div>
+                <div id="especieError" class="input-error"></div>
             </div>
-          </div>
+            </div>
 
             <div class="row mb-3">
             <div class="col-md-6">
@@ -78,19 +74,16 @@
             </div>
 
             <div class="row mb-3">
-              <div class="col-md-6">
+            <div class="col-md-6">
                 <label for="sexo" class="form-label" style="color: red;">*Sexo</label>
-                <div class="has-validation">
-                  <select class="form-select" id="sexo" required>
-                    <option value="">Selecione</option>
-                    <option value="M">Macho</option>
-                    <option value="F">Fêmea</option>
-                  </select>
-                  <div class="invalid-feedback">Por favor, selecione o sexo.</div>
-                </div>
-              </div>
+                <select class="form-select" id="sexo" required>
+                <option value="">Selecione</option>
+                <option value="M">Macho</option>
+                <option value="F">Fêmea</option>
+                </select>
+                <div id="sexoError" class="input-error"></div>
+            </div>
 
-              
             <div class="col-md-6">
                 <label for="cor" class="form-label">Cor</label>
                 <input type="text" class="form-control" id="cor" data-max-length="50" />
@@ -98,32 +91,28 @@
             </div>
             </div>
 
-            
-              <div class="row mb-3">
-              <div class="col-md-6">
+            <div class="row mb-3">
+            <div class="col-md-6">
                 <label for="status" class="form-label" style="color: red;">*Status</label>
-                <div class="has-validation">
-                  <select class="form-select" id="status" required>
-                    <option value="">Selecione</option>
-                    <option value="Disponível">Disponível</option>
-                    <option value="Adotado">Adotado</option>
-                    <option value="Resgatado">Resgatado</option>
-                  </select>
-                  <div class="invalid-feedback">Por favor, selecione o status.</div>
-                </div>
-              </div>
+                <select class="form-select" id="status" required>
+                <option value="">Selecione</option>
+                <option value="Disponível">Disponível</option>
+                <option value="Adotado">Adotado</option>
+                <option value="Resgatado">Resgatado</option>
+                </select>
+                <div id="statusError" class="input-error"></div>
+            </div>
 
-              <div class="col-md-6">
+            <div class="col-md-6">
                 <label for="castrado" class="form-label">Castrado</label>
                 <select class="form-select" id="castrado">
-                  <option value="">Selecione</option>
-                  <option value="true">Sim</option>
-                  <option value="false">Não</option>
+                <option value="">Selecione</option>
+                <option value="true">Sim</option>
+                <option value="false">Não</option>
                 </select>
                 <div id="castradoError" class="input-error"></div>
-              </div>
             </div>
-          
+            </div>
 
             <div class="mb-3">
             <label for="foto" class="form-label">URL da Foto</label>
@@ -150,23 +139,6 @@
 
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-      (() => {
-        'use strict';
-        const forms = document.querySelectorAll('.needs-validation');
-
-        Array.from(forms).forEach(form => {
-          form.addEventListener('submit', event => {
-            if (!form.checkValidity()) {
-              event.preventDefault();
-              event.stopPropagation();
-            }
-            form.classList.add('was-validated');
-          }, false);
-        });
-      })();
-    </script>
-
     <script type="module">
         import { animalController } from "../../assets/js/controllers/AnimalController.js"; 
         import UIComponents from "../../assets/js/components/uiComponents.js";

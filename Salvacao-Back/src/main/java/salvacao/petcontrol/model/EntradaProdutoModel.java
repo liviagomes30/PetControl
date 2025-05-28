@@ -1,65 +1,30 @@
 package salvacao.petcontrol.model;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public class EntradaProdutoModel {
-    private Integer idprod;
-    private Integer idusu;
-    private Double quantidade;
-    private String fornecedor;
+    private Integer usuarioId;
     private String observacao;
-    private LocalDate date;
+    private LocalDate data;
+    private List<ItensEntrada> itens;
 
-    public EntradaProdutoModel(Integer idprod, Integer idusu, Double quantidade, String fornecedor, String observacao, LocalDate date) {
-        this.idprod = idprod;
-        this.idusu = idusu;
-        this.quantidade = quantidade;
-        this.fornecedor = fornecedor;
+    public EntradaProdutoModel(Integer usuarioId, String observacao, LocalDate data, List<ItensEntrada> itens) {
+        this.usuarioId = usuarioId;
         this.observacao = observacao;
-        this.date = date;
-    }
-
-    public EntradaProdutoModel(Integer idprod, Double quantidade, String fornecedor, String observacao, LocalDate date) {
-        this.idprod = idprod;
-        this.quantidade = quantidade;
-        this.fornecedor = fornecedor;
-        this.observacao = observacao;
-        this.date = date;
+        this.data = data;
+        this.itens = itens;
     }
 
     public EntradaProdutoModel() {
     }
 
-    public Integer getIdprod() {
-        return idprod;
+    public Integer getUsuarioId() {
+        return usuarioId;
     }
 
-    public void setIdprod(Integer idprod) {
-        this.idprod = idprod;
-    }
-
-    public Integer getIdusu() {
-        return idusu;
-    }
-
-    public void setIdusu(Integer idusu) {
-        this.idusu = idusu;
-    }
-
-    public Double getQuantidade() {
-        return quantidade;
-    }
-
-    public void setQuantidade(Double quantidade) {
-        this.quantidade = quantidade;
-    }
-
-    public String getFornecedor() {
-        return fornecedor;
-    }
-
-    public void setFornecedor(String fornecedor) {
-        this.fornecedor = fornecedor;
+    public void setUsuarioId(Integer usuarioId) {
+        this.usuarioId = usuarioId;
     }
 
     public String getObservacao() {
@@ -70,11 +35,19 @@ public class EntradaProdutoModel {
         this.observacao = observacao;
     }
 
-    public LocalDate getDate() {
-        return date;
+    public LocalDate getData() {
+        return data;
     }
 
-    public void setDate(LocalDate date) {
-        this.date = date;
+    public void setData(LocalDate data) {
+        this.data = data;
+    }
+
+    public List<ItensEntrada> getItens() {
+        return itens;
+    }
+
+    public void setItens(List<ItensEntrada> itens) {
+        this.itens = itens;
     }
 }

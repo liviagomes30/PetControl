@@ -1,11 +1,9 @@
 class EntradaProdutoModel {
     constructor(data = {}) {
-        this.idprod = data.idprod;
-        this.idusu = data.idusu || null;
-        this.quantidade = data.quantidade;
-        this.fornecedor = data.fornecedor || "";
+        this.usuarioId = data.usuario_pessoa_id || 1; // Default para testes
         this.observacao = data.observacao || "";
-        this.date = data.date || null;
+        this.data = data.data || null;
+        this.itens = data.itens || [];
     }
 
 }

@@ -1,18 +1,23 @@
-package salvacao.petcontrol.model;
+package salvacao.petcontrol.dto;
+
+import salvacao.petcontrol.model.ItensModel;
 
 import java.time.LocalDate;
+import java.util.List;
 
-public class RegistroModel {
+public class ItensEntradaDTO {
     private Integer id;
     private String usuario;
     private LocalDate data;
     private String observacao;
+    private List<ItensModel> itens;
 
-    public RegistroModel(Integer id, String usuario, LocalDate data, String observacao) {
+    public ItensEntradaDTO(Integer id, String usuario, LocalDate data, String observacao, List<ItensModel> itens) {
         this.id = id;
         this.usuario = usuario;
         this.data = data;
         this.observacao = observacao;
+        this.itens = itens;
     }
 
     public Integer getId() {
@@ -39,11 +44,19 @@ public class RegistroModel {
         this.data = data;
     }
 
-    public String getOboservacao() {
+    public String getObservacao() {
         return observacao;
     }
 
     public void setObservacao(String observacao) {
         this.observacao = observacao;
+    }
+
+    public List<ItensModel> getItens() {
+        return itens;
+    }
+
+    public void setItens(List<ItensModel> itens) {
+        this.itens = itens;
     }
 }

@@ -67,6 +67,14 @@ document.addEventListener("DOMContentLoaded", function () {
         <i class="bi bi-chevron-right sidebar-item-arrow"></i>
       </a>
       
+      <a href="${getBasePath()}pages/usuarios/index.html" class="sidebar-item" id="menu-usuarios">
+        <div class="sidebar-item-content">
+          <i class="bi bi-person-gear sidebar-item-icon"></i>
+          <span class="sidebar-item-text">Usuários</span>
+        </div>
+        <i class="bi bi-chevron-right sidebar-item-arrow"></i>
+      </a>
+      
       <div class="sidebar-item" id="menu-produtos" onclick="toggleSubmenu('produtosSubmenu')">
         <div class="sidebar-item-content">
           <i class="bi bi-plus-circle sidebar-item-icon"></i>
@@ -80,10 +88,10 @@ document.addEventListener("DOMContentLoaded", function () {
         <a href="${getBasePath()}pages/produto/categorias.html" class="sidebar-submenu-item" id="submenu-produtos-categorias">Lista de Categorias</a>
         <a href="${getBasePath()}pages/produto/tipo/listarTipos.html" class="sidebar-submenu-item" id="submenu-produtos-tipos">Tipos de Produto</a>
         <a href="${getBasePath()}pages/produto/unidade/listarUnidades.html" class="sidebar-submenu-item" id="submenu-produtos-unidades">Unidades de Medida</a>
-        <a href="${getBasePath()}pages/produto/entrada/listarprodutos.html" class="sidebar-submenu-item" id="submenu-produtos-unidades">Entrada de produtos</a>
+        <a href="${getBasePath()}pages/produto/entrada/listarRegistros.html" class="sidebar-submenu-item" id="submenu-produtos-unidades">Entrada Produtos</a>
       </ul>
       
-      <a href="${getBasePath()}pages/estoque/index.html" class="sidebar-item" id="menu-estoque">
+      <a href="${getBasePath()}pages/acerto-estoque/listarAcertosEstoque.html" class="sidebar-item" id="menu-estoque">
         <div class="sidebar-item-content">
           <i class="bi bi-box sidebar-item-icon"></i>
           <span class="sidebar-item-text">Estoque</span>
@@ -167,6 +175,8 @@ function markActiveMenuItem() {
     document.getElementById("menu-vacinacao").classList.add("active");
   } else if (currentPath.includes("/pessoas/")) {
     document.getElementById("menu-pessoas").classList.add("active");
+  } else if (currentPath.includes("/usuarios/")) {
+    document.getElementById("menu-usuarios").classList.add("active");
   } else if (currentPath.includes("/produto/")) {
     document.getElementById("menu-produtos").classList.add("active");
     document.getElementById("produtosSubmenu").classList.add("open");
@@ -192,7 +202,7 @@ function markActiveMenuItem() {
     const arrow = document.querySelector("#menu-produtos .sidebar-item-arrow");
     arrow.classList.remove("bi-chevron-down");
     arrow.classList.add("bi-chevron-up");
-  } else if (currentPath.includes("/estoque/")) {
+  } else if (currentPath.includes("")) {
     document.getElementById("menu-estoque").classList.add("active");
   }
 }
