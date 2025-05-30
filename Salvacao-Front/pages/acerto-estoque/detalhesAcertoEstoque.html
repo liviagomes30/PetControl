@@ -110,11 +110,14 @@
       import UIComponents from "../../assets/js/components/uiComponents.js";
 
       document.addEventListener("DOMContentLoaded", () => {
+        // Obter o ID do acerto da URL
         const urlParams = new URLSearchParams(window.location.search);
-        const id = parseInt(urlParams.get("id"));
+        // Ensure the ID is parsed as an integer before passing it
+        const id = parseInt(urlParams.get("id")); // Fixed here
         console.log("Parsed ID:", id);
 
         if (isNaN(id)) {
+          // Check if id is actually a number
           UIComponents.ModalErro.mostrar(
             "ID do acerto de estoque não informado ou inválido."
           );
@@ -124,6 +127,7 @@
           return;
         }
 
+        // Carregar detalhes do acerto
         acertoEstoqueController.carregarDetalhesAcerto(id);
       });
     </script>

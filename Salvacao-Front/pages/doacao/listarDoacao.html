@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PetControl - Lista de Adoções</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <link rel="stylesheet" href="../../assets/css/style.css" />
+    <script src="../../assets/js/components/sidebar.js" defer></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header d-flex justify-content-between align-items-center">
+        <h1 class="h3" style="color: var(--vermelho-escuro)">
+          Lista de Adoções
+        </h1>
+        <a href="cadastrarDoacao.html" class="btn btn-primary"
+          >Nova Adoção</a
+        >
+      </div>
+     
+      <div class="container mt-3">
+        <div class="row g-2 align-items-center">
+            <!-- Campo de pesquisa -->
+            <div class="col">
+                <input class="form-control form-control-sm" type="search" placeholder="Pesquisar" aria-label="Pesquisar" id="inputBusca">
+            </div>
+            <!-- Select -->
+            <div class="col-auto">
+                <select class="form-select form-select-sm" style="background-color: rgb(73, 71, 71); color: lightgray; border-radius: 10px; width: auto;" aria-label="Filtro" id="selectFiltro">
+                    <option value="1" selected>Nome do Animal</option>
+                    <option value="2">Nome do Adotante</option>
+                    <option value="3">Status</option>
+                    <option value="4">Data de Adoção</option>
+                </select>
+            </div>
+        </div>
+      </div>
+      <br>
+
+      <!-- Tabela de Adoções -->
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Animal</th>
+              <th>Adotante</th>
+              <th>Data Adoção</th>
+              <th>Status Acompanhamento</th>
+              <th>Data Acompanhamento</th>
+              <th>Observações</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-adocoes">
+            <!-- Conteúdo será carregado dinamicamente -->
+            <tr>
+              <td colspan="8" class="text-center">Carregando adoções...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Modal de Confirmação de Exclusão -->
+    <div class="modal fade" id="modalConfirmacaoExclusao" tabindex="-1" aria-labelledby="modalConfirmacaoExclusaoLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalConfirmacaoExclusaoLabel">Confirmar Exclusão</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            Tem certeza que deseja excluir esta adoção? Esta ação não pode ser desfeita.
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-danger" id="btnConfirmarExclusao">Excluir</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Seu AdocaoService
+      class AdocaoService {
+        constructor(baseUrl = "http://localhost:8080") {
+          this.baseUrl = baseUrl;
+          this.endpoint = "/adocao";
+        }
+
+        async listarTodos() {
+          try {
+            const response = await fetch(`${this.baseUrl}${this.endpoint}/listar`, {
+              method: "GET"
+            });
+
+            if (!response.ok) {
+              if (response.status === 404) {
+                return []; // Retorna array vazio para renderizarTabela funcionar
+              }
+              throw new Error(`Erro ${response.status}: ${await response.text()}`);
+            }
+
+            const data = await response.json();
+            console.log("Dados recebidos da API listarTodos:", data);
+            return data;
+          } catch (error) {
+            console.error("Erro ao listar adoções:", error);
+            throw error;
+          }
+        }
+
+        // Método simples para listar usando fetch direto
+        listar() {
+          const tabela = document.getElementById("tabela-adocoes");
+
+          fetch(`${this.baseUrl}${this.endpoint}/listar`)
+                  .then(res => res.json())
+                  .then(lista => {
+                    if(!Array.isArray(lista))
+                      throw new Error('A resposta da API não é uma lista');
+
+                    if(lista.length === 0) {
+                      tabela.innerHTML = `
+                            <tr>
+                                <td colspan="8" class="text-center">Nenhuma adoção encontrada.</td>
+                            </tr>`;
+                      return;
+                    }
+
+                    tabela.innerHTML = ""; // Limpa a tabela
+
+                    lista.forEach(adocao => {
+                      const tr = document.createElement('tr');
+                      tr.innerHTML = `
+                                <td>${adocao.idAdocao || '-'}</td>
+                                <td>Animal ID: ${adocao.idAnimal || '-'}</td>
+                                <td>Adotante ID: ${adocao.idAdotante || '-'}</td>
+                                <td>${this.formatarData(adocao.dataAdocao)}</td>
+                                <td>${this.getBadgeStatus(adocao.statusAcompanhamento)}</td>
+                                <td>${adocao.dataAcompanhamento ? this.formatarData(adocao.dataAcompanhamento) : '-'}</td>
+                                <td>${adocao.obs ? (adocao.obs.length > 50 ? adocao.obs.substring(0, 50) + '...' : adocao.obs) : '-'}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editarAdocao(${adocao.idAdocao})">Editar</button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="adocaoController.confirmarExclusao(${adocao.idAdocao})">Excluir</button>
+                                </td>
+                            `;
+                      tabela.appendChild(tr);
+                    });
+                  })
+                  .catch(error => {
+                    console.error('Erro ao carregar adoções:', error);
+                    tabela.innerHTML = `
+                        <tr>
+                            <td colspan="8" class="text-center text-danger">Erro ao carregar dados.</td>
+                        </tr>`;
+                  });
+        }
+
+        // Métodos auxiliares para formatação
+        formatarData(data) {
+          if (!data) return '';
+          try {
+            const date = new Date(data);
+            return date.toLocaleDateString('pt-BR');
+          } catch (error) {
+            return data;
+          }
+        }
+
+        getBadgeStatus(status) {
+          const statusMap = {
+            'Pendente': 'bg-warning',
+            'Em acompanhamento': 'bg-info',
+            'Aprovado': 'bg-success',
+            'Rejeitado': 'bg-danger',
+            'Cancelado': 'bg-secondary'
+          };
+
+          const badgeClass = statusMap[status] || 'bg-secondary';
+          return `<span class="badge ${badgeClass}">${status || 'N/A'}</span>`;
+        }
+
+        async buscarPorId(id) {
+          try {
+            const response = await fetch(`${this.baseUrl}${this.endpoint}/${id}`, {
+              method: "GET"
+            });
+
+            if (!response.ok) {
+              throw new Error(`Erro ${response.status}: ${await response.text()}`);
+            }
+
+            const data = await response.json();
+            console.log("Dados recebidos da API buscarPorId:", data);
+            return data;
+          } catch (error) {
+            console.error("Erro ao buscar adoção:", error);
+            throw error;
+          }
+        }
+
+        async cadastrar(adocao) {
+          try {
+            const response = await fetch(`${this.baseUrl}${this.endpoint}/cadastro`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify(adocao)
+            });
+
+            if (!response.ok) {
+              throw new Error(`Erro ${response.status}: ${await response.text()}`);
+            }
+
+            const data = await response.json();
+            console.log("Adoção cadastrada:", data);
+            return data;
+          } catch (error) {
+            console.error("Erro ao cadastrar adoção:", error);
+            throw error;
+          }
+        }
+
+        async atualizar(id, adocao) {
+          try {
+            const response = await fetch(`${this.baseUrl}${this.endpoint}/alterar`, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({ ...adocao, idadocao: id })
+            });
+
+            if (!response.ok) {
+              throw new Error(`Erro ${response.status}: ${await response.text()}`);
+            }
+
+            const data = await response.text();
+            console.log("Adoção atualizada:", data);
+            return data;
+          } catch (error) {
+            console.error("Erro ao atualizar adoção:", error);
+            throw error;
+          }
+        }
+
+        async excluir(id) {
+          try {
+            const response = await fetch(`${this.baseUrl}${this.endpoint}/${id}`, {
+              method: "DELETE"
+            });
+
+            if (!response.ok) {
+              throw new Error(`Erro ${response.status}: ${await response.text()}`);
+            }
+
+            const data = await response.text();
+            console.log("Adoção excluída:", data);
+            return data;
+          } catch (error) {
+            console.error("Erro ao excluir adoção:", error);
+            throw error;
+          }
+        }
+      }
+
+      // Controller para gerenciar a página
+      class AdocaoController {
+        constructor() {
+          this.service = new AdocaoService();
+          this.idParaExcluir = null;
+          this.init();
+        }
+
+        init() {
+          // Inicializar quando o DOM estiver carregado
+          document.addEventListener('DOMContentLoaded', () => {
+            this.inicializarListagem();
+            this.configurarEventListeners();
+          });
+        }
+
+        configurarEventListeners() {
+          // Event listener para busca
+          const inputBusca = document.getElementById('inputBusca');
+          inputBusca.addEventListener('input', (e) => {
+            this.filtrarTabela(e.target.value);
+          });
+
+          // Event listener para o select de filtro
+          const selectFiltro = document.getElementById('selectFiltro');
+          selectFiltro.addEventListener('change', () => {
+            this.aplicarFiltro();
+          });
+
+          // Event listener para confirmação de exclusão
+          const btnConfirmarExclusao = document.getElementById('btnConfirmarExclusao');
+          btnConfirmarExclusao.addEventListener('click', () => {
+            this.excluirAdocao();
+          });
+        }
+
+        async inicializarListagem() {
+          try {
+            console.log("Carregando adoções...");
+            // Usa o método simples do service que já renderiza a tabela
+            this.service.listar();
+
+            // Verificar mensagem na URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const message = urlParams.get("message");
+            if (message) {
+              console.log("Mensagem de sucesso:", message);
+              this.mostrarToast(message, 'success');
+            }
+          } catch (error) {
+            console.error("Erro ao carregar adoções:", error);
+            const tabela = document.getElementById("tabela-adocoes");
+            tabela.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Erro ao carregar dados.</td></tr>`;
+          }
+        }
+
+        filtrarTabela(termo) {
+          const linhas = document.querySelectorAll('#tabela-adocoes tr');
+          linhas.forEach(linha => {
+            const texto = linha.textContent.toLowerCase();
+            linha.style.display = texto.includes(termo.toLowerCase()) ? '' : 'none';
+          });
+        }
+
+        aplicarFiltro() {
+          const filtro = document.getElementById('selectFiltro').value;
+          const termo = document.getElementById('inputBusca').value.toLowerCase();
+
+          if (!termo) return;
+
+          const linhas = document.querySelectorAll('#tabela-adocoes tr');
+          linhas.forEach(linha => {
+            const colunas = linha.querySelectorAll('td');
+            if (colunas.length === 0) return; // Skip header or empty rows
+
+            let textoParaFiltrar = '';
+            switch(filtro) {
+              case '1': // Nome do Animal - coluna 1
+                textoParaFiltrar = colunas[1].textContent.toLowerCase();
+                break;
+              case '2': // Nome do Adotante - coluna 2
+                textoParaFiltrar = colunas[2].textContent.toLowerCase();
+                break;
+              case '3': // Status - coluna 4
+                textoParaFiltrar = colunas[4].textContent.toLowerCase();
+                break;
+              case '4': // Data de Adoção - coluna 3
+                textoParaFiltrar = colunas[3].textContent.toLowerCase();
+                break;
+              default:
+                textoParaFiltrar = linha.textContent.toLowerCase();
+            }
+
+            linha.style.display = textoParaFiltrar.includes(termo) ? '' : 'none';
+          });
+        }
+
+        confirmarExclusao(id) {
+          this.idParaExcluir = id;
+          const modal = new bootstrap.Modal(document.getElementById('modalConfirmacaoExclusao'));
+          modal.show();
+        }
+
+        async excluirAdocao() {
+          if (!this.idParaExcluir) return;
+
+          try {
+            await this.service.excluir(this.idParaExcluir);
+            this.mostrarToast('Adoção excluída com sucesso!', 'success');
+            this.inicializarListagem(); // Recarregar a lista
+
+            // Fechar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmacaoExclusao'));
+            modal.hide();
+          } catch (error) {
+            console.error('Erro ao excluir adoção:', error);
+            this.mostrarToast('Erro ao excluir adoção!', 'error');
+          }
+        }
+
+        mostrarToast(mensagem, tipo) {
+          const toast = document.createElement('div');
+          toast.className = `alert alert-${tipo === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+          toast.style.top = '20px';
+          toast.style.right = '20px';
+          toast.style.zIndex = '9999';
+          toast.innerHTML = `
+                    ${mensagem}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+          document.body.appendChild(toast);
+
+          setTimeout(() => {
+            toast.remove();
+          }, 5000);
+        }
+      }
+
+      // Funções globais para os botões inline
+      function editarAdocao(id) {
+        console.log('Editar adoção:', id);
+        window.location.href = `editarDoacao.html?id=${id}`;
+      }
+
+      // Inicializar o controller
+      const adocaoController = new AdocaoController();
+    </script>
+  </body>
+</html>

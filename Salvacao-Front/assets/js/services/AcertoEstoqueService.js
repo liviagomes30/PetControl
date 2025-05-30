@@ -8,6 +8,7 @@ class AcertoEstoqueService {
     try {
       const response = await fetch(`${this.baseUrl}${this.endpoint}`);
 
+      // Se a resposta for 404 (Nenhum acerto encontrado), retornamos um array vazio
       if (response.status === 404) {
         console.log("Nenhum acerto de estoque encontrado no sistema");
         return [];
@@ -26,7 +27,7 @@ class AcertoEstoqueService {
         error.message &&
         error.message.includes("Nenhum acerto de estoque encontrado")
       ) {
-        return [];
+        return []; // Retorna lista vazia em vez de propagar o erro
       }
       throw error;
     }

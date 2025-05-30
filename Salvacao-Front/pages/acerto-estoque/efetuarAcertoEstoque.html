@@ -34,7 +34,7 @@
       </div>
 
       <div class="bg-white p-4 shadow rounded">
-        <form id="formAcertoEstoque" class="needs-validation" novalidate>
+        <form id="formAcertoEstoque">
           <div class="mb-3">
             <label for="motivo" class="form-label">
               Motivo do Acerto <span class="text-danger">*</span>
@@ -48,7 +48,7 @@
               <option value="Doação recebida">Doação recebida</option>
               <option value="Outro">Outro</option>
             </select>
-            <div id="motivoError" class="invalid-feedback"></div>
+            <div id="motivoError" class="invalid-feedback d-block"></div>
           </div>
 
           <div class="mb-3 d-none" id="motivoOutroContainer">
@@ -60,9 +60,8 @@
               class="form-control"
               id="motivoOutro"
               data-max-length="100"
-              required
             />
-            <div id="motivoOutroError" class="invalid-feedback"></div>
+            <div id="motivoOutroError" class="invalid-feedback d-block"></div>
           </div>
 
           <div class="mb-3">
@@ -88,7 +87,7 @@
                 data-bs-toggle="modal"
                 data-bs-target="#adicionarItemModal"
               >
-                <i class="bi bi-plus-circle me-1"></i> Adicionar Item
+                <i class="bi bi-plus-circle"></i> Adicionar Item
               </button>
             </div>
             <div class="card-body">
@@ -156,17 +155,18 @@
             ></button>
           </div>
           <div class="modal-body">
-            <form id="formItem" class="needs-validation" novalidate>
+            <form id="formItem">
               <div class="mb-3">
                 <label for="selectProduto" class="form-label">
                   Produto <span class="text-danger">*</span>
                 </label>
-                <select class="form-select" id="selectProduto" required>
+                <select class="form-select" id="selectProduto">
                   <option value="">Selecione um produto</option>
                 </select>
-                <div class="invalid-feedback">
-                  Por favor, selecione um produto.
-                </div>
+                <div
+                  id="selectProdutoError"
+                  class="invalid-feedback d-block"
+                ></div>
               </div>
 
               <div class="mb-3">
@@ -190,11 +190,11 @@
                   class="form-control"
                   id="novaQuantidade"
                   data-mask="decimal"
-                  required
                 />
-                <div class="invalid-feedback">
-                  Por favor, informe a nova quantidade.
-                </div>
+                <div
+                  id="novaQuantidadeError"
+                  class="invalid-feedback d-block"
+                ></div>
               </div>
             </form>
           </div>
@@ -231,37 +231,40 @@
       import UIComponents from "../../assets/js/components/uiComponents.js";
 
       document.addEventListener("DOMContentLoaded", () => {
+        // Máscaras
         if (UIComponents.InputMasks) {
           UIComponents.InputMasks.inicializar();
         }
 
+        // Initialize form via controller
         acertoEstoqueController.inicializarFormulario();
 
+        // Show/hide "Outro" reason field
         document
           .getElementById("motivo")
           .addEventListener("change", function () {
-            const outroContainer = document.getElementById(
-              "motivoOutroContainer"
-            );
-            const motivoOutroInput = document.getElementById("motivoOutro");
-
-            if (this.value === "Outro") {
-              outroContainer.classList.remove("d-none");
-              motivoOutroInput.setAttribute("required", "true");
-            } else {
-              outroContainer.classList.add("d-none");
-              motivoOutroInput.removeAttribute("required");
-              motivoOutroInput.value = "";
-              motivoOutroInput.classList.remove("is-invalid");
-              motivoOutroInput.classList.remove("is-valid");
-            }
+            const outro = document.getElementById("motivoOutroContainer");
+            outro.classList.toggle("d-none", this.value !== "Outro");
           });
 
+        // Event listener to prepare modal (clear fields) when the "Add Item" button is clicked
+        // Bootstrap's data-bs-toggle will then handle showing the modal.
         document
           .getElementById("btnAdicionarItem")
           .addEventListener("click", () => {
-            acertoEstoqueController.prepararModal();
+            acertoEstoqueController.prepararModal(); // Prepare the form inside the modal
+            // No manual modal.show() needed here because of data-bs-toggle
           });
+
+        // Event listener for confirming item in modal
+        document
+          .getElementById("btnConfirmarItem")
+          .addEventListener("click", () => {
+            acertoEstoqueController.adicionarItem(); // This will add the item and close the modal
+          });
+
+        // No need for explicit event listeners on data-bs-dismiss buttons (btn-close, Cancelar)
+        // Bootstrap's data-bs-dismiss handles closing automatically.
       });
     </script>
   </body>

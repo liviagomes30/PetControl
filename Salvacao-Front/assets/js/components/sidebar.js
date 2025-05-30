@@ -1,14 +1,14 @@
-// sidebar.js
+// Salvacao-Front/assets/js/components/sidebar.js
 document.addEventListener("DOMContentLoaded", function () {
   const bootstrapIconsLoaded = Array.from(
-    document.querySelectorAll("link")
+      document.querySelectorAll("link")
   ).some((link) => link.href.includes("bootstrap-icons"));
 
   if (!bootstrapIconsLoaded) {
     const iconLink = document.createElement("link");
     iconLink.rel = "stylesheet";
     iconLink.href =
-      "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css";
+        "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css";
     document.head.appendChild(iconLink);
   }
   const sidebar = document.createElement("div");
@@ -35,7 +35,12 @@ document.addEventListener("DOMContentLoaded", function () {
         <i class="bi bi-chevron-down sidebar-item-arrow"></i>
       </div>
       <ul id="animaisSubmenu" class="sidebar-submenu">
-        <a href="${getBasePath()}pages/animal/gerenciarAnimal.html" class="sidebar-submenu-item" id="submenu-animais-gerenciar">Gerenciar Animais</a>
+        <li>
+          <a href="${getBasePath()}pages/animal/gerenciarAnimal.html" class="sidebar-submenu-item" id="submenu-animais-gerenciar">Gerenciar Animais</a>
+        </li>
+        <li>
+          <a href="${getBasePath()}pages/eventos/gerenciarEvento.html" class="sidebar-submenu-item" id="submenu-eventos-gerenciar">Gerenciar Eventos</a>
+        </li>
       </ul>
       
       <div class="sidebar-item" id="menu-medicacao" onclick="toggleSubmenu('medicacaoSubmenu')">
@@ -51,29 +56,39 @@ document.addEventListener("DOMContentLoaded", function () {
         <a href="${getBasePath()}pages/medicamentos/historicoMedicacoes.html" class="sidebar-submenu-item" id="submenu-medicacao-historico">Histórico Medicações</a>
       </ul>
       
-      <a href="${getBasePath()}pages/vacinacao/index.html" class="sidebar-item" id="menu-vacinacao">
+      <div class="sidebar-item" id="menu-vacinacao" onclick="toggleSubmenu('vacinacaoSubmenu')">
         <div class="sidebar-item-content">
           <i class="bi bi-bandaid sidebar-item-icon"></i>
           <span class="sidebar-item-text">Vacinação</span>
         </div>
-        <i class="bi bi-chevron-right sidebar-item-arrow"></i>
-      </a>
+        <i class="bi bi-chevron-down sidebar-item-arrow"></i>
+      </div>
+      <ul id="vacinacaoSubmenu" class="sidebar-submenu">
+        <li>
+          <a href="${getBasePath()}pages/vacina/listarVacinas.html" class="sidebar-submenu-item" id="submenu-vacina-gerenciar">Gerenciar Vacinas</a>
+        </li>
+        <li>
+          <a href="${getBasePath()}pages/vacina/cadastrarVacina.html" class="sidebar-submenu-item" id="submenu-vacina-cadastrar">Cadastrar Tipo de Vacina</a>
+        </li>
+        <li>
+          <a href="${getBasePath()}pages/vacinacao/efetuarVacinacao.html" class="sidebar-submenu-item" id="submenu-vacinacao-efetuar">Efetuar Vacinação</a>
+        </li>
+         <li>
+          <a href="${getBasePath()}pages/vacinacao/historicoVacinacoes.html" class="sidebar-submenu-item" id="submenu-vacinacao-historico">Histórico de Vacinações</a>
+        </li>
+      </ul>
       
-      <a href="${getBasePath()}pages/pessoas/index.html" class="sidebar-item" id="menu-pessoas">
+      <div class="sidebar-item" id="menu-pessoas" onclick="toggleSubmenu('pessoasSubmenu')">
         <div class="sidebar-item-content">
           <i class="bi bi-people sidebar-item-icon"></i>
           <span class="sidebar-item-text">Pessoas</span>
         </div>
-        <i class="bi bi-chevron-right sidebar-item-arrow"></i>
-      </a>
-      
-      <a href="${getBasePath()}pages/usuarios/index.html" class="sidebar-item" id="menu-usuarios">
-        <div class="sidebar-item-content">
-          <i class="bi bi-person-gear sidebar-item-icon"></i>
-          <span class="sidebar-item-text">Usuários</span>
-        </div>
-        <i class="bi bi-chevron-right sidebar-item-arrow"></i>
-      </a>
+        <i class="bi bi-chevron-down sidebar-item-arrow"></i>
+      </div>
+      <ul id="pessoasSubmenu" class="sidebar-submenu">
+        <a href="${getBasePath()}pages/pessoas/listarAdotante.html" class="sidebar-submenu-item" id="submenu-pessoas-gerenciar">Gerenciar Adotante</a>
+        <a href="${getBasePath()}pages/doacao/listarDoacao.html" class="sidebar-submenu-item" id="submenu-pessoas-cadastrar">Gerenciar Adoção</a>
+      </ul>
       
       <div class="sidebar-item" id="menu-produtos" onclick="toggleSubmenu('produtosSubmenu')">
         <div class="sidebar-item-content">
@@ -103,16 +118,14 @@ document.addEventListener("DOMContentLoaded", function () {
   document.body.prepend(sidebar);
 
   const mainContent =
-    document.querySelector(".main-content") || document.createElement("div");
+      document.querySelector(".main-content") || document.createElement("div");
   if (!mainContent.classList.contains("main-content")) {
     mainContent.className = "main-content";
-    while (document.body.childNodes.length > 1) {
-      if (document.body.childNodes[1] !== sidebar) {
-        mainContent.appendChild(document.body.childNodes[1]);
-      } else {
-        document.body.removeChild(document.body.childNodes[1]);
+    Array.from(document.body.childNodes).forEach(node => {
+      if (node !== sidebar && node !== mainContent) {
+        mainContent.appendChild(node);
       }
-    }
+    });
     document.body.appendChild(mainContent);
   }
 
@@ -121,11 +134,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
 function toggleSubmenu(submenuId) {
   const submenu = document.getElementById(submenuId);
+  if (!submenu) return;
   submenu.classList.toggle("open");
 
-  // Alterna o ícone de seta
   const parentItem = submenu.previousElementSibling;
+  if (!parentItem) return;
   const arrow = parentItem.querySelector(".sidebar-item-arrow");
+  if (!arrow) return;
 
   if (submenu.classList.contains("open")) {
     arrow.classList.remove("bi-chevron-down");
@@ -140,87 +155,128 @@ function markActiveMenuItem() {
   const currentPath = window.location.pathname;
 
   document
-    .querySelectorAll(".sidebar-item, .sidebar-submenu-item")
-    .forEach((item) => {
-      item.classList.remove("active");
-    });
+      .querySelectorAll(".sidebar-item, .sidebar-submenu-item")
+      .forEach((item) => {
+        item.classList.remove("active");
+      });
 
-  if (currentPath.includes("index.html") || currentPath.endsWith("/")) {
-    document.getElementById("menu-home").classList.add("active");
-  } else if (currentPath.includes("/animal/")) {
-    document.getElementById("menu-animais").classList.add("active");
-  } else if (currentPath.includes("/medicamentos/")) {
-    document.getElementById("menu-medicacao").classList.add("active");
-    document.getElementById("medicacaoSubmenu").classList.add("open");
-
-    if (currentPath.includes("listarMedicamentos.html")) {
-      document
-        .getElementById("submenu-medicacao-gerenciar")
-        .classList.add("active");
-    } else if (currentPath.includes("efetuarMedicacao.html")) {
-      document
-        .getElementById("submenu-medicacao-efetuar")
-        .classList.add("active");
-    } else if (currentPath.includes("historicoMedicacoes.html")) {
-      document
-        .getElementById("submenu-medicacao-historico")
-        .classList.add("active");
+  document.querySelectorAll('.sidebar-submenu.open').forEach(submenu => {
+    submenu.classList.remove('open');
+    const parentItem = submenu.previousElementSibling;
+    if (parentItem) {
+      const arrow = parentItem.querySelector(".sidebar-item-arrow.bi-chevron-up");
+      if (arrow) {
+        arrow.classList.remove("bi-chevron-up");
+        arrow.classList.add("bi-chevron-down");
+      }
     }
+  });
 
-    const arrow = document.querySelector("#menu-medicacao .sidebar-item-arrow");
-    arrow.classList.remove("bi-chevron-down");
-    arrow.classList.add("bi-chevron-up");
-  } else if (currentPath.includes("/vacinacao/")) {
-    document.getElementById("menu-vacinacao").classList.add("active");
-  } else if (currentPath.includes("/pessoas/")) {
-    document.getElementById("menu-pessoas").classList.add("active");
-  } else if (currentPath.includes("/usuarios/")) {
-    document.getElementById("menu-usuarios").classList.add("active");
-  } else if (currentPath.includes("/produto/")) {
-    document.getElementById("menu-produtos").classList.add("active");
-    document.getElementById("produtosSubmenu").classList.add("open");
+  let activeParentFound = false;
+  const menuItems = [
+    { id: "menu-home", pathCheck: (path) => path.includes("index.html") || path.endsWith("/") || path.endsWith("/Salvacao-Front/") },
+    { id: "menu-animais", pathCheck: (path) => path.includes("/animal/") || path.includes("/eventos/"), submenuId: "animaisSubmenu",
+      subItems: [
+        { id: "submenu-animais-gerenciar", pathCheck: (path) => path.includes("/animal/gerenciarAnimal.html")},
+        { id: "submenu-eventos-gerenciar", pathCheck: (path) => path.includes("/eventos/gerenciarEvento.html")}
+      ]
+    },
+    { id: "menu-medicacao", pathCheck: (path) => path.includes("/medicamentos/"), submenuId: "medicacaoSubmenu",
+      subItems: [
+        { id: "submenu-medicacao-gerenciar", pathCheck: (path) => path.includes("listarMedicamentos.html")},
+        { id: "submenu-medicacao-efetuar", pathCheck: (path) => path.includes("efetuarMedicacao.html")},
+        { id: "submenu-medicacao-historico", pathCheck: (path) => path.includes("historicoMedicacoes.html")}
+      ]
+    },
+    { id: "menu-vacinacao", pathCheck: (path) => path.includes("/vacina/") || path.includes("/vacinacao/"), submenuId: "vacinacaoSubmenu",
+      subItems: [
+        { id: "submenu-vacina-gerenciar", pathCheck: (path) => path.includes("/vacina/listarVacinas.html")},
+        { id: "submenu-vacina-cadastrar", pathCheck: (path) => path.includes("/vacina/cadastrarVacina.html")},
+        { id: "submenu-vacinacao-efetuar", pathCheck: (path) => path.includes("/vacinacao/efetuarVacinacao.html")},
+        { id: "submenu-vacinacao-historico", pathCheck: (path) => path.includes("/vacinacao/historicoVacinacoes.html")}
+      ]
+    },
+    { id: "menu-pessoas", pathCheck: (path) => path.includes("/pessoas/") || path.includes("/doacao/"), submenuId: "pessoasSubmenu",
+      subItems: [
+        { id: "submenu-pessoas-gerenciar", pathCheck: (path) => path.includes("/pessoas/listarAdotante.html")},
+        { id: "submenu-pessoas-cadastrar", pathCheck: (path) => path.includes("/doacao/listarDoacao.html")}
+      ]
+    },
+    { id: "menu-produtos", pathCheck: (path) => path.includes("/produto/"), submenuId: "produtosSubmenu",
+      subItems: [
+        { id: "submenu-produtos-listar", pathCheck: (path) => path.includes("/produto/listar.html")},
+        { id: "submenu-produtos-novo", pathCheck: (path) => path.includes("/produto/novo.html")},
+        { id: "submenu-produtos-categorias", pathCheck: (path) => path.includes("/produto/categorias.html")},
+        { id: "submenu-produtos-tipos", pathCheck: (path) => path.includes("/produto/tipo/")},
+        { id: "submenu-produtos-unidades", pathCheck: (path) => path.includes("/produto/unidade/")}
+      ]
+    },
+    { id: "menu-estoque", pathCheck: (path) => path.includes("/acerto-estoque/") }
+  ];
 
-    if (currentPath.includes("/produto/listar.html")) {
-      document
-        .getElementById("submenu-produtos-listar")
-        .classList.add("active");
-    } else if (currentPath.includes("/produto/novo.html")) {
-      document.getElementById("submenu-produtos-novo").classList.add("active");
-    } else if (currentPath.includes("/produto/categorias.html")) {
-      document
-        .getElementById("submenu-produtos-categorias")
-        .classList.add("active");
-    } else if (currentPath.includes("/produto/tipo/")) {
-      document.getElementById("submenu-produtos-tipos").classList.add("active");
-    } else if (currentPath.includes("/produto/unidade/")) {
-      document
-        .getElementById("submenu-produtos-unidades")
-        .classList.add("active");
+  for (const menuItem of menuItems) {
+    const menuElement = document.getElementById(menuItem.id);
+    if (menuElement && menuItem.pathCheck(currentPath)) {
+      menuElement.classList.add("active");
+      activeParentFound = true;
+      if (menuItem.submenuId) {
+        const submenuElement = document.getElementById(menuItem.submenuId);
+        if (submenuElement) {
+          let openSubmenu = false;
+          if (menuItem.subItems) {
+            for (const subItem of menuItem.subItems) {
+              const subItemElement = document.getElementById(subItem.id);
+              if (subItemElement && subItem.pathCheck(currentPath)) {
+                subItemElement.classList.add("active");
+                openSubmenu = true;
+                break;
+              }
+            }
+          }
+          if(openSubmenu){
+            submenuElement.classList.add("open");
+            const arrow = menuElement.querySelector(".sidebar-item-arrow");
+            if (arrow) {
+              arrow.classList.remove("bi-chevron-down");
+              arrow.classList.add("bi-chevron-up");
+            }
+          }
+        }
+      }
+      break;
     }
+  }
 
-    const arrow = document.querySelector("#menu-produtos .sidebar-item-arrow");
-    arrow.classList.remove("bi-chevron-down");
-    arrow.classList.add("bi-chevron-up");
-  } else if (currentPath.includes("")) {
-    document.getElementById("menu-estoque").classList.add("active");
+  if (!activeParentFound && (currentPath === getBasePath() || currentPath === getBasePath() + "index.html")) {
+    const homeMenu = document.getElementById("menu-home");
+    if (homeMenu) homeMenu.classList.add("active");
   }
 }
 
 function getBasePath() {
   const path = window.location.pathname;
+  const segments = path.split('/');
+  const pagesIndex = segments.indexOf('pages');
 
-  // Lógica ajustada para a nova estrutura de pastas
-  if (path.includes("/pages/")) {
-    const segments = path.split("/");
-    const pagesIndex = segments.indexOf("pages");
-    if (pagesIndex !== -1) {
-      // Calcula quantos níveis precisamos subir para chegar à raiz
-      // pages + mais subpastas
-      const levelsUp = segments.length - pagesIndex - 1;
-      return "../".repeat(levelsUp);
+  if (pagesIndex !== -1) {
+    const levelsUp = segments.length - pagesIndex - 2;
+    if (levelsUp < 0) return "./"; // Caso de /pages/arquivo.html
+    return '../'.repeat(levelsUp);
+  } else {
+    // Verifica se está na raiz (ex: /index.html ou /Projeto/index.html)
+    // Conta quantos segmentos existem além do nome do arquivo.
+    const pathEnd = segments[segments.length - 1];
+    const isIndexOrRoot = pathEnd === "" || pathEnd === "index.html";
+    let depth = 0;
+    if (!isIndexOrRoot) { // Se for algo como /projeto/outrapagina.html
+      depth = segments.filter(s => s && !s.includes('.html')).length;
+      if (segments[0] === "") depth--; // Ajuste para path absoluto começando com /
+    } else { // Se for index.html ou /
+      const relevantSegments = segments.filter(s => s && s !== "index.html");
+      depth = relevantSegments.length > 1 ? relevantSegments.length -1 : 0;
     }
-    return "../../"; // Fallback padrão se a lógica acima falhar
-  }
+    if (depth <=0) return "./";
 
-  return "";
+    return "../".repeat(depth);
+  }
 }

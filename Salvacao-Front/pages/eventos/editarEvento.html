@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PetControl - Editar Evento</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <link rel="stylesheet" href="../../assets/css/style.css" />
+    <script src="../../assets/js/components/sidebar.js" defer></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header d-flex align-items-center">
+        <a href="gerenciarEvento.html" class="btn btn-secondary me-3">
+          <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+        <h1 class="h3 mb-0" style="color: var(--vermelho-escuro)">
+          Editar Evento
+        </h1>
+      </div>
+
+      <div class="bg-white shadow rounded p-4">
+        <form id="formEvento">
+            <input type="hidden" id="idEvento" />
+            
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label for="descricao" class="form-label" style="color: red;">*Descrição</label>
+                    <textarea class="form-control" id="descricao" rows="3" required data-max-length="500" data-show-counter="true" placeholder="Descreva o evento..."></textarea>
+                    <div id="descricaoError" class="input-error"></div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="data" class="form-label" style="color: red;">*Data</label>
+                    <input type="datetime-local" class="form-control" id="data" required />
+                    <div id="dataError" class="input-error"></div>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="local" class="form-label" style="color: red;">*Local</label>
+                    <input type="text" class="form-control" id="local" required data-max-length="255" placeholder="Local do evento" />
+                    <div id="localError" class="input-error"></div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="animalId" class="form-label">Animal Relacionado</label>
+                    <select class="form-select" id="animalId">
+                        <option value="">Selecione um animal (opcional)</option>
+                        <!-- Opções serão carregadas dinamicamente -->
+                    </select>
+                    <div id="animalIdError" class="input-error"></div>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="foto" class="form-label">URL da Foto</label>
+                    <input
+                        type="url"
+                        class="form-control"
+                        id="foto"
+                        data-max-length="500"
+                        placeholder="https://exemplo.com/foto.jpg"
+                        pattern="https?://.*\.(jpg|jpeg|png|gif|bmp|webp)"
+                        title="Insira uma URL válida que termine com .jpg, .jpeg, .png, .gif, .bmp ou .webp"
+                    />
+                    <div id="fotoError" class="input-error"></div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-secondary" onclick="window.location.href='gerenciarEvento.html'">
+                    Cancelar
+                </button>
+                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+            </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+        import { eventoController } from "../../assets/js/controllers/EventoController.js"; 
+        import UIComponents from "../../assets/js/components/uiComponents.js";
+
+        // Aguarda o carregamento do DOM
+        document.addEventListener("DOMContentLoaded", async () => {
+            const form = document.getElementById("formEvento");
+
+            // Obter ID do evento da URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const eventoId = urlParams.get('id');
+
+            if (!eventoId) {
+                UIComponents.Toast.erro("ID do evento não encontrado");
+                window.location.href = 'gerenciarEvento.html';
+                return;
+            }
+
+            try {
+                // Carrega a lista de animais para o select
+                await eventoController.carregarAnimais();
+                
+                // Carrega os dados do evento
+                await eventoController.carregarDadosEdicao(eventoId);
+
+                // Adiciona o listener de submit
+                if (form) {
+                    form.addEventListener("submit", (event) => {
+                        event.preventDefault(); // Evita o envio padrão do formulário
+
+                        try {
+                            eventoController.atualizar(event); // Chama o método atualizar
+                        } catch (error) {
+                            console.error("Erro ao atualizar evento:", error);
+                            UIComponents.alertaErro("Erro ao atualizar evento. Verifique os campos.");
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error("Erro ao carregar dados:", error);
+                UIComponents.Toast.erro("Erro ao carregar dados do evento");
+                setTimeout(() => {
+                    window.location.href = 'gerenciarEvento.html';
+                }, 2000);
+            }
+        });
+    </script>
+
+  </body>
+</html>

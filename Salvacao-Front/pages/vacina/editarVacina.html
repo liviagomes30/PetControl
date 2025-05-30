@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta
+                name="description"
+                content="Edição de Tipo de Vacina - PetControl"
+        />
+        <title>PetControl - Editar Vacina</title>
+        <link
+                rel="stylesheet"
+                href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css"
+        />
+        <link rel="stylesheet" href="../../assets/css/style.css" />
+        <script src="../../assets/js/components/sidebar.js" defer></script>
+    </head>
+    <body>
+        <main class="main-content">
+            <header class="content-header">
+                <button
+                        class="btn-back"
+                        onclick="window.location.href='listarVacinas.html'"
+                        aria-label="Voltar para lista de vacinas"
+                >
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </button>
+                <h1>Editar Vacina</h1>
+            </header>
+
+            <div class="form-container">
+                <form id="editarVacinaForm" novalidate>
+                    <input type="hidden" id="id_vacina" value="0" />
+
+                    <div class="form-group">
+                        <label for="descricao_vacina" class="required">Descrição</label>
+                        <input
+                                type="text"
+                                id="descricao_vacina"
+                                name="descricao_vacina"
+                                required
+                                placeholder="Digite o nome ou descrição da vacina"
+                                aria-required="true"
+                                aria-describedby="descricao-error descricao-help"
+                        />
+                        <div
+                                class="error-message"
+                                id="descricao-error"
+                                aria-live="polite"
+                        ></div>
+                        <small id="descricao-help" class="form-help-text">
+                            Atualize a descrição da vacina.
+                        </small>
+                    </div>
+
+                    <div class="form-buttons">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Salvar Alterações
+                        </button>
+                        <button
+                                type="button"
+                                class="btn btn-secondary"
+                                onclick="window.location.href='listarVacinas.html'"
+                        >
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-icon success">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+                <div class="toast-content">
+                    <div class="toast-title" id="toastTitle">Sucesso!</div>
+                    <div class="toast-message" id="toastMessage">Operação realizada com sucesso.</div>
+                </div>
+                <button class="toast-close" aria-label="Fechar notificação">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+
+            <div id="loadingOverlay" class="loading-overlay">
+                <div class="spinner" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                </div>
+            </div>
+        </main>
+
+        <script type="module">
+            import VacinaController from "../../assets/js/controllers/VacinaController.js";
+            import UIComponents from "../../assets/js/components/uiComponents.js"; // Assumindo que é usado pelo controller
+            import MensagensPadroes from "../../assets/js/utils/mensagensPadroes.js";
+
+            document.addEventListener("DOMContentLoaded", async () => {
+                const urlParams = new URLSearchParams(window.location.search);
+                const idVacina = urlParams.get("id");
+
+                if (!idVacina) {
+                    UIComponents.ModalErro.mostrar("ID da vacina não fornecido para edição.");
+                    setTimeout(() => { window.location.href = 'listarVacinas.html'; }, 2000);
+                    return;
+                }
+
+                window.vacinaController = new VacinaController();
+
+                try {
+                    // Preencher o formulário com os dados da vacina
+                    const vacina = await window.vacinaController.carregarParaEdicao(idVacina);
+                    if (vacina) {
+                        document.getElementById("id_vacina").value = vacina.id_vacina;
+                        document.getElementById("descricao_vacina").value = vacina.descricao_vacina;
+                    } else {
+                        UIComponents.ModalErro.mostrar("Vacina não encontrada para edição.");
+                        setTimeout(() => { window.location.href = 'listarVacinas.html'; }, 2000);
+                    }
+                } catch (error) {
+                    UIComponents.ModalErro.mostrar("Erro ao carregar dados da vacina: " + error.message);
+                    setTimeout(() => { window.location.href = 'listarVacinas.html'; }, 3000);
+                }
+
+
+                const form = document.getElementById("editarVacinaForm");
+                const descricaoInput = document.getElementById("descricao_vacina");
+                const descricaoError = document.getElementById("descricao-error");
+
+                descricaoInput.addEventListener("input", function () {
+                    validarDescricao(this);
+                });
+                descricaoInput.addEventListener("blur", function () {
+                    validarDescricao(this);
+                });
+
+                function validarDescricao(campo) {
+                    if (campo.value.trim() === "") {
+                        descricaoError.textContent = "Este campo é obrigatório";
+                        campo.classList.add("invalid");
+                        return false;
+                    } else if (campo.value.length < 2) {
+                        descricaoError.textContent = "A descrição deve ter pelo menos 2 caracteres";
+                        campo.classList.add("invalid");
+                        return false;
+                    } else if (campo.value.length > 100) {
+                        descricaoError.textContent = "A descrição deve ter no máximo 100 caracteres";
+                        campo.classList.add("invalid");
+                        return false;
+                    } else {
+                        descricaoError.textContent = "";
+                        campo.classList.remove("invalid");
+                        return true;
+                    }
+                }
+
+                form.addEventListener("submit", async function (event) {
+                    event.preventDefault();
+                    if (!validarDescricao(descricaoInput)) {
+                        UIComponents.Toast.erro("Por favor, corrija os erros no formulário.");
+                        return;
+                    }
+
+                    const vacinaData = {
+                        // id_vacina é pego do campo hidden, que já tem o valor correto
+                        descricao_vacina: descricaoInput.value.trim(),
+                    };
+
+                    const idParaAtualizar = document.getElementById("id_vacina").value;
+
+                    try {
+                        await window.vacinaController.atualizar(idParaAtualizar, vacinaData);
+                        // O controller.atualizar já mostra o Toast e o Loading.
+                        // O redirecionamento pode ser feito aqui se o controller.atualizar retornar sucesso.
+                        setTimeout(() => {
+                            window.location.href = "listarVacinas.html?message=" + encodeURIComponent(MensagensPadroes.SUCESSO.ATUALIZACAO);
+                        }, 1500); // Aguarda um pouco para o toast ser visto
+
+                    } catch (error) {
+                        // O controller já deve ter mostrado o erro via ModalErro
+                        console.error("Falha ao submeter atualização:", error);
+                    }
+                });
+            });
+        </script>
+    </body>
+</html>

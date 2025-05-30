@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PetControl - Lista de Eventos</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <link rel="stylesheet" href="../../assets/css/style.css" />
+    <script src="../../assets/js/components/sidebar.js" defer></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header d-flex justify-content-between align-items-center">
+        <h1 class="h3" style="color: var(--vermelho-escuro)">
+          Lista de Eventos
+        </h1>
+        <a href="cadastrarEvento.html" class="btn btn-primary"
+          >Novo Evento</a
+        >
+      </div>
+     
+      <div class="container mt-3">
+        <div class="row g-2 align-items-center">
+            <!-- Campo de pesquisa -->
+            <div class="col">
+                <input class="form-control form-control-sm" type="search" placeholder="Pesquisar" aria-label="Pesquisar">
+            </div>
+            <!-- Select -->
+            <div class="col-auto">
+                <select class="form-select form-select-sm" style="background-color: rgb(73, 71, 71); color: lightgray; border-radius: 10px; width: auto;" aria-label="Filtro">
+                    <option value="1" selected>Descrição</option>
+                    <option value="2">Local</option>
+                    <option value="3">Data</option>
+                </select>
+            </div>
+        </div>
+      </div>
+      <br>
+
+      <!-- Tabela de Eventos -->
+      <div class="bg-white shadow rounded p-4">
+        <table class="table table-hover">
+          <thead class="table-header">
+            <tr>
+              <th>Descrição</th>
+              <th>Data</th>
+              <th>Local</th>
+              <th>Animal</th>
+              <th>Foto</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-eventos">
+            <!-- Conteúdo será carregado dinamicamente -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+      import { eventoController } from "../../assets/js/controllers/EventoController.js";
+
+        document.addEventListener("DOMContentLoaded", () => {
+            console.log("InicializarListagem");
+            eventoController.inicializarListagem();
+
+            const inputBusca = document.querySelector('input[type="search"]');
+            const selectFiltro = document.querySelector('select');
+
+            const aplicarFiltro = () => {
+            const termo = inputBusca.value.trim();
+            const filtro = selectFiltro.value;
+            console.log("G: "+termo);
+            eventoController.filtrarEventos(termo, filtro);
+            };
+
+            // Evento ao digitar
+            inputBusca.addEventListener("input", aplicarFiltro);
+
+            // Evento ao mudar o select
+            selectFiltro.addEventListener("change", aplicarFiltro);
+        });
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const mensagem = urlParams.get("message");
+
+        if (mensagem) {
+            import("../../assets/js/components/uiComponents.js").then(({ default: UIComponents }) => {
+                UIComponents.Toast.sucesso(mensagem);
+
+                // Remove o parâmetro ?message da URL sem recarregar a página
+                const url = new URL(window.location);
+                url.searchParams.delete("message");
+                window.history.replaceState({}, document.title, url);
+            });
+          }
+          window.eventoController = eventoController;
+    </script>
+  </body>
+</html>

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PetControl - Editar Adotante</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css"
+    />
+    <link rel="stylesheet" href="../../assets/css/style.css" />
+    <script src="../../assets/js/components/sidebar.js" defer></script>
+  </head>
+  <body>
+    <div class="container">
+
+      <div class="header d-flex align-items-center">
+        <a href="/pages/pessoas/listarAdotante.html" class="btn btn-secondary me-3">
+          <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+        <h1 class="h3 mb-0" style="color: var(--vermelho-escuro);">
+          Editar Adotante
+        </h1>
+      </div>
+
+      <div class="bg-white shadow rounded p-4">
+        <form id="formAdotante">
+          <!-- Campo hidden para armazenar o ID da pessoa -->
+          <input type="hidden" id="idpessoa" />
+          
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="cpf" class="form-label">CPF</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="cpf" 
+                required 
+                readonly
+                style="background-color: #f8f9fa; cursor: not-allowed;"
+              />
+              <div id="cpfError" class="input-error"></div>
+              <small class="form-text text-muted">
+                <i class="bi bi-info-circle"></i> O CPF não pode ser alterado
+              </small>
+            </div>
+
+            <div class="col-md-6">
+              <label for="nome" class="form-label">Nome Completo</label>
+              <input type="text" class="form-control" id="nome" required />
+              <div id="nomeError" class="input-error"></div>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="telefone" class="form-label">Telefone</label>
+              <input type="tel" class="form-control" id="telefone" required />
+              <div id="telefoneError" class="input-error"></div>
+            </div>
+
+            <div class="col-md-6">
+              <label for="email" class="form-label">E-mail</label>
+              <input type="email" class="form-control" id="email" required />
+              <div id="emailError" class="input-error"></div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="endereco" class="form-label">Endereço Completo</label>
+            <input type="text" class="form-control" id="endereco" required />
+            <div id="enderecoError" class="input-error"></div>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="window.location.href='listarAdotante.html'"
+            >
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-check-lg"></i> Salvar Alterações
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+      <div class="d-flex flex-column align-items-center">
+        <div class="spinner"></div>
+        <p class="text-white mt-2" id="loadingMessage">Carregando...</p>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+      import { pessoaController } from "../../assets/js/controllers/PessoaController.js";
+      import UIComponents from "../../assets/js/components/uiComponents.js";
+      import MensagensPadroes from "../../assets/js/utils/mensagensPadroes.js";
+
+      document.addEventListener("DOMContentLoaded", async () => {
+        // Obter o CPF da URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const cpf = urlParams.get('cpf');
+        
+        if (!cpf) {
+          UIComponents.ModalErro.mostrar("CPF não fornecido na URL!");
+          setTimeout(() => {
+            window.location.href = 'listarAdotante.html';
+          }, 2000);
+          return;
+        }
+
+        // Carregar dados da pessoa para edição
+        await carregarDadosPessoa(cpf);
+
+        // Configurar o formulário
+        const form = document.getElementById("formAdotante");
+        if (form) {
+          form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            await pessoaController.atualizar();
+          });
+        }
+      });
+
+      // Função para carregar os dados da pessoa
+      async function carregarDadosPessoa(cpf) {
+        try {
+          UIComponents.Loading.mostrar("Carregando dados do adotante...");
+          
+          // Buscar pessoa pelo CPF usando o service
+          const pessoa = await pessoaController.service.buscarPorId(cpf);
+          
+          if (pessoa) {
+            // Preencher os campos do formulário
+            document.getElementById("idpessoa").value = pessoa.idpessoa || '';
+            document.getElementById("cpf").value = pessoa.cpf || '';
+            document.getElementById("nome").value = pessoa.nome || '';
+            document.getElementById("telefone").value = pessoa.telefone || '';
+            document.getElementById("email").value = pessoa.email || '';
+            document.getElementById("endereco").value = pessoa.endereco || '';
+            
+            console.log("Dados carregados:", pessoa);
+          } else {
+            throw new Error("Adotante não encontrado!");
+          }
+          
+        } catch (error) {
+          console.error("Erro ao carregar dados:", error);
+          UIComponents.ModalErro.mostrar(
+            error.message || "Erro ao carregar dados do adotante"
+          );
+          
+          // Redirecionar de volta para a listagem após erro
+          setTimeout(() => {
+            window.location.href = 'listarAdotante.html';
+          }, 3000);
+        } finally {
+          UIComponents.Loading.esconder();
+        }
+      }
+    </script>
+    <script src="../../assets/js/utils/validacao.js"></script>
+  </body>
+</html>
