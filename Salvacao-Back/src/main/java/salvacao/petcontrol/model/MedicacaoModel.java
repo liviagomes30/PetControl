@@ -27,7 +27,6 @@ public class MedicacaoModel {
         this.posologia_medicamento_idproduto = posologia_medicamento_idproduto;
         this.posologia_receitamedicamento_idreceita = posologia_receitamedicamento_idreceita;
         this.data = data;
-        this.medicacaoDAO = new MedicacaoDAO(); // Initialize DAO here as well
     }
 
     // Getters and Setters

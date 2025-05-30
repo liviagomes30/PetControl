@@ -1,12 +1,11 @@
-// HistoricoMedicacoesController.js
 import MedicacaoService from "../services/MedicacaoService.js";
-import AnimalService from "../services/AnimalService.js"; // Para carregar a lista de animais no filtro
-import { medicamentoController } from "../controllers/MedicamentoController.js"; // Para buscar detalhes do medicamento
+import AnimalService from "../services/AnimalService.js";
+import { medicamentoController } from "../controllers/MedicamentoController.js";
 import UIComponents from "../components/uiComponents.js";
 import MensagensPadroes from "../utils/mensagensPadroes.js";
-import HistoricoService from "../services/HistoricoService.js"; // Para buscar detalhes do histórico
-import ReceitaMedicamentoService from "../services/ReceitaMedicamentoService.js"; // Para buscar detalhes da receita
-import PosologiaService from "../services/PosologiaService.js"; // Para buscar detalhes da posologia
+import HistoricoService from "../services/HistoricoService.js";
+import ReceitaMedicamentoService from "../services/ReceitaMedicamentoService.js";
+import PosologiaService from "../services/PosologiaService.js";
 
 class HistoricoMedicacoesController {
   constructor() {

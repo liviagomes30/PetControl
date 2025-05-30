@@ -20,6 +20,49 @@ class MedicacaoController {
     await this.carregarDadosIniciais();
   }
 
+  vincularLimpezaAutomaticaValidacao() {
+    const camposFormPrincipal = [
+      { id: "animal", evento: "change" },
+      { id: "medicamento", evento: "change" },
+      { id: "receita", evento: "change" },
+      { id: "posologia", evento: "change" },
+      { id: "quantidade", evento: "input" },
+      { id: "dataMedicao", evento: "change" },
+      { id: "descricaoHistorico", evento: "input" },
+    ];
+
+    camposFormPrincipal.forEach((config) => {
+      const elemento = document.getElementById(config.id);
+      if (elemento) {
+        elemento.addEventListener(config.evento, function () {
+          if (
+            (this.tagName === "SELECT" && this.value) ||
+            (this.tagName !== "SELECT" && this.value.trim())
+          ) {
+            UIComponents.Validacao.limparErroCampo(config.id);
+          }
+        });
+      }
+    });
+
+    const camposModalPosologia = [
+      { id: "modalPosologiaDose", evento: "input" },
+      { id: "modalPosologiaQuantidadeDias", evento: "input" },
+      { id: "modalPosologiaIntervaloHoras", evento: "input" },
+    ];
+
+    camposModalPosologia.forEach((config) => {
+      const elemento = document.getElementById(config.id);
+      if (elemento) {
+        elemento.addEventListener(config.evento, function () {
+          if (this.value.trim()) {
+            UIComponents.Validacao.limparErroCampo(config.id);
+          }
+        });
+      }
+    });
+  }
+
   setupEventListeners() {
     const form = document.getElementById("formEfetuarMedicacao");
     if (form) {
@@ -38,6 +81,13 @@ class MedicacaoController {
     document
       .getElementById("quantidade")
       .addEventListener("input", () => this.validarQuantidadeEstoque());
+
+    const quantidadeInput = document.getElementById("quantidade");
+    if (quantidadeInput) {
+      quantidadeInput.addEventListener("input", () =>
+        this.validarQuantidadeEstoque()
+      ); //
+    }
 
     // Configuração do botão "Cadastrar Nova Posologia"
     const btnCadastrarPosologia = document.getElementById(
@@ -61,6 +111,7 @@ class MedicacaoController {
     const today = new Date().toISOString().split("T")[0];
     document.getElementById("dataMedicao").value = today;
 
+    this.vincularLimpezaAutomaticaValidacao();
     // Validação Bootstrap (lado do cliente)
     (() => {
       "use strict";

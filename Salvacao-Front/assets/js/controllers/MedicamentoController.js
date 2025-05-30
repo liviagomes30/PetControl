@@ -10,6 +10,32 @@ class MedicamentoController {
     this.unidadeMedidaValue = null;
   }
 
+  vincularLimpezaAutomaticaValidacao() {
+    const campos = [
+      { id: "nome", evento: "input" },
+      { id: "composicao", evento: "input" },
+      { id: "tipoProduto", evento: "change" },
+      { id: "unidadeMedida", evento: "change" },
+      { id: "preco", evento: "input" },
+      { id: "estoqueMinimo", evento: "input" },
+      { id: "fabricante", evento: "input" }, // Adicionado fabricante se também tiver validação de obrigatório
+    ];
+
+    campos.forEach((config) => {
+      const elemento = document.getElementById(config.id);
+      if (elemento) {
+        elemento.addEventListener(config.evento, function () {
+          if (
+            (this.tagName === "SELECT" && this.value) ||
+            (this.tagName !== "SELECT" && this.value.trim())
+          ) {
+            UIComponents.Validacao.limparErroCampo(config.id);
+          }
+        });
+      }
+    });
+  }
+
   async inicializarListagem() {
     try {
       UIComponents.Loading.mostrar("Carregando medicamentos...");
@@ -231,41 +257,43 @@ class MedicamentoController {
 
   async inicializarFormulario() {
     try {
-      UIComponents.Validacao.limparErros("formMedicamento");
+      UIComponents.Validacao.limparErros("formMedicamento"); //
 
-      const urlParams = new URLSearchParams(window.location.search);
-      const id = urlParams.get("id");
+      const urlParams = new URLSearchParams(window.location.search); //
+      const id = urlParams.get("id"); //
 
       const form = document.getElementById("formMedicamento");
       if (form) {
         if (id) {
-          form.addEventListener("submit", (e) => this.atualizar(e, id));
+          form.addEventListener("submit", (e) => this.atualizar(e, id)); //
         } else {
-          form.addEventListener("submit", (e) => this.cadastrar(e));
-
-          const alertaEstoque = document.getElementById("alertaEstoque");
+          form.addEventListener("submit", (e) => this.cadastrar(e)); //
+          const alertaEstoque = document.getElementById("alertaEstoque"); //
           if (alertaEstoque) {
-            alertaEstoque.style.display = "block";
+            //
+            alertaEstoque.style.display = "block"; //
           }
         }
       }
 
-      this.configurarMascarasCampos();
+      this.configurarMascarasCampos(); //
+      this.vincularLimpezaAutomaticaValidacao(); // Adiciona a chamada aqui
 
-      UIComponents.Loading.mostrar("Carregando dados...");
-      await this.carregarSelectsTipoUnidade();
+      UIComponents.Loading.mostrar("Carregando dados..."); //
+      await this.carregarSelectsTipoUnidade(); //
 
       if (id) {
-        await this.carregarMedicamento(id);
+        await this.carregarMedicamento(id); //
       }
 
-      UIComponents.Loading.esconder();
+      UIComponents.Loading.esconder(); //
     } catch (error) {
-      console.error("Erro ao inicializar formulário:", error);
+      console.error("Erro ao inicializar formulário:", error); //
       UIComponents.ModalErro.mostrar(
+        //
         "Não foi possível carregar o formulário: " + (error.message || "")
       );
-      UIComponents.Loading.esconder();
+      UIComponents.Loading.esconder(); //
     }
   }
 

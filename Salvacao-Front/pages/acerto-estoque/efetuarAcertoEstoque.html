@@ -227,13 +227,15 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <script type="module">
-      import acertoEstoqueController from "../../assets/js/controllers/AcertoEstoqueController.js";
+      import AcertoEstoqueController from "../../assets/js/controllers/AcertoEstoqueController.js";
       import UIComponents from "../../assets/js/components/uiComponents.js";
 
       document.addEventListener("DOMContentLoaded", () => {
         if (UIComponents.InputMasks) {
           UIComponents.InputMasks.inicializar();
         }
+
+        window.acertoEstoqueController = new AcertoEstoqueController();
 
         acertoEstoqueController.inicializarFormulario();
 

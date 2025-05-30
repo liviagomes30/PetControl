@@ -17,7 +17,6 @@ const UIValidacao = {
     const camposInvalidos = form.querySelectorAll(".is-invalid");
     camposInvalidos.forEach((campo) => {
       campo.classList.remove("is-invalid");
-      campo.classList.remove("is-valid");
     });
 
     // Remove também as classes de campo válido
@@ -35,6 +34,78 @@ const UIValidacao = {
     });
   },
 
+  limparErroCampo: function (campoId) {
+    const campo = document.getElementById(campoId);
+    if (!campo) return;
+
+    campo.classList.remove("is-invalid");
+    campo.classList.remove("is-valid"); // Remove também 'is-valid' para um estado neutro
+
+    // ID de referência para acessibilidade e busca
+    const feedbackIdAria = `validation${
+      campoId.charAt(0).toUpperCase() + campoId.slice(1)
+    }Feedback`;
+    let feedbackElementBS = null;
+    const inputGroup = campo.closest(".input-group");
+
+    // Tenta encontrar o elemento de feedback do Bootstrap
+    // 1. Para campos dentro de um input-group
+    if (inputGroup) {
+      const nextSibling = inputGroup.nextElementSibling;
+      if (nextSibling) {
+        // Prioriza elemento com ID específico ou um .invalid-feedback genérico
+        if (
+          nextSibling.id === feedbackIdAria &&
+          nextSibling.classList.contains("invalid-feedback")
+        ) {
+          feedbackElementBS = nextSibling;
+        } else if (nextSibling.classList.contains("invalid-feedback")) {
+          // Pode ser um sem ID específico
+          feedbackElementBS = nextSibling;
+        }
+      }
+    }
+    // 2. Para campos normais (não em input-group)
+    else {
+      const nextSibling = campo.nextElementSibling;
+      if (nextSibling) {
+        if (
+          nextSibling.id === feedbackIdAria &&
+          nextSibling.classList.contains("invalid-feedback")
+        ) {
+          feedbackElementBS = nextSibling;
+        } else if (nextSibling.classList.contains("invalid-feedback")) {
+          // Pode ser um sem ID específico
+          feedbackElementBS = nextSibling;
+        }
+      }
+    }
+
+    // Tratar o elemento legado se ele existir e for o feedback do Bootstrap
+    const erroIdLegado = `${campoId}Error`;
+    const erroElementLegado = document.getElementById(erroIdLegado);
+
+    if (
+      erroElementLegado &&
+      erroElementLegado.classList.contains("invalid-feedback")
+    ) {
+      // Se o elemento legado é também o de feedback do Bootstrap, use-o
+      feedbackElementBS = erroElementLegado;
+    }
+
+    // Limpa o texto do elemento de feedback do Bootstrap encontrado/identificado
+    if (feedbackElementBS) {
+      feedbackElementBS.textContent = "";
+      // A classe 'is-invalid' já foi removida do campo, o Bootstrap irá esconder o feedback.
+    }
+
+    // Limpa o elemento legado separadamente se ele não for o feedback do Bootstrap
+    if (erroElementLegado && erroElementLegado !== feedbackElementBS) {
+      erroElementLegado.textContent = "";
+      erroElementLegado.style.display = "none";
+    }
+  },
+
   // Exibe uma mensagem de erro para um campo específico (método para validação server-side)
   mostrarErro: function (campoId, mensagem) {
     const input = document.getElementById(campoId);
@@ -44,56 +115,129 @@ const UIValidacao = {
     input.classList.remove("is-valid"); // Remove classe de válido se existir
     input.classList.add("is-invalid");
 
-    // Gera o ID para o feedback
-    const feedbackId = `validation${
+    // Adiciona o aria-describedby para acessibilidade (mantido da versão original)
+    const feedbackIdAria = `validation${
       campoId.charAt(0).toUpperCase() + campoId.slice(1)
-    }Feedback`;
-
-    // Adiciona o aria-describedby para acessibilidade
+    }Feedback`; // Usar um ID consistente para aria
     if (input.getAttribute("aria-describedby")) {
-      // Se já existe, apenas adiciona o novo ID
-      if (!input.getAttribute("aria-describedby").includes(feedbackId)) {
+      if (!input.getAttribute("aria-describedby").includes(feedbackIdAria)) {
         input.setAttribute(
           "aria-describedby",
-          input.getAttribute("aria-describedby") + " " + feedbackId
+          input.getAttribute("aria-describedby") + " " + feedbackIdAria
         );
       }
     } else {
-      input.setAttribute("aria-describedby", feedbackId);
+      input.setAttribute("aria-describedby", feedbackIdAria);
     }
 
     // Verificar se existe um elemento para exibir erro (modo legado)
-    const erroId = `${campoId}Error`;
-    const erroElement = document.getElementById(erroId);
+    const erroIdLegado = `${campoId}Error`;
+    const erroElementLegado = document.getElementById(erroIdLegado);
+    let mensagemDefinidaPeloLegado = false;
 
-    if (erroElement) {
-      erroElement.textContent = mensagem;
-      erroElement.style.display = "block";
-    }
-
-    // Verificar se existe um feedback de validação do Bootstrap
-    let feedbackElement = document.getElementById(feedbackId);
-
-    if (!feedbackElement) {
-      // Se não existir, criar um novo
-      feedbackElement = document.createElement("div");
-      feedbackElement.className = "invalid-feedback";
-      feedbackElement.id = feedbackId;
-
-      // Verifica se é um input-group
-      const inputGroup = input.closest(".input-group");
-      if (inputGroup) {
-        // Se for input group, adiciona a classe has-validation e adiciona o feedback após o grupo
-        inputGroup.classList.add("has-validation");
-        inputGroup.parentNode.appendChild(feedbackElement);
-      } else {
-        // Senão, adiciona após o input
-        input.parentNode.appendChild(feedbackElement);
+    if (erroElementLegado) {
+      erroElementLegado.textContent = mensagem;
+      erroElementLegado.style.display = "block";
+      // Se o elemento legado também for o feedback do Bootstrap, marcamos
+      if (erroElementLegado.classList.contains("invalid-feedback")) {
+        mensagemDefinidaPeloLegado = true;
       }
     }
 
-    // Atualizar a mensagem de feedback
-    feedbackElement.textContent = mensagem;
+    // Lógica para encontrar/criar o feedbackElement do Bootstrap
+    let feedbackElementBS = null;
+    const inputGroup = input.closest(".input-group");
+
+    // Tenta encontrar um feedbackElement existente associado ao input ou input-group
+    if (inputGroup) {
+      // Para input-groups, o feedback geralmente fica FORA e DEPOIS do input-group.
+      // Tenta encontrar por ID específico ou classe .invalid-feedback DEPOIS do input-group.
+      const nextSibling = inputGroup.nextElementSibling;
+      if (nextSibling) {
+        if (
+          nextSibling.id === feedbackIdAria &&
+          nextSibling.classList.contains("invalid-feedback")
+        ) {
+          feedbackElementBS = nextSibling;
+        } else if (
+          nextSibling.classList.contains("invalid-feedback") &&
+          !nextSibling.id
+        ) {
+          // Prioriza um sem ID se o ID específico não bate
+          feedbackElementBS = nextSibling;
+        } else if (nextSibling.classList.contains("invalid-feedback")) {
+          // Ou qualquer invalid-feedback se não achou com ID ou sem ID específico
+          feedbackElementBS = nextSibling;
+        }
+      }
+    } else {
+      // Para inputs normais (não em input-group)
+      // Tenta encontrar por ID específico ou classe .invalid-feedback como irmão posterior.
+      const nextSibling = input.nextElementSibling;
+      if (nextSibling) {
+        if (
+          nextSibling.id === feedbackIdAria &&
+          nextSibling.classList.contains("invalid-feedback")
+        ) {
+          feedbackElementBS = nextSibling;
+        } else if (
+          nextSibling.classList.contains("invalid-feedback") &&
+          !nextSibling.id
+        ) {
+          feedbackElementBS = nextSibling;
+        } else if (nextSibling.classList.contains("invalid-feedback")) {
+          feedbackElementBS = nextSibling;
+        }
+      }
+    }
+
+    // Se o elemento legado já é o feedback do Bootstrap, usa ele.
+    if (
+      erroElementLegado &&
+      erroElementLegado.classList.contains("invalid-feedback")
+    ) {
+      feedbackElementBS = erroElementLegado;
+    }
+
+    // Se NENHUM feedbackElementBS existente foi encontrado, criar um novo.
+    if (!feedbackElementBS) {
+      feedbackElementBS = document.createElement("div");
+      feedbackElementBS.className = "invalid-feedback";
+      feedbackElementBS.id = feedbackIdAria; // Atribui o ID para acessibilidade e referência
+
+      if (inputGroup) {
+        inputGroup.classList.add("has-validation");
+        inputGroup.parentNode.insertBefore(
+          feedbackElementBS,
+          inputGroup.nextSibling
+        );
+      } else {
+        // Garante que não vai inserir se o elemento legado (sem classe invalid-feedback) já estiver lá
+        if (
+          !(erroElementLegado && input.nextElementSibling === erroElementLegado)
+        ) {
+          input.parentNode.insertBefore(feedbackElementBS, input.nextSibling);
+        } else if (!erroElementLegado) {
+          // Se não há elemento legado, insere normalmente
+          input.parentNode.insertBefore(feedbackElementBS, input.nextSibling);
+        }
+      }
+    }
+
+    // Atualizar a mensagem do feedbackElementBS
+    // Só define o texto se não foi definido pelo legado OU se o legado não é o mesmo elemento
+    if (
+      feedbackElementBS &&
+      (!mensagemDefinidaPeloLegado || erroElementLegado !== feedbackElementBS)
+    ) {
+      feedbackElementBS.textContent = mensagem;
+    }
+
+    // Garante classes corretas no elemento de feedback do Bootstrap
+    if (feedbackElementBS) {
+      feedbackElementBS.classList.add("invalid-feedback");
+      feedbackElementBS.classList.remove("valid-feedback");
+    }
   },
 
   // Exibe uma mensagem de sucesso para um campo (método para validação server-side)
@@ -105,23 +249,47 @@ const UIValidacao = {
     input.classList.remove("is-invalid"); // Remove classe de inválido se existir
     input.classList.add("is-valid");
 
-    // Gera o ID para o feedback
+    // Gera o ID para o feedback de sucesso
     const feedbackId = `validation${
       campoId.charAt(0).toUpperCase() + campoId.slice(1)
     }ValidFeedback`;
 
-    // Verificar se existe um feedback de validação do Bootstrap
-    let feedbackElement = document.getElementById(feedbackId);
+    let feedbackElement = null;
+    const inputGroup = input.closest(".input-group");
 
-    if (!feedbackElement) {
-      // Se não existir, criar um novo
-      feedbackElement = document.createElement("div");
-      feedbackElement.className = "valid-feedback";
-      feedbackElement.id = feedbackId;
-      input.parentNode.appendChild(feedbackElement);
+    if (inputGroup) {
+      if (
+        inputGroup.nextElementSibling &&
+        (inputGroup.nextElementSibling.id === feedbackId ||
+          inputGroup.nextElementSibling.classList.contains("valid-feedback"))
+      ) {
+        feedbackElement = inputGroup.nextElementSibling;
+      }
+    } else {
+      if (
+        input.nextElementSibling &&
+        (input.nextElementSibling.id === feedbackId ||
+          input.nextElementSibling.classList.contains("valid-feedback"))
+      ) {
+        feedbackElement = input.nextElementSibling;
+      }
     }
 
-    // Atualizar a mensagem de feedback
+    if (!feedbackElement) {
+      feedbackElement = document.createElement("div");
+      feedbackElement.id = feedbackId;
+      if (inputGroup) {
+        inputGroup.classList.add("has-validation");
+        inputGroup.parentNode.insertBefore(
+          feedbackElement,
+          inputGroup.nextSibling
+        );
+      } else {
+        input.parentNode.insertBefore(feedbackElement, input.nextSibling);
+      }
+    }
+
+    feedbackElement.className = "valid-feedback"; // Garante a classe correta
     feedbackElement.textContent = mensagem;
   },
 
@@ -137,20 +305,14 @@ const UIValidacao = {
 
     let valido = true;
 
-    // Se for uma função, executa para validar
     if (typeof validador === "function") {
       valido = validador(input.value);
-    }
-    // Se for uma regex, testa o valor
-    else if (validador instanceof RegExp) {
+    } else if (validador instanceof RegExp) {
       valido = validador.test(input.value);
-    }
-    // Se for um valor booleano, usa diretamente
-    else if (typeof validador === "boolean") {
+    } else if (typeof validador === "boolean") {
       valido = validador;
     }
 
-    // Exibe feedback adequado
     if (valido) {
       this.mostrarSucesso(campo, mensagemSucesso);
     } else {
@@ -172,7 +334,8 @@ const UIValidacao = {
     }
   },
 
-  // Adiciona feedback para todos os campos obrigatórios
+  // Adiciona feedback para todos os campos obrigatórios (esta função pode precisar de revisão se usada extensivamente,
+  // para garantir que não crie divs redundantes se `mostrarErro` já os manipula bem)
   adicionarFeedbackCamposObrigatorios: function (formId) {
     const form = document.getElementById(formId);
     if (!form) return;
@@ -180,24 +343,74 @@ const UIValidacao = {
     const camposObrigatorios = form.querySelectorAll("[required]");
 
     camposObrigatorios.forEach((campo) => {
-      // Gera o ID para o feedback
       const feedbackId = `validation${
         campo.id.charAt(0).toUpperCase() + campo.id.slice(1)
-      }Feedback`;
+      }Feedback`; // ID para acessibilidade e referência
 
-      // Verifica se já existe um feedback para este campo
-      let feedbackElement = document.getElementById(feedbackId);
+      let feedbackElement = null;
+      const inputGroup = campo.closest(".input-group");
 
-      // Se não existir, criar um novo
+      // Tenta encontrar um feedback já existente (irmão do input ou do input-group)
+      if (inputGroup) {
+        if (
+          inputGroup.nextElementSibling &&
+          inputGroup.nextElementSibling.classList.contains("invalid-feedback")
+        ) {
+          feedbackElement = inputGroup.nextElementSibling;
+        }
+      } else {
+        if (
+          campo.nextElementSibling &&
+          campo.nextElementSibling.classList.contains("invalid-feedback")
+        ) {
+          feedbackElement = campo.nextElementSibling;
+        }
+      }
+
       if (!feedbackElement) {
         feedbackElement = document.createElement("div");
         feedbackElement.className = "invalid-feedback";
-        feedbackElement.id = feedbackId;
+        // Não necessariamente atribuir o ID feedbackId aqui, pois o HTML pode já ter um feedback genérico
+        // que foi pego acima. Se não foi pego, este novo div será o feedback.
+        // Se o HTML já tiver um div.invalid-feedback sem ID, esta função não deve criar outro,
+        // mas sim garantir que ele exista. A lógica de `mostrarErro` é mais crítica para a exibição.
 
-        // Define a mensagem padrão com base no tipo de campo
+        // Para esta função, se o div de feedback NÃO EXISTE DE TODO, nós o criamos.
+        // Se ele existe (mesmo sem ID), não criamos outro.
+        let deveCriar = true;
+        if (inputGroup) {
+          if (
+            inputGroup.nextElementSibling &&
+            inputGroup.nextElementSibling.classList.contains("invalid-feedback")
+          )
+            deveCriar = false;
+        } else {
+          if (
+            campo.nextElementSibling &&
+            campo.nextElementSibling.classList.contains("invalid-feedback")
+          )
+            deveCriar = false;
+        }
+
+        if (deveCriar) {
+          feedbackElement.id = feedbackId; // Dê o ID se for criar
+          if (inputGroup) {
+            inputGroup.classList.add("has-validation");
+            inputGroup.parentNode.appendChild(feedbackElement);
+          } else {
+            campo.parentNode.appendChild(feedbackElement);
+          }
+        } else if (feedbackElement && !feedbackElement.id) {
+          // Se encontrou um genérico, pode dar o ID para aria
+          feedbackElement.id = feedbackId;
+        }
+      }
+
+      // Preenche a mensagem padrão se o feedbackElement (existente ou novo) estiver vazio
+      if (feedbackElement && feedbackElement.textContent === "") {
         const labelElement = document.querySelector(`label[for="${campo.id}"]`);
         const labelText = labelElement
-          ? labelElement.textContent.replace(" *", "")
+          ? labelElement.textContent.replace(" *", "").trim()
           : "Este campo";
 
         if (campo.tagName.toLowerCase() === "select") {
@@ -205,20 +418,23 @@ const UIValidacao = {
         } else {
           feedbackElement.textContent = `Por favor, preencha ${labelText.toLowerCase()}.`;
         }
+      }
 
-        // Verifica se é um input-group
-        const inputGroup = campo.closest(".input-group");
-        if (inputGroup) {
-          // Se for input group, adiciona a classe has-validation e adiciona o feedback após o grupo
-          inputGroup.classList.add("has-validation");
-          inputGroup.parentNode.appendChild(feedbackElement);
+      // Adiciona o aria-describedby para acessibilidade
+      if (feedbackElement && feedbackElement.id) {
+        // Só adiciona aria se o feedback tiver ID
+        if (campo.getAttribute("aria-describedby")) {
+          if (
+            !campo.getAttribute("aria-describedby").includes(feedbackElement.id)
+          ) {
+            campo.setAttribute(
+              "aria-describedby",
+              campo.getAttribute("aria-describedby") + " " + feedbackElement.id
+            );
+          }
         } else {
-          // Senão, adiciona após o input
-          campo.parentNode.appendChild(feedbackElement);
+          campo.setAttribute("aria-describedby", feedbackElement.id);
         }
-
-        // Adiciona o aria-describedby para acessibilidade
-        campo.setAttribute("aria-describedby", feedbackId);
       }
     });
   },

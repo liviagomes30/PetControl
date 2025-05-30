@@ -1,18 +1,23 @@
+// assets/js/services/MedicacaoService.js
 class MedicacaoService {
   constructor() {
-    this.baseUrl = "http://localhost:8080";
-    this.endpoint = "/medicacoes";
+    this.baseUrl = "http://localhost:8080"; // Correct base URL
+    this.endpoint = "/medicacoes"; // Correct endpoint
   }
 
   // NOVO MÉTODO: Para listar todas as medicações
   async listarTodos() {
     try {
-      const response = await fetch(`${this.baseUrl}${this.endpoint}`); // Chamada GET para /medicacoes
+      // Use template literals for correct URL construction
+      const response = await fetch(`${this.baseUrl}${this.endpoint}`); // Corrected URL construction
+      console.log("Response from /medicacoes:", response); // Debug log
       if (!response.ok) {
         if (response.status === 404) return []; // Se 404, retorna array vazio (sem dados)
         throw new Error(`Erro ${response.status}: ${await response.text()}`);
       }
-      return await response.json();
+      const data = await response.json();
+      console.log("Data parsed from /medicacoes:", data); // Debug log
+      return data;
     } catch (error) {
       console.error("Erro ao listar todas as medicações:", error);
       throw error;

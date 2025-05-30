@@ -86,26 +86,26 @@ public class MedicacaoDAO {
 
     public List<MedicacaoModel> getAll() {
         List<MedicacaoModel> medicacoes = new ArrayList<>();
-        String sql = "SELECT * FROM medicacao ORDER BY data DESC";
-        try (ResultSet rs = SingletonDB.getConexao().consultar(sql)) {
-            while (rs.next()) {
-                Date dataSql = rs.getDate("data");
-                LocalDate data = (dataSql != null) ? dataSql.toLocalDate() : null;
+        String sql = "SELECT * FROM medicacao ORDER BY data DESC"; //
+        try (ResultSet rs = SingletonDB.getConexao().consultar(sql)) { //
+            while (rs.next()) { //
+                Date dataSql = rs.getDate("data"); //
+                LocalDate data = (dataSql != null) ? dataSql.toLocalDate() : null; //
 
-                MedicacaoModel medicacao = new MedicacaoModel(
-                        rs.getInt("idmedicacao"),
-                        rs.getInt("idanimal"),
-                        rs.getObject("idhistorico") != null ? rs.getInt("idhistorico") : null,
-                        rs.getInt("posologia_medicamento_idproduto"),
-                        rs.getInt("posologia_receitamedicamento_idreceita"),
-                        data
+                MedicacaoModel medicacao = new MedicacaoModel( //
+                        rs.getInt("idmedicacao"), //
+                        rs.getInt("idanimal"), //
+                        rs.getObject("idhistorico") != null ? rs.getInt("idhistorico") : null, //
+                        rs.getInt("posologia_medicamento_idproduto"), //
+                        rs.getInt("posologia_receitamedicamento_idreceita"), //
+                        data //
                 );
-                medicacoes.add(medicacao);
+                medicacoes.add(medicacao); //
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException e) { //
+            e.printStackTrace(); //
         }
-        return medicacoes;
+        return medicacoes; //
     }
 
 
