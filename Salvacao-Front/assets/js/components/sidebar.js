@@ -252,7 +252,5 @@ function getBasePath() {
 }
 
 function handleLogout() {
-  if (confirm('Tem certeza que deseja sair do sistema?')) {
     AuthService.logout();
-  }
 }

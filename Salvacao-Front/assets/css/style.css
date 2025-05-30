@@ -445,7 +445,7 @@ table tbody tr:last-child td {
 .actions {
   display: flex;
   gap: var(--spacing-xs);
-  justify-content: center;
+  justify-content: left;
 }
 
 .btn-icon {

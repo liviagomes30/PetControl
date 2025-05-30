@@ -18,6 +18,25 @@ const UsuarioService = {
     }
   },
 
+  async listarUsuariosFiltrados(filtro) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/usuarios/listar-filtrados?filtro=${filtro}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        mode: "cors",
+      });
+      if (!response.ok) {
+        throw new Error(`Erro: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error("Erro ao listar usuários filtrados:", error);
+      throw error;
+    }
+  },
+
   async buscarUsuario(id) {
     try {
       const response = await fetch(`${API_BASE_URL}/usuarios/${id}`, {

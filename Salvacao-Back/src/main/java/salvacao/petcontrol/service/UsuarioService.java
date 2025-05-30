@@ -7,6 +7,7 @@ import salvacao.petcontrol.util.ResultadoOperacao;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.ArrayList;
 import salvacao.petcontrol.dto.UsuarioDTO;
 import salvacao.petcontrol.dto.UsuarioCompletoDTO;
 import salvacao.petcontrol.model.PessoaModel;
@@ -86,6 +87,15 @@ public class UsuarioService {
         }
 
         return usuarioModel.getUsuDAO().reativarUsuario(id);
+    }
+
+    public List<UsuarioCompletoDTO> listarUsuariosFiltrados(String filtro) throws Exception {
+        try {
+            return usuarioModel.getUsuDAO().listarUsuariosFiltrados(filtro);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new Exception("Erro ao buscar usuários com filtro: " + e.getMessage(), e);
+        }
     }
 
     public List<UsuarioCompletoDTO> getByFabricante(String filtro) {

@@ -232,6 +232,18 @@
         }, []);
 
         useEffect(() => {
+          const timeoutId = setTimeout(() => {
+            if (filtro.trim()) {
+              buscarUsuariosFiltrados(filtro);
+            } else {
+              carregarUsuarios();
+            }
+          }, 500);
+
+          return () => clearTimeout(timeoutId);
+        }, [filtro]);
+
+        useEffect(() => {
           if (mostrarModal && modalRef.current) {
             forceCleanupBackdrops();
             
@@ -284,15 +296,21 @@
           }
         };
 
-        const usuariosFiltrados = usuarios.filter((usuario) => {
-          const termo = filtro.toLowerCase();
-          return (
-            usuario.usuario?.login?.toLowerCase().includes(termo) ||
-            usuario.pessoa?.nome?.toLowerCase().includes(termo) ||
-            usuario.pessoa?.cpf?.includes(termo) ||
-            usuario.pessoa?.email?.toLowerCase().includes(termo)
-          );
-        });
+        const buscarUsuariosFiltrados = async (filtro) => {
+          try {
+            setLoading(true);
+            const dados = await UsuarioService.listarUsuariosFiltrados(filtro);
+            setUsuarios(Array.isArray(dados) ? dados : []);
+          } catch (error) {
+            console.error("Erro ao carregar usuários:", error);
+            safeToast.error("Erro ao carregar usuários: " + error.message);
+            setUsuarios([]);
+          } finally {
+            setLoading(false);
+          }
+        };
+
+        const usuariosFiltrados = usuarios;
 
         const novoUsuario = () => {
           setUsuarioEdicao({
@@ -583,13 +601,6 @@
                       title="Editar usuário"
                     >
                       <i className="bi bi-pencil"></i>
-                    </button>
-                    <button
-                      className="btn btn-sm btn-outline-warning me-2"
-                      onClick={() => onAlterarSenha(usuario)}
-                      title="Alterar senha"
-                    >
-                      <i className="bi bi-key"></i>
                     </button>
                     <button
                       className="btn btn-sm btn-outline-danger"
