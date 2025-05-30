@@ -201,6 +201,35 @@ const UsuarioService = {
       throw error;
     }
   },
+
+  async authenticate(login, senha) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/usuarios/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          login: login,
+          senha: senha
+        }),
+        mode: "cors",
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error("Credenciais inválidas");
+        }
+        const errorText = await response.text();
+        throw new Error(errorText || `Erro: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Erro ao fazer login:", error);
+      throw error;
+    }
+  }
 };
 
 window.UsuarioService = UsuarioService;

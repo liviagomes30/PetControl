@@ -1,5 +1,10 @@
 // sidebar.js
 document.addEventListener("DOMContentLoaded", function () {
+  if (!window.location.pathname.includes('login.html') && !AuthService.isAuthenticated()) {
+    AuthService.requireAuth();
+    return;
+  }
+
   const bootstrapIconsLoaded = Array.from(
     document.querySelectorAll("link")
   ).some((link) => link.href.includes("bootstrap-icons"));
@@ -11,6 +16,10 @@ document.addEventListener("DOMContentLoaded", function () {
       "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css";
     document.head.appendChild(iconLink);
   }
+  
+  const currentUser = AuthService.getCurrentUser();
+  const userName = currentUser ? (currentUser.pessoa?.nome || currentUser.usuario?.login || 'Usuário') : 'Usuário';
+  
   const sidebar = document.createElement("div");
   sidebar.className = "sidebar";
 
@@ -18,6 +27,23 @@ document.addEventListener("DOMContentLoaded", function () {
     <div class="sidebar-logo">
       PetControl
     </div>
+    
+    <!-- User Info Section -->
+    <div class="sidebar-user">
+      <div class="sidebar-user-avatar">
+        <i class="bi bi-person-circle"></i>
+      </div>
+      <div class="sidebar-user-info">
+        <span class="sidebar-user-name">${userName}</span>
+        <small class="sidebar-user-role">Usuário</small>
+      </div>
+      <div class="sidebar-user-actions">
+        <button class="btn btn-link btn-sm text-black" onclick="handleLogout()" title="Sair">
+          <i class="bi bi-box-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+    
     <ul class="sidebar-menu">
       <a href="${getBasePath()}index.html" class="sidebar-item" id="menu-home">
         <div class="sidebar-item-content">
@@ -223,4 +249,10 @@ function getBasePath() {
   }
 
   return "";
+}
+
+function handleLogout() {
+  if (confirm('Tem certeza que deseja sair do sistema?')) {
+    AuthService.logout();
+  }
 }
