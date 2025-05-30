@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="80eed5b1-cf8f-4625-b1c9-7d41db00f869" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/pages/pessoas/listarPessoa.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Salvacao-Back/src/main/java/salvacao/petcontrol/util/Validation.java" beforeDir="false" afterPath="$PROJECT_DIR$/../Salvacao-Back/src/main/java/salvacao/petcontrol/util/Validation.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/js/components/sidebar.js" beforeDir="false" afterPath="$PROJECT_DIR$/assets/js/components/sidebar.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/js/controllers/EventoController.js" beforeDir="false" afterPath="$PROJECT_DIR$/assets/js/controllers/EventoController.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/js/controllers/PessoaController.js" beforeDir="false" afterPath="$PROJECT_DIR$/assets/js/controllers/PessoaController.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pages/eventos/cadastrarEvento.html" beforeDir="false" afterPath="$PROJECT_DIR$/pages/eventos/cadastrarEvento.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pages/eventos/editarEvento.html" beforeDir="false" afterPath="$PROJECT_DIR$/pages/eventos/editarEvento.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pages/eventos/gerenciarEvento.html" beforeDir="false" afterPath="$PROJECT_DIR$/pages/eventos/listarEventos.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pages/pessoas/cadastrarAdotante.html" beforeDir="false" afterPath="$PROJECT_DIR$/pages/pessoas/cadastrarPessoa.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pages/pessoas/cadatroAdotante_!.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pages/pessoas/editarAdotante.html" beforeDir="false" afterPath="$PROJECT_DIR$/pages/pessoas/editarPessoa.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pages/pessoas/listarAdotante.html" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="HTML File" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 4
+}</component>
+  <component name="ProjectId" id="2xY1QXaJuv9Npd8oYJGz3SFdVRg" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="1" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "DefaultHtmlFileTemplate": "HTML File",
+    "JavaScript Debug.cadastrarDoacao.html.executor": "Run",
+    "JavaScript Debug.cadastrarPessoa.html.executor": "Run",
+    "JavaScript Debug.index.html.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Node.js.sidebar.js.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "evento",
+    "junie.onboarding.icon.badge.shown": "true",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "preferences.lookFeel",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-6a121458b545-JavaScript-WS-251.25410.117" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="80eed5b1-cf8f-4625-b1c9-7d41db00f869" name="Changes" comment="" />
+      <created>1748100177510</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1748100177510</updated>
+      <workItem from="1748100178774" duration="2422000" />
+      <workItem from="1748103768352" duration="21766000" />
+      <workItem from="1748128507192" duration="4150000" />
+      <workItem from="1748469297469" duration="15000" />
+      <workItem from="1748569764116" duration="1405000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
