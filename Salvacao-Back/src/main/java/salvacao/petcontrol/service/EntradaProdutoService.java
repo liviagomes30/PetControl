@@ -58,6 +58,9 @@ public class EntradaProdutoService {
         Connection conn = SingletonDB.getConexao().getConnection();
         boolean sucesso = true;
 
+        if(registro.getItens() == null || registro.getItens().isEmpty())
+            throw new Exception("Erro: É necessario adicionar ao menos um item");
+
         try {
             // Iniciar transação
             conn.setAutoCommit(false);

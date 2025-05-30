@@ -38,6 +38,12 @@ public class SaidaProdutoService {
         Connection conn = SingletonDB.getConexao().getConnection();
         boolean sucesso = true;
 
+        if(registro.getItens() == null || registro.getItens().isEmpty())
+            throw new Exception("Erro: É necessario adicionar ao menos um item");
+        if(registro.getData() == null)
+            throw new Exception("Erro: Data de uso precisa ser informada");
+        validarDataNaoFutura(registro.getData());
+
         try {
             // Iniciar transação
             conn.setAutoCommit(false);
@@ -220,5 +226,12 @@ public class SaidaProdutoService {
             }
         }
         return sucesso;
+    }
+
+    private void validarDataNaoFutura(LocalDate data) throws Exception{
+        LocalDate hoje = LocalDate.now();
+        if (data != null && data.isAfter(hoje)) {
+            throw new Exception("Erro: A data não pode ser no futuro.");
+        }
     }
 }

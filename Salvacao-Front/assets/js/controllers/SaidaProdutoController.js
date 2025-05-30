@@ -286,9 +286,9 @@ class SaidaProdutoController{
       const data = new Date(elemento);
       const hoje = new Date();
       
-      data.setHours(0, 0, 0, 0);
       hoje.setHours(0, 0, 0, 0);
 
+      console.log(data," > ",hoje);
       if (data > hoje) {
 
         UIComponents.Validacao.mostrarErro("dataUso","A data não pode ser futura");
@@ -316,7 +316,9 @@ class SaidaProdutoController{
                   return;
           }
 
+          console.log("Aqui: ",data);
           if(this.validarDataNaoFutura(data)){
+            console.log("Aqui2: ");
             return;
           }
           
