@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PetControl - Cadastrar Pessoa</title>
+    <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <link rel="stylesheet" href="../../assets/css/style.css" />
+    <script src="../../assets/js/components/sidebar.js" defer></script>
+</head>
+<body>
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3" style="color: var(--vermelho-escuro)">
+            Cadastrar Nova Pessoa
+        </h1>
+        <a href="listarPessoa.html" class="btn btn-secondary me-3">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+    </div>
+
+    <!-- Formulário -->
+    <div class="form-container" id="form-container">
+        <form id="form-cadastrar-pessoa">
+            <div class="row">
+                <!-- ID da Pessoa -->
+                <div class="col-md-6 mb-3">
+                    <label for="idpessoa" class="form-label">ID da Pessoa *</label>
+                    <input type="number" class="form-control" id="idpessoa" required>
+                    <div class="form-text">Informe um ID único para a pessoa</div>
+                </div>
+
+                <!-- Nome -->
+                <div class="col-md-6 mb-3">
+                    <label for="nome" class="form-label">Nome Completo *</label>
+                    <input type="text" class="form-control" id="nome" required>
+                    <div class="form-text">Nome completo da pessoa</div>
+                </div>
+
+                <!-- CPF -->
+                <div class="col-md-6 mb-3">
+                    <label for="cpf" class="form-label">CPF *</label>
+                    <input type="text" class="form-control" id="cpf" required maxlength="14" placeholder="000.000.000-00">
+                    <div class="form-text">CPF da pessoa (apenas números ou com pontuação)</div>
+                </div>
+
+                <!-- Email -->
+                <div class="col-md-6 mb-3">
+                    <label for="email" class="form-label">Email *</label>
+                    <input type="email" class="form-control" id="email" required>
+                    <div class="form-text">Endereço de email da pessoa</div>
+                </div>
+
+                <!-- Telefone -->
+                <div class="col-md-6 mb-3">
+                    <label for="telefone" class="form-label">Telefone *</label>
+                    <input type="text" class="form-control" id="telefone" required maxlength="15" placeholder="(11) 99999-9999">
+                    <div class="form-text">Número de telefone da pessoa</div>
+                </div>
+
+                <!-- Endereço -->
+                <div class="col-md-6 mb-3">
+                    <label for="endereco" class="form-label">Endereço *</label>
+                    <input type="text" class="form-control" id="endereco" required>
+                    <div class="form-text">Endereço completo da pessoa</div>
+                </div>
+            </div>
+
+            <!-- Botões -->
+            <div class="d-flex gap-2 justify-content-end">
+                <button type="button" class="btn btn-voltar" onclick="voltarParaLista()">
+                    Cancelar
+                </button>
+                <button type="submit" class="btn btn-success" id="btn-salvar">
+                    <span class="spinner-border spinner-border-sm d-none" id="spinner-salvar"></span>
+                    Cadastrar Pessoa
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Services
+    class PessoaService {
+        constructor(baseUrl = "http://localhost:8080") {
+            this.baseUrl = baseUrl;
+            this.endpoint = "/pessoa";
+        }
+
+        async cadastrar(pessoa) {
+            try {
+                console.log("Objeto pessoa:", pessoa);
+                console.log("Dados sendo enviados para API cadastro:", pessoa);
+
+                const response = await fetch(`${this.baseUrl}${this.endpoint}/cadastro`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(pessoa)
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error("Erro da API cadastro:", errorText);
+                    throw new Error(`Erro ${response.status}: ${errorText}`);
+                }
+
+                const data = await response.text();
+                console.log("Pessoa cadastrada:", data);
+                return data;
+            } catch (error) {
+                console.error("Erro ao cadastrar pessoa:", error);
+                throw error;
+            }
+        }
+
+        async buscarPorCpf(cpf) {
+            try {
+                const response = await fetch(`${this.baseUrl}${this.endpoint}/${cpf}`, {
+                    method: "GET"
+                });
+
+                if (!response.ok) {
+                    // Se retornar 400 ou 404, significa que a pessoa não existe
+                    // Isso é bom para cadastro - CPF disponível
+                    if (response.status === 404 || response.status === 400) {
+                        return null; // Pessoa não existe, pode cadastrar
+                    }
+                    throw new Error(`Erro ${response.status}: ${await response.text()}`);
+                }
+
+                const data = await response.json();
+                return data; // Pessoa existe - CPF já cadastrado
+            } catch (error) {
+                console.error("Erro ao buscar pessoa por CPF:", error);
+                // Se o erro for de rede ou servidor, retorna null para permitir o cadastro
+                return null;
+            }
+        }
+    }
+
+    // Controller principal
+    class CadastrarPessoaController {
+        constructor() {
+            this.pessoaService = new PessoaService();
+            this.init();
+        }
+
+        init() {
+            document.addEventListener('DOMContentLoaded', () => {
+                this.configurarFormulario();
+                this.configurarMascaras();
+            });
+        }
+
+        configurarFormulario() {
+            const form = document.getElementById('form-cadastrar-pessoa');
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.cadastrarPessoa();
+            });
+
+            // Validação em tempo real do CPF
+            const cpfInput = document.getElementById('cpf');
+            cpfInput.addEventListener('blur', () => {
+                this.validarCPF();
+            });
+        }
+
+        configurarMascaras() {
+            // Máscara para CPF
+            const cpfInput = document.getElementById('cpf');
+            cpfInput.addEventListener('input', (e) => {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length <= 11) {
+                    value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+                    e.target.value = value;
+                }
+            });
+
+            // Máscara para telefone
+            const telefoneInput = document.getElementById('telefone');
+            telefoneInput.addEventListener('input', (e) => {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length <= 11) {
+                    if (value.length === 11) {
+                        value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+                    } else if (value.length === 10) {
+                        value = value.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+                    }
+                    e.target.value = value;
+                }
+            });
+        }
+
+        async validarCPF() {
+            const cpfInput = document.getElementById('cpf');
+            const cpf = cpfInput.value.replace(/\D/g, '');
+
+            if (cpf.length === 11) {
+                try {
+                    const pessoaExistente = await this.pessoaService.buscarPorCpf(cpf);
+                    if (pessoaExistente) {
+                        // Pessoa já existe - CPF duplicado
+                        this.mostrarToast('CPF já cadastrado no sistema!', 'error');
+                        cpfInput.classList.add('is-invalid');
+                        cpfInput.classList.remove('is-valid');
+                        return false;
+                    } else {
+                        // Pessoa não existe - CPF disponível
+                        cpfInput.classList.remove('is-invalid');
+                        cpfInput.classList.add('is-valid');
+                        return true;
+                    }
+                } catch (error) {
+                    console.error('Erro ao validar CPF:', error);
+                    // Em caso de erro na validação, permite continuar
+                    cpfInput.classList.remove('is-invalid', 'is-valid');
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        async cadastrarPessoa() {
+            try {
+                this.mostrarSpinnerSalvar(true);
+
+                const dadosPessoa = this.obterDadosFormulario();
+                console.log("Dados para cadastro:", dadosPessoa);
+
+                // Validar CPF antes de cadastrar (opcional, já que a validação em tempo real está funcionando)
+                const cpf = dadosPessoa.cpf;
+                if (cpf && cpf.length === 11) {
+                    const pessoaExistente = await this.pessoaService.buscarPorCpf(cpf);
+                    if (pessoaExistente) {
+                        this.mostrarSpinnerSalvar(false);
+                        this.mostrarToast('CPF já cadastrado no sistema!', 'error');
+                        return;
+                    }
+                }
+
+                await this.pessoaService.cadastrar(dadosPessoa);
+
+                this.mostrarToast('Pessoa cadastrada com sucesso!', 'success');
+
+                // Redirecionar para lista após 1.5 segundos
+                setTimeout(() => {
+                    window.location.href = 'listarPessoa.html?message=Pessoa cadastrada com sucesso!';
+                }, 1500);
+
+            } catch (error) {
+                this.mostrarSpinnerSalvar(false);
+                this.mostrarToast(`Erro ao cadastrar: ${error.message}`, 'error');
+            }
+        }
+
+        obterDadosFormulario() {
+            // Limpar CPF e telefone para enviar apenas números
+            const cpfLimpo = document.getElementById('cpf').value.replace(/\D/g, '');
+            const telefoneLimpo = document.getElementById('telefone').value.replace(/\D/g, '');
+
+            const dados = {
+                idpessoa: parseInt(document.getElementById('idpessoa').value),
+                nome: document.getElementById('nome').value.trim(),
+                cpf: cpfLimpo,
+                email: document.getElementById('email').value.trim(),
+                telefone: telefoneLimpo,
+                endereco: document.getElementById('endereco').value.trim()
+            };
+
+            console.log("Dados do formulário:", dados);
+            return dados;
+        }
+
+        mostrarSpinnerSalvar(mostrar) {
+            const spinner = document.getElementById('spinner-salvar');
+            const btn = document.getElementById('btn-salvar');
+
+            if (mostrar) {
+                spinner.classList.remove('d-none');
+                btn.disabled = true;
+            } else {
+                spinner.classList.add('d-none');
+                btn.disabled = false;
+            }
+        }
+
+        mostrarToast(mensagem, tipo) {
+            const toast = document.createElement('div');
+            toast.className = `alert alert-${tipo === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+            toast.style.top = '20px';
+            toast.style.right = '20px';
+            toast.style.zIndex = '9999';
+            toast.innerHTML = `
+                    ${mensagem}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 5000);
+        }
+    }
+
+    // Função global para voltar
+    function voltarParaLista() {
+        window.location.href = 'listarPessoa.html';
+    }
+
+    // Inicializar controller
+    const cadastrarController = new CadastrarPessoaController();
+</script>
+</body>
+</html>

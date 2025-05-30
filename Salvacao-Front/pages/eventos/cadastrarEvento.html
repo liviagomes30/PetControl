@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PetControl - Cadastrar Evento</title>
+    <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <link rel="stylesheet" href="../../assets/css/style.css" />
+    <script src="../../assets/js/components/sidebar.js" defer></script>
+</head>
+<body>
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3" style="color: var(--vermelho-escuro)">
+                Cadastrar Novo Evento
+            </h1>
+            <a href="listarEventos.html" class="btn btn-secondary me-3">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+        </div>
+
+        <!-- Loading -->
+        <div id="loading" class="loading-spinner">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+            <p class="mt-2">Carregando animais...</p>
+        </div>
+
+        <!-- Formulário -->
+        <div class="form-container" id="form-container" style="display: none;">
+            <form id="form-cadastrar-evento">
+                <div class="row">
+                    <!-- Descrição do Evento -->
+                    <div class="col-12 mb-3">
+                        <label for="descricao" class="form-label">Descrição do Evento *</label>
+                        <textarea class="form-control" id="descricao" rows="3" required
+                                  placeholder="Descreva o evento (ex: Feira de Adoção, Campanha de Vacinação, etc.)"></textarea>
+                        <div class="form-text">Forneça uma descrição clara do evento</div>
+                    </div>
+
+                    <!-- Data do Evento -->
+                    <div class="col-md-6 mb-3">
+                        <label for="data" class="form-label">Data do Evento *</label>
+                        <input type="date" class="form-control" id="data" required>
+                        <div class="form-text">Data de realização do evento</div>
+                    </div>
+
+                    <!-- Local do Evento -->
+                    <div class="col-md-6 mb-3">
+                        <label for="local" class="form-label">Local do Evento *</label>
+                        <input type="text" class="form-control" id="local" required
+                               placeholder="Ex: Praça Central, Shopping ABC, etc.">
+                        <div class="form-text">Onde o evento será realizado</div>
+                    </div>
+
+                    <!-- Responsável -->
+                    <div class="col-md-6 mb-3">
+                        <label for="responsavel" class="form-label">Responsável pelo Evento *</label>
+                        <input type="text" class="form-control" id="responsavel" required
+                               placeholder="Nome do responsável">
+                        <div class="form-text">Pessoa responsável pela organização</div>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="col-md-6 mb-3">
+                        <label for="status" class="form-label">Status *</label>
+                        <select class="form-select" id="status" required>
+                            <option value="">Selecione o status</option>
+                            <option value="Planejado" selected>Planejado</option>
+                            <option value="Em andamento">Em andamento</option>
+                            <option value="Concluído">Concluído</option>
+                            <option value="Cancelado">Cancelado</option>
+                            <option value="Adiado">Adiado</option>
+                        </select>
+                    </div>
+
+                    <!-- Select do Animal -->
+                    <div class="col-md-12 mb-3">
+                        <label for="animalIdAnimal" class="form-label">Animal Relacionado</label>
+                        <select class="form-select" id="animalIdAnimal">
+                            <option value="">Carregando animais...</option>
+                        </select>
+                        <div class="form-text">Selecione um animal relacionado ao evento (opcional)</div>
+                    </div>
+
+                    <!-- Informações do Animal Selecionado -->
+                    <div class="col-12 mb-3" id="animal-info-container" style="display: none;">
+                        <div id="animal-info" class="animal-info">
+                            <h6>Informações do Animal Selecionado:</h6>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <p><strong>Nome:</strong> <span id="animal-nome"></span></p>
+                                    <p><strong>Espécie:</strong> <span id="animal-especie"></span></p>
+                                    <p><strong>Raça:</strong> <span id="animal-raca"></span></p>
+                                    <p><strong>Porte:</strong> <span id="animal-porte"></span> | <strong>Sexo:</strong> <span id="animal-sexo"></span></p>
+                                    <p><strong>Status:</strong> <span id="animal-status"></span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Foto (campo opcional) -->
+                    <div class="col-12 mb-3">
+                        <label for="foto" class="form-label">URL da Foto do Evento</label>
+                        <input type="url" class="form-control" id="foto"
+                               placeholder="https://exemplo.com/foto-evento.jpg">
+                        <div class="form-text">Link para uma foto do evento (opcional)</div>
+                    </div>
+                </div>
+
+                <!-- Botões -->
+                <div class="d-flex gap-2 justify-content-end">
+                    <button type="button" class="btn btn-voltar" onclick="voltarParaLista()">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-success" id="btn-salvar">
+                        <span class="spinner-border spinner-border-sm d-none" id="spinner-salvar"></span>
+                        Cadastrar Evento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Services
+        class EventoService {
+            constructor(baseUrl = "http://localhost:8080") {
+                this.baseUrl = baseUrl;
+                this.endpoint = "/evento";
+            }
+
+            async cadastrar(evento) {
+                try {
+                    console.log("Objeto evento:", evento);
+                    const dadosParaEnvio = {
+                        descricao: evento.descricao,
+                        data: evento.data,
+                        local: evento.local,
+                        responsavel: evento.responsavel,
+                        status: evento.status,
+                        animalIdAnimal: evento.animalIdAnimal || null,
+                        foto: evento.foto || null
+                    };
+
+                    console.log("Dados sendo enviados para API cadastro:", dadosParaEnvio);
+
+                    const response = await fetch(`${this.baseUrl}${this.endpoint}/cadastro`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(dadosParaEnvio)
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error("Erro da API cadastro:", errorText);
+                        throw new Error(`Erro ${response.status}: ${errorText}`);
+                    }
+
+                    const data = await response.json();
+                    console.log("Evento cadastrado:", data);
+                    return data;
+                } catch (error) {
+                    console.error("Erro ao cadastrar evento:", error);
+                    throw error;
+                }
+            }
+        }
+
+        class AnimalService {
+            constructor(baseUrl = "http://localhost:8080") {
+                this.baseUrl = baseUrl;
+                this.endpoint = "/animais";
+            }
+
+            async listarTodos() {
+                try {
+                    const response = await fetch(`${this.baseUrl}${this.endpoint}`, {
+                        method: "GET"
+                    });
+
+                    if (!response.ok) {
+                        if (response.status == 404) {
+                            return [];
+                        } else {
+                            throw new Error(`Erro ${response.status}: ${await response.text()}`);
+                        }
+                    }
+
+                    const data = await response.json();
+                    console.log("Dados recebidos da API listarTodos:", data);
+                    return data;
+                } catch (error) {
+                    console.error("Erro ao listar animais:", error);
+                    throw error;
+                }
+            }
+        }
+
+        // Models
+        class AnimalModel {
+            constructor(data = {}) {
+                this.id = data.id || null;
+                this.nome = data.nome || "";
+                this.especie = data.especie || "";
+                this.datanascimento = data.datanascimento || null;
+                this.raca = data.raca || "";
+                this.porte = data.porte || "";
+                this.sexo = data.sexo || "";
+                this.status = data.status || "";
+                this.dataresgate = data.dataresgate || null;
+                this.foto = data.foto || "";
+                this.castrado = data.castrado ?? false;
+                this.cor = data.cor || "";
+            }
+        }
+
+        // Controller principal
+        class CadastrarEventoController {
+            constructor() {
+                this.eventoService = new EventoService();
+                this.animalService = new AnimalService();
+                this.animais = [];
+                this.init();
+            }
+
+            init() {
+                document.addEventListener('DOMContentLoaded', () => {
+                    this.configurarFormulario();
+                    this.carregarDados();
+                    this.configurarDataAtual();
+                });
+            }
+
+            configurarFormulario() {
+                const form = document.getElementById('form-cadastrar-evento');
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.cadastrarEvento();
+                });
+
+                // Event listener para mudança de animal
+                const selectAnimal = document.getElementById('animalIdAnimal');
+                selectAnimal.addEventListener('change', (e) => {
+                    this.mostrarInfoAnimal(e.target.value);
+                });
+            }
+
+            configurarDataAtual() {
+                // Definir data atual como padrão
+                const hoje = new Date().toISOString().split('T')[0];
+                document.getElementById('data').value = hoje;
+            }
+
+            async carregarDados() {
+                try {
+                    this.mostrarLoading(true);
+
+                    // Carregar animais
+                    this.animais = await this.animalService.listarTodos();
+                    this.preencherSelectAnimais();
+
+                    this.mostrarLoading(false);
+                } catch (error) {
+                    this.mostrarLoading(false);
+                    this.mostrarToast(`Erro ao carregar dados: ${error.message}`, 'error');
+                }
+            }
+
+            async carregarAnimais() {
+                try {
+                    this.mostrarLoading(true);
+
+                    this.animais = await this.animalService.listarTodos();
+                    this.preencherSelectAnimais();
+
+                    this.mostrarLoading(false);
+                } catch (error) {
+                    this.mostrarLoading(false);
+                    this.mostrarToast(`Erro ao carregar animais: ${error.message}`, 'error');
+                }
+            }
+
+            preencherSelectAnimais() {
+                const select = document.getElementById('animalIdAnimal');
+                select.innerHTML = '<option value="">Nenhum animal selecionado</option>';
+
+                if (this.animais.length === 0) {
+                    select.innerHTML = '<option value="">Nenhum animal cadastrado</option>';
+                    return;
+                }
+
+                this.animais.forEach(animal => {
+                    const option = document.createElement('option');
+                    option.value = animal.id;
+                    option.textContent = `${animal.nome} - ${animal.especie} (${animal.raca})`;
+                    select.appendChild(option);
+                });
+            }
+
+            mostrarInfoAnimal(animalId) {
+                const infoContainer = document.getElementById('animal-info-container');
+
+                if (!animalId) {
+                    infoContainer.style.display = 'none';
+                    return;
+                }
+
+                const animal = this.animais.find(a => a.id == animalId);
+                if (!animal) return;
+
+                // Preencher informações
+                document.getElementById('animal-nome').textContent = animal.nome || 'N/A';
+                document.getElementById('animal-especie').textContent = animal.especie || 'N/A';
+                document.getElementById('animal-raca').textContent = animal.raca || 'N/A';
+                document.getElementById('animal-porte').textContent = animal.porte || 'N/A';
+                document.getElementById('animal-sexo').textContent = animal.sexo || 'N/A';
+                document.getElementById('animal-status').textContent = animal.status || 'N/A';
+
+                infoContainer.style.display = 'block';
+            }
+
+            async cadastrarEvento() {
+                try {
+                    this.mostrarSpinnerSalvar(true);
+
+                    const dadosEvento = this.obterDadosFormulario();
+                    console.log("Dados para cadastro:", dadosEvento);
+
+                    await this.eventoService.cadastrar(dadosEvento);
+
+                    this.mostrarToast('Evento cadastrado com sucesso!', 'success');
+
+                    // Redirecionar para lista após 1.5 segundos
+                    setTimeout(() => {
+                        window.location.href = 'listarEventos.html?message=Evento cadastrado com sucesso!';
+                    }, 1500);
+
+                } catch (error) {
+                    this.mostrarSpinnerSalvar(false);
+                    this.mostrarToast(`Erro ao cadastrar: ${error.message}`, 'error');
+                }
+            }
+
+            obterDadosFormulario() {
+                const animalId = document.getElementById('animalIdAnimal').value;
+
+                const dados = {
+                    descricao: document.getElementById('descricao').value,
+                    data: document.getElementById('data').value,
+                    local: document.getElementById('local').value,
+                    responsavel: document.getElementById('responsavel').value,
+                    status: document.getElementById('status').value,
+                    animalIdAnimal: animalId ? parseInt(animalId) : null,
+                    foto: document.getElementById('foto').value || null
+                };
+
+                console.log("Dados do formulário:", dados);
+                return dados;
+            }
+
+            mostrarLoading(mostrar) {
+                const loading = document.getElementById('loading');
+                const formContainer = document.getElementById('form-container');
+
+                if (mostrar) {
+                    loading.style.display = 'block';
+                    formContainer.style.display = 'none';
+                } else {
+                    loading.style.display = 'none';
+                    formContainer.style.display = 'block';
+                }
+            }
+
+            mostrarSpinnerSalvar(mostrar) {
+                const spinner = document.getElementById('spinner-salvar');
+                const btn = document.getElementById('btn-salvar');
+
+                if (mostrar) {
+                    spinner.classList.remove('d-none');
+                    btn.disabled = true;
+                } else {
+                    spinner.classList.add('d-none');
+                    btn.disabled = false;
+                }
+            }
+
+            mostrarToast(mensagem, tipo) {
+                const toast = document.createElement('div');
+                toast.className = `alert alert-${tipo === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+                toast.style.top = '20px';
+                toast.style.right = '20px';
+                toast.style.zIndex = '9999';
+                toast.innerHTML = `
+                        ${mensagem}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+                document.body.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.remove();
+                }, 5000);
+            }
+        }
+
+        // Função global para voltar
+        function voltarParaLista() {
+            window.location.href = 'listarEventos.html';
+        }
+
+        // Inicializar controller
+        const cadastrarController = new CadastrarEventoController();
+    </script>
+</body>
+</html>

@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PetControl - Editar Pessoa</title>
+  <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+  />
+  <link rel="stylesheet" href="../../assets/css/style.css" />
+  <script src="../../assets/js/components/sidebar.js" defer></script>
+</head>
+<body>
+<div class="container mt-4">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3" style="color: var(--vermelho-escuro)">
+      Editar Pessoa
+    </h1>
+    <a href="listarPessoa.html" class="btn btn-secondary me-3">
+      <i class="bi bi-arrow-left"></i> Voltar
+    </a>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading" class="loading-spinner">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Carregando...</span>
+    </div>
+    <p class="mt-2">Carregando dados da pessoa...</p>
+  </div>
+
+  <!-- Formulário -->
+  <div class="form-container" id="form-container" style="display: none;">
+    <form id="form-editar-pessoa">
+      <div class="row">
+        <!-- ID da Pessoa (readonly) -->
+        <div class="col-md-6 mb-3">
+          <label for="idpessoa" class="form-label">ID da Pessoa</label>
+          <input type="text" class="form-control" id="idpessoa" readonly>
+        </div>
+
+        <!-- CPF (readonly) -->
+        <div class="col-md-6 mb-3">
+          <label for="cpf" class="form-label">CPF</label>
+          <input type="text" class="form-control" id="cpf" readonly>
+          <div class="form-text">O CPF não pode ser alterado</div>
+        </div>
+
+        <!-- Nome -->
+        <div class="col-md-6 mb-3">
+          <label for="nome" class="form-label">Nome Completo *</label>
+          <input type="text" class="form-control" id="nome" required>
+          <div class="form-text">Nome completo da pessoa</div>
+        </div>
+
+        <!-- Email -->
+        <div class="col-md-6 mb-3">
+          <label for="email" class="form-label">Email *</label>
+          <input type="email" class="form-control" id="email" required>
+          <div class="form-text">Endereço de email da pessoa</div>
+        </div>
+
+        <!-- Telefone -->
+        <div class="col-md-6 mb-3">
+          <label for="telefone" class="form-label">Telefone *</label>
+          <input type="text" class="form-control" id="telefone" required maxlength="15" placeholder="(11) 99999-9999">
+          <div class="form-text">Número de telefone da pessoa</div>
+        </div>
+
+        <!-- Endereço -->
+        <div class="col-md-6 mb-3">
+          <label for="endereco" class="form-label">Endereço *</label>
+          <input type="text" class="form-control" id="endereco" required>
+          <div class="form-text">Endereço completo da pessoa</div>
+        </div>
+      </div>
+
+      <!-- Botões -->
+      <div class="d-flex gap-2 justify-content-end">
+        <button type="button" class="btn btn-voltar" onclick="voltarParaLista()">
+          Cancelar
+        </button>
+        <button type="submit" class="btn btn-success" id="btn-salvar">
+          <span class="spinner-border spinner-border-sm d-none" id="spinner-salvar"></span>
+          Salvar Alterações
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Mensagem de erro -->
+  <div id="erro-container" class="alert alert-danger d-none" role="alert">
+    <h4 class="alert-heading">Erro ao carregar pessoa!</h4>
+    <p id="erro-mensagem"></p>
+    <a href="listarPessoa.html" class="btn btn-outline-danger">Voltar para Lista</a>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  class PessoaService {
+    constructor(baseUrl = "http://localhost:8080") {
+      this.baseUrl = baseUrl;
+      this.endpoint = "/pessoa";
+    }
+
+    async buscarPorCpf(cpf) {
+      try {
+        const response = await fetch(`${this.baseUrl}${this.endpoint}/${cpf}`, {
+          method: "GET"
+        });
+
+        if (!response.ok) {
+          throw new Error(`Erro ${response.status}: ${await response.text()}`);
+        }
+
+        const data = await response.json();
+        console.log("Dados recebidos da API buscarPorCpf:", data);
+        return data;
+      } catch (error) {
+        console.error("Erro ao buscar pessoa:", error);
+        throw error;
+      }
+    }
+
+    async atualizar(pessoa) {
+      try {
+        console.log("Dados sendo enviados para API:", pessoa);
+
+        const response = await fetch(`${this.baseUrl}${this.endpoint}/alterar`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(pessoa)
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Erro da API:", errorText);
+          throw new Error(`Erro ${response.status}: ${errorText}`);
+        }
+
+        const data = await response.text();
+        console.log("Pessoa atualizada:", data);
+        return data;
+      } catch (error) {
+        console.error("Erro ao atualizar pessoa:", error);
+        throw error;
+      }
+    }
+  }
+
+  // Controller para edição
+  class EditarPessoaController {
+    constructor() {
+      this.service = new PessoaService();
+      this.cpfPessoa = null;
+      this.init();
+    }
+
+    init() {
+      document.addEventListener('DOMContentLoaded', () => {
+        this.obterCpfDaUrl();
+        this.configurarFormulario();
+        this.configurarMascaras();
+        this.carregarDados();
+      });
+    }
+
+    obterCpfDaUrl() {
+      const urlParams = new URLSearchParams(window.location.search);
+      this.cpfPessoa = urlParams.get('cpf');
+
+      if (!this.cpfPessoa) {
+        this.mostrarErro('CPF da pessoa não informado na URL');
+        return;
+      }
+    }
+
+    configurarFormulario() {
+      const form = document.getElementById('form-editar-pessoa');
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.salvarAlteracoes();
+      });
+    }
+
+    configurarMascaras() {
+      // Máscara para telefone
+      const telefoneInput = document.getElementById('telefone');
+      telefoneInput.addEventListener('input', (e) => {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length <= 11) {
+          if (value.length === 11) {
+            value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+          } else if (value.length === 10) {
+            value = value.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+          }
+          e.target.value = value;
+        }
+      });
+    }
+
+    async carregarDados() {
+      try {
+        this.mostrarLoading(true);
+
+        const pessoa = await this.service.buscarPorCpf(this.cpfPessoa);
+        if (!pessoa) {
+          throw new Error('Pessoa não encontrada');
+        }
+
+        this.preencherFormulario(pessoa);
+
+        this.mostrarLoading(false);
+        this.mostrarFormulario(true);
+
+      } catch (error) {
+        this.mostrarLoading(false);
+        this.mostrarErro(`Erro ao carregar dados: ${error.message}`);
+      }
+    }
+
+    preencherFormulario(pessoa) {
+      document.getElementById('idpessoa').value = pessoa.idpessoa || '';
+      document.getElementById('cpf').value = this.formatarCPF(pessoa.cpf) || '';
+      document.getElementById('nome').value = pessoa.nome || '';
+      document.getElementById('email').value = pessoa.email || '';
+      document.getElementById('telefone').value = this.formatarTelefone(pessoa.telefone) || '';
+      document.getElementById('endereco').value = pessoa.endereco || '';
+    }
+
+    formatarCPF(cpf) {
+      if (!cpf) return '';
+      return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    }
+
+    formatarTelefone(telefone) {
+      if (!telefone) return '';
+      if (telefone.length === 11) {
+        return telefone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+      } else if (telefone.length === 10) {
+        return telefone.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+      }
+      return telefone;
+    }
+
+    async salvarAlteracoes() {
+      try {
+        this.mostrarSpinnerSalvar(true);
+
+        const dadosFormulario = this.obterDadosFormulario();
+
+        // Debug: Verificar se a pessoa ainda existe antes de atualizar
+        console.log("Verificando se pessoa existe antes de atualizar...");
+        await this.service.buscarPorCpf(this.cpfPessoa);
+        console.log("Pessoa encontrada, prosseguindo com atualização...");
+
+        await this.service.atualizar(dadosFormulario);
+
+        this.mostrarToast('Pessoa atualizada com sucesso!', 'success');
+
+        // Redirecionar para lista após 1.5 segundos
+        setTimeout(() => {
+          window.location.href = 'listarPessoa.html?message=Pessoa atualizada com sucesso!';
+        }, 1500);
+
+      } catch (error) {
+        this.mostrarSpinnerSalvar(false);
+        console.error("Erro completo:", error);
+        this.mostrarToast(`Erro ao salvar: ${error.message}`, 'error');
+      }
+    }
+
+    obterDadosFormulario() {
+      // Limpar telefone para enviar apenas números
+      const telefoneLimpo = document.getElementById('telefone').value.replace(/\D/g, '');
+      const cpfLimpo = this.cpfPessoa.replace(/\D/g, '');
+
+      const dados = {
+        idpessoa: parseInt(document.getElementById('idpessoa').value),
+        nome: document.getElementById('nome').value.trim(),
+        cpf: cpfLimpo,
+        email: document.getElementById('email').value.trim(),
+        telefone: telefoneLimpo,
+        endereco: document.getElementById('endereco').value.trim()
+      };
+
+      console.log("Dados do formulário:", dados);
+      return dados;
+    }
+
+    mostrarLoading(mostrar) {
+      const loading = document.getElementById('loading');
+      loading.style.display = mostrar ? 'block' : 'none';
+    }
+
+    mostrarFormulario(mostrar) {
+      const container = document.getElementById('form-container');
+      container.style.display = mostrar ? 'block' : 'none';
+    }
+
+    mostrarErro(mensagem) {
+      const erroContainer = document.getElementById('erro-container');
+      const erroMensagem = document.getElementById('erro-mensagem');
+
+      erroMensagem.textContent = mensagem;
+      erroContainer.classList.remove('d-none');
+    }
+
+    mostrarSpinnerSalvar(mostrar) {
+      const spinner = document.getElementById('spinner-salvar');
+      const btn = document.getElementById('btn-salvar');
+
+      if (mostrar) {
+        spinner.classList.remove('d-none');
+        btn.disabled = true;
+      } else {
+        spinner.classList.add('d-none');
+        btn.disabled = false;
+      }
+    }
+
+    mostrarToast(mensagem, tipo) {
+      const toast = document.createElement('div');
+      toast.className = `alert alert-${tipo === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+      toast.style.top = '20px';
+      toast.style.right = '20px';
+      toast.style.zIndex = '9999';
+      toast.innerHTML = `
+                    ${mensagem}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.remove();
+      }, 5000);
+    }
+  }
+
+  // Função global para voltar
+  function voltarParaLista() {
+    window.location.href = 'listarPessoa.html';
+  }
+
+  // Inicializar controller
+  const editarController = new EditarPessoaController();
+</script>
+</body>
+</html>

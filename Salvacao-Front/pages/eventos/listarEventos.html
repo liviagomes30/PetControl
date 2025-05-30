@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PetControl - Lista de Eventos</title>
+  <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+  />
+  <link rel="stylesheet" href="../../assets/css/style.css" />
+  <script src="../../assets/js/components/sidebar.js" defer></script>
+</head>
+<body>
+<div class="container">
+  <div class="header d-flex justify-content-between align-items-center">
+    <h1 class="h3" style="color: var(--vermelho-escuro)">
+      Lista de Eventos
+    </h1>
+    <a href="cadastrarEvento.html" class="btn btn-primary"
+    >Novo Evento</a
+    >
+  </div>
+
+  <div class="container mt-3">
+    <div class="row g-2 align-items-center">
+      <!-- Campo de pesquisa -->
+      <div class="col">
+        <input class="form-control form-control-sm" type="search" placeholder="Pesquisar" aria-label="Pesquisar" id="inputBusca">
+      </div>
+      <!-- Select -->
+      <div class="col-auto">
+        <select class="form-select form-select-sm" style="background-color: rgb(73, 71, 71); color: lightgray; border-radius: 10px; width: auto;" aria-label="Filtro" id="selectFiltro">
+          <option value="1" selected>Descrição</option>
+          <option value="2">Local</option>
+          <option value="3">Responsável</option>
+          <option value="4">Status</option>
+          <option value="5">Data</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <br>
+
+  <!-- Tabela de Eventos -->
+  <div class="table-container">
+    <table>
+      <thead>
+      <tr>
+        <th>ID</th>
+        <th>Descrição</th>
+        <th>Data</th>
+        <th>Local</th>
+        <th>Responsável</th>
+        <th>Animal ID</th>
+        <th>Status</th>
+        <th>Ações</th>
+      </tr>
+      </thead>
+      <tbody id="tabela-eventos">
+      <!-- Conteúdo será carregado dinamicamente -->
+      <tr>
+        <td colspan="8" class="text-center">Carregando eventos...</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão -->
+<div class="modal fade" id="modalConfirmacaoExclusao" tabindex="-1" aria-labelledby="modalConfirmacaoExclusaoLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalConfirmacaoExclusaoLabel">Confirmar Exclusão</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Tem certeza que deseja excluir este evento? Esta ação não pode ser desfeita.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="btnConfirmarExclusao">Excluir</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // EventoService
+  class EventoService {
+    constructor(baseUrl = "http://localhost:8080") {
+      this.baseUrl = baseUrl;
+      this.endpoint = "/evento";
+    }
+
+    async listarTodos() {
+      try {
+        const response = await fetch(`${this.baseUrl}${this.endpoint}/listar`, {
+          method: "GET"
+        });
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            return []; // Retorna array vazio para renderizarTabela funcionar
+          }
+          throw new Error(`Erro ${response.status}: ${await response.text()}`);
+        }
+
+        const data = await response.json();
+        console.log("Dados recebidos da API listarTodos:", data);
+        return data;
+      } catch (error) {
+        console.error("Erro ao listar eventos:", error);
+        throw error;
+      }
+    }
+
+    // Método simples para listar usando fetch direto
+    listar() {
+      const tabela = document.getElementById("tabela-eventos");
+
+      fetch(`${this.baseUrl}${this.endpoint}/listar`)
+              .then(res => res.json())
+              .then(lista => {
+                if(!Array.isArray(lista))
+                  throw new Error('A resposta da API não é uma lista');
+
+                if(lista.length === 0) {
+                  tabela.innerHTML = `
+                            <tr>
+                                <td colspan="8" class="text-center">Nenhum evento encontrado.</td>
+                            </tr>`;
+                  return;
+                }
+
+                tabela.innerHTML = ""; // Limpa a tabela
+
+                lista.forEach(evento => {
+                  const tr = document.createElement('tr');
+                  tr.innerHTML = `
+                                <td>${evento.idEvento || '-'}</td>
+                                <td>${evento.descricao || '-'}</td>
+                                <td>${this.formatarData(evento.data)}</td>
+                                <td>${evento.local || '-'}</td>
+                                <td>${evento.responsavel || '-'}</td>
+                                <td>${evento.animalIdAnimal || '-'}</td>
+                                <td>${this.getBadgeStatus(evento.status)}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editarEvento(${evento.idEvento})">Editar</button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="eventoController.confirmarExclusao(${evento.idEvento})">Excluir</button>
+                                </td>
+                            `;
+                  tabela.appendChild(tr);
+                });
+              })
+              .catch(error => {
+                console.error('Erro ao carregar eventos:', error);
+                tabela.innerHTML = `
+                        <tr>
+                            <td colspan="8" class="text-center text-danger">Erro ao carregar dados.</td>
+                        </tr>`;
+              });
+    }
+
+    // Métodos auxiliares para formatação
+    formatarData(data) {
+      if (!data) return '';
+      try {
+        const date = new Date(data);
+        return date.toLocaleDateString('pt-BR');
+      } catch (error) {
+        return data;
+      }
+    }
+
+    getBadgeStatus(status) {
+      const statusMap = {
+        'Planejado': 'bg-info',
+        'Em andamento': 'bg-warning',
+        'Concluído': 'bg-success',
+        'Cancelado': 'bg-danger',
+        'Adiado': 'bg-secondary'
+      };
+
+      const badgeClass = statusMap[status] || 'bg-secondary';
+      return `<span class="badge ${badgeClass}">${status || 'N/A'}</span>`;
+    }
+
+    async buscarPorId(id) {
+      try {
+        const response = await fetch(`${this.baseUrl}${this.endpoint}/${id}`, {
+          method: "GET"
+        });
+
+        if (!response.ok) {
+          throw new Error(`Erro ${response.status}: ${await response.text()}`);
+        }
+
+        const data = await response.json();
+        console.log("Dados recebidos da API buscarPorId:", data);
+        return data;
+      } catch (error) {
+        console.error("Erro ao buscar evento:", error);
+        throw error;
+      }
+    }
+
+    async cadastrar(evento) {
+      try {
+        const response = await fetch(`${this.baseUrl}${this.endpoint}/cadastro`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(evento)
+        });
+
+        if (!response.ok) {
+          throw new Error(`Erro ${response.status}: ${await response.text()}`);
+        }
+
+        const data = await response.json();
+        console.log("Evento cadastrado:", data);
+        return data;
+      } catch (error) {
+        console.error("Erro ao cadastrar evento:", error);
+        throw error;
+      }
+    }
+
+    async atualizar(id, evento) {
+      try {
+        const response = await fetch(`${this.baseUrl}${this.endpoint}/alterar`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ ...evento, idEvento: id })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Erro ${response.status}: ${await response.text()}`);
+        }
+
+        const data = await response.text();
+        console.log("Evento atualizado:", data);
+        return data;
+      } catch (error) {
+        console.error("Erro ao atualizar evento:", error);
+        throw error;
+      }
+    }
+
+    async excluir(id) {
+      try {
+        const response = await fetch(`${this.baseUrl}${this.endpoint}/${id}`, {
+          method: "DELETE"
+        });
+
+        if (!response.ok) {
+          throw new Error(`Erro ${response.status}: ${await response.text()}`);
+        }
+
+        const data = await response.text();
+        console.log("Evento excluído:", data);
+        return data;
+      } catch (error) {
+        console.error("Erro ao excluir evento:", error);
+        throw error;
+      }
+    }
+  }
+
+  // Controller para gerenciar a página
+  class EventoController {
+    constructor() {
+      this.service = new EventoService();
+      this.idParaExcluir = null;
+      this.init();
+    }
+
+    init() {
+      // Inicializar quando o DOM estiver carregado
+      document.addEventListener('DOMContentLoaded', () => {
+        this.inicializarListagem();
+        this.configurarEventListeners();
+      });
+    }
+
+    configurarEventListeners() {
+      // Event listener para busca
+      const inputBusca = document.getElementById('inputBusca');
+      inputBusca.addEventListener('input', (e) => {
+        this.filtrarTabela(e.target.value);
+      });
+
+      // Event listener para o select de filtro
+      const selectFiltro = document.getElementById('selectFiltro');
+      selectFiltro.addEventListener('change', () => {
+        this.aplicarFiltro();
+      });
+
+      // Event listener para confirmação de exclusão
+      const btnConfirmarExclusao = document.getElementById('btnConfirmarExclusao');
+      btnConfirmarExclusao.addEventListener('click', () => {
+        this.excluirEvento();
+      });
+    }
+
+    async inicializarListagem() {
+      try {
+        console.log("Carregando eventos...");
+        // Usa o método simples do service que já renderiza a tabela
+        this.service.listar();
+
+        // Verificar mensagem na URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const message = urlParams.get("message");
+        if (message) {
+          console.log("Mensagem de sucesso:", message);
+          this.mostrarToast(message, 'success');
+        }
+      } catch (error) {
+        console.error("Erro ao carregar eventos:", error);
+        const tabela = document.getElementById("tabela-eventos");
+        tabela.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Erro ao carregar dados.</td></tr>`;
+      }
+    }
+
+    filtrarTabela(termo) {
+      const linhas = document.querySelectorAll('#tabela-eventos tr');
+      linhas.forEach(linha => {
+        const texto = linha.textContent.toLowerCase();
+        linha.style.display = texto.includes(termo.toLowerCase()) ? '' : 'none';
+      });
+    }
+
+    aplicarFiltro() {
+      const filtro = document.getElementById('selectFiltro').value;
+      const termo = document.getElementById('inputBusca').value.toLowerCase();
+
+      if (!termo) return;
+
+      const linhas = document.querySelectorAll('#tabela-eventos tr');
+      linhas.forEach(linha => {
+        const colunas = linha.querySelectorAll('td');
+        if (colunas.length === 0) return; // Skip header or empty rows
+
+        let textoParaFiltrar = '';
+        switch(filtro) {
+          case '1': // Descrição - coluna 1
+            textoParaFiltrar = colunas[1].textContent.toLowerCase();
+            break;
+          case '2': // Local - coluna 3
+            textoParaFiltrar = colunas[3].textContent.toLowerCase();
+            break;
+          case '3': // Responsável - coluna 4
+            textoParaFiltrar = colunas[4].textContent.toLowerCase();
+            break;
+          case '4': // Status - coluna 6
+            textoParaFiltrar = colunas[6].textContent.toLowerCase();
+            break;
+          case '5': // Data - coluna 2
+            textoParaFiltrar = colunas[2].textContent.toLowerCase();
+            break;
+          default:
+            textoParaFiltrar = linha.textContent.toLowerCase();
+        }
+
+        linha.style.display = textoParaFiltrar.includes(termo) ? '' : 'none';
+      });
+    }
+
+    confirmarExclusao(id) {
+      this.idParaExcluir = id;
+      const modal = new bootstrap.Modal(document.getElementById('modalConfirmacaoExclusao'));
+      modal.show();
+    }
+
+    async excluirEvento() {
+      if (!this.idParaExcluir) return;
+
+      try {
+        await this.service.excluir(this.idParaExcluir);
+        this.mostrarToast('Evento excluído com sucesso!', 'success');
+        this.inicializarListagem(); // Recarregar a lista
+
+        // Fechar modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmacaoExclusao'));
+        modal.hide();
+      } catch (error) {
+        console.error('Erro ao excluir evento:', error);
+        this.mostrarToast('Erro ao excluir evento!', 'error');
+      }
+    }
+
+    mostrarToast(mensagem, tipo) {
+      const toast = document.createElement('div');
+      toast.className = `alert alert-${tipo === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+      toast.style.top = '20px';
+      toast.style.right = '20px';
+      toast.style.zIndex = '9999';
+      toast.innerHTML = `
+                    ${mensagem}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.remove();
+      }, 5000);
+    }
+  }
+
+  // Funções globais para os botões inline
+  function editarEvento(id) {
+    console.log('Editar evento:', id);
+    window.location.href = `editarEvento.html?id=${id}`;
+  }
+
+  // Inicializar o controller
+  const eventoController = new EventoController();
+</script>
+</body>
+</html>
