@@ -19,7 +19,7 @@ public class MedicacaoDAO {
     public MedicacaoModel gravar(MedicacaoModel medicacao, Connection conn) throws SQLException {
         String sql = "INSERT INTO medicacao (idanimal, idhistorico, posologia_medicamento_idproduto, posologia_receitamedicamento_idreceita, data) " +
                 "VALUES (?, ?, ?, ?, ?)";
-        try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) { // Use provided connection
+        try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setInt(1, medicacao.getIdanimal());
 
             if (medicacao.getIdhistorico() != null) {
@@ -32,7 +32,7 @@ public class MedicacaoDAO {
             if (medicacao.getPosologia_receitamedicamento_idreceita() != null) {
                 stmt.setInt(4, medicacao.getPosologia_receitamedicamento_idreceita());
             } else {
-                stmt.setNull(4, java.sql.Types.INTEGER); // Define como NULL se o ID da receita for nulo
+                stmt.setNull(4, java.sql.Types.INTEGER);
             }
 
             if (medicacao.getData() != null) {
@@ -51,7 +51,7 @@ public class MedicacaoDAO {
                 throw new SQLException("Falha ao registrar medicação.");
             }
         } catch (SQLException e) {
-            throw e; // Re-throw for service to handle transaction
+            throw e;
         }
         return medicacao;
     }
@@ -86,26 +86,26 @@ public class MedicacaoDAO {
 
     public List<MedicacaoModel> getAll() {
         List<MedicacaoModel> medicacoes = new ArrayList<>();
-        String sql = "SELECT * FROM medicacao ORDER BY data DESC"; //
-        try (ResultSet rs = SingletonDB.getConexao().consultar(sql)) { //
-            while (rs.next()) { //
-                Date dataSql = rs.getDate("data"); //
-                LocalDate data = (dataSql != null) ? dataSql.toLocalDate() : null; //
+        String sql = "SELECT * FROM medicacao ORDER BY data DESC"; 
+        try (ResultSet rs = SingletonDB.getConexao().consultar(sql)) { 
+            while (rs.next()) { 
+                Date dataSql = rs.getDate("data"); 
+                LocalDate data = (dataSql != null) ? dataSql.toLocalDate() : null; 
 
-                MedicacaoModel medicacao = new MedicacaoModel( //
-                        rs.getInt("idmedicacao"), //
-                        rs.getInt("idanimal"), //
-                        rs.getObject("idhistorico") != null ? rs.getInt("idhistorico") : null, //
-                        rs.getInt("posologia_medicamento_idproduto"), //
-                        rs.getInt("posologia_receitamedicamento_idreceita"), //
-                        data //
+                MedicacaoModel medicacao = new MedicacaoModel( 
+                        rs.getInt("idmedicacao"), 
+                        rs.getInt("idanimal"), 
+                        rs.getObject("idhistorico") != null ? rs.getInt("idhistorico") : null, 
+                        rs.getInt("posologia_medicamento_idproduto"), 
+                        rs.getInt("posologia_receitamedicamento_idreceita"), 
+                        data 
                 );
-                medicacoes.add(medicacao); //
+                medicacoes.add(medicacao); 
             }
-        } catch (SQLException e) { //
-            e.printStackTrace(); //
+        } catch (SQLException e) { 
+            e.printStackTrace(); 
         }
-        return medicacoes; //
+        return medicacoes; 
     }
 
 
@@ -123,7 +123,7 @@ public class MedicacaoDAO {
             if (medicacao.getPosologia_receitamedicamento_idreceita() != null) {
                 stmt.setInt(4, medicacao.getPosologia_receitamedicamento_idreceita());
             } else {
-                stmt.setNull(4, java.sql.Types.INTEGER); // Define como NULL se o ID da receita for nulo
+                stmt.setNull(4, java.sql.Types.INTEGER);
             }
             if (medicacao.getData() != null) {
                 stmt.setDate(5, java.sql.Date.valueOf(medicacao.getData()));
@@ -141,7 +141,6 @@ public class MedicacaoDAO {
 
 
     public boolean apagar(Integer id, Connection conn) throws SQLException {
-        // Check if Medicacao is referenced by Historico (if Historico has idmedicacao as FK)
         String sqlCheckHistorico = "SELECT COUNT(*) FROM historico WHERE medicacao_idmedicacao = ?";
         try (PreparedStatement stmtCheck = conn.prepareStatement(sqlCheckHistorico)) {
             stmtCheck.setInt(1, id);

@@ -14,12 +14,6 @@ import java.util.List;
 @Repository
 public class PosologiaDAO {
 
-    /**
-     * Busca uma posologia pelo ID do medicamento e ID da receita.
-     * @param medicamentoId O ID do medicamento.
-     * @param receitaId O ID da receita de medicamento.
-     * @return O objeto PosologiaModel correspondente, ou null se não encontrado.
-     */
     public PosologiaModel getId(Integer medicamentoId, Integer receitaId) {
         PosologiaModel posologia = null;
         String sql = "SELECT * FROM posologia WHERE medicamento_idproduto = ? AND receitamedicamento_idreceita = ?";
@@ -42,13 +36,7 @@ public class PosologiaDAO {
         return posologia;
     }
 
-    /**
-     * Grava uma nova posologia no banco de dados.
-     * @param posologia O objeto PosologiaModel a ser gravado.
-     * @param conn A conexão JDBC a ser usada para a transação.
-     * @return O objeto PosologiaModel gravado.
-     * @throws SQLException Se ocorrer um erro de banco de dados.
-     */
+
     public PosologiaModel gravar(PosologiaModel posologia, Connection conn) throws SQLException {
         String sql = "INSERT INTO posologia (dose, quantidadedias, intervalohoras, medicamento_idproduto, receitamedicamento_idreceita) " +
                 "VALUES (?, ?, ?, ?, ?)";
@@ -69,13 +57,7 @@ public class PosologiaDAO {
         return posologia;
     }
 
-    /**
-     * Atualiza uma posologia existente no banco de dados.
-     * @param posologia O objeto PosologiaModel com os dados a serem atualizados.
-     * @param conn A conexão JDBC a ser usada para a transação.
-     * @return true se a posologia foi atualizada com sucesso, false caso contrário.
-     * @throws SQLException Se ocorrer um erro de banco de dados.
-     */
+
     public boolean alterar(PosologiaModel posologia, Connection conn) throws SQLException {
         String sql = "UPDATE posologia SET dose = ?, quantidadedias = ?, intervalohoras = ? " +
                 "WHERE medicamento_idproduto = ? AND receitamedicamento_idreceita = ?";
@@ -93,14 +75,7 @@ public class PosologiaDAO {
         }
     }
 
-    /**
-     * Exclui uma posologia do banco de dados.
-     * @param medicamentoId O ID do medicamento associado à posologia.
-     * @param receitaId O ID da receita associada à posologia.
-     * @param conn A conexão JDBC a ser usada para a transação.
-     * @return true se a posologia foi excluída com sucesso, false caso contrário.
-     * @throws SQLException Se ocorrer um erro de banco de dados (ex: violação de FK).
-     */
+
     public boolean apagar(Integer medicamentoId, Integer receitaId, Connection conn) throws SQLException {
         String sqlCheckMedicacao = "SELECT COUNT(*) FROM medicacao WHERE posologia_medicamento_idproduto = ? AND posologia_receitamedicamento_idreceita = ?";
         try (PreparedStatement stmtCheck = conn.prepareStatement(sqlCheckMedicacao)) {
@@ -123,10 +98,6 @@ public class PosologiaDAO {
         }
     }
 
-    /**
-     * Lista todas as posologias.
-     * @return Uma lista de objetos PosologiaModel.
-     */
     public List<PosologiaModel> getAll() {
         List<PosologiaModel> posologias = new ArrayList<>();
         String sql = "SELECT * FROM posologia";
@@ -147,11 +118,7 @@ public class PosologiaDAO {
         return posologias;
     }
 
-    /**
-     * Lista posologias para um determinado medicamento.
-     * @param medicamentoId O ID do medicamento.
-     * @return Uma lista de objetos PosologiaModel.
-     */
+
     public List<PosologiaModel> getByMedicamento(Integer medicamentoId) {
         List<PosologiaModel> posologias = new ArrayList<>();
         String sql = "SELECT * FROM posologia WHERE medicamento_idproduto = ?";
@@ -174,11 +141,7 @@ public class PosologiaDAO {
         return posologias;
     }
 
-    /**
-     * Lista posologias para uma determinada receita.
-     * @param receitaId O ID da receita.
-     * @return Uma lista de objetos PosologiaModel.
-     */
+
     public List<PosologiaModel> getByReceita(Integer receitaId) {
         List<PosologiaModel> posologias = new ArrayList<>();
         String sql = "SELECT * FROM posologia WHERE receitamedicamento_idreceita = ?";

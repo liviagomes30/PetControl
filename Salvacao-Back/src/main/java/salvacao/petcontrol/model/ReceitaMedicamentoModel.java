@@ -14,10 +14,10 @@ public class ReceitaMedicamentoModel {
     private String clinica;
     private Integer animal_idanimal;
 
-    private ReceitaMedicamentoDAO receitaMedicamentoDAO; // DAO instance
+    private ReceitaMedicamentoDAO receitaMedicamentoDAO;
 
     public ReceitaMedicamentoModel() {
-        this.receitaMedicamentoDAO = new ReceitaMedicamentoDAO(); // Instantiate DAO in default constructor
+        this.receitaMedicamentoDAO = new ReceitaMedicamentoDAO();
     }
 
     public ReceitaMedicamentoModel(Integer idreceita, LocalDate data, String medico, String clinica, Integer animal_idanimal) {
@@ -28,7 +28,6 @@ public class ReceitaMedicamentoModel {
         this.animal_idanimal = animal_idanimal;
     }
 
-    // Getters and Setters
     public Integer getIdreceita() {
         return idreceita;
     }

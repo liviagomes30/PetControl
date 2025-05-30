@@ -13,7 +13,7 @@ import java.util.List;
 @Service
 public class HistoricoService {
     @Autowired
-    private HistoricoModel historicoModel = new HistoricoModel(); // Autowire the Model
+    private HistoricoModel historicoModel = new HistoricoModel();
 
     public HistoricoModel getId(Integer id){
         return historicoModel.getHistDAO().getId(id);
@@ -51,24 +51,22 @@ public class HistoricoService {
         if (historico.getAnimal_idanimal() == null) {
             throw new Exception("O animal é obrigatório para o histórico.");
         }
-        // Additional validation for description length could be added here if needed
 
         Connection conn = null;
         boolean autoCommitOriginal = true;
         try {
             conn = SingletonDB.getConexao().getConnection();
             autoCommitOriginal = conn.getAutoCommit();
-            conn.setAutoCommit(false); // Start transaction
+            conn.setAutoCommit(false);
 
-            // Access DAO via Model instance and pass connection
             HistoricoModel novoHistorico = historicoModel.getHistDAO().gravar(historico, conn);
 
-            conn.commit(); // Commit transaction if successful
+            conn.commit();
             return novoHistorico;
         } catch (SQLException e) {
             if (conn != null) {
                 try {
-                    conn.rollback(); // Rollback on error
+                    conn.rollback();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -77,7 +75,7 @@ public class HistoricoService {
         } finally {
             if (conn != null) {
                 try {
-                    conn.setAutoCommit(autoCommitOriginal); // Restore auto-commit state
+                    conn.setAutoCommit(autoCommitOriginal);
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -96,7 +94,6 @@ public class HistoricoService {
             throw new Exception("O animal é obrigatório para o histórico.");
         }
 
-        // Access DAO via Model instance to check if it exists
         HistoricoModel existente = historicoModel.getHistDAO().getId(historico.getIdhistorico());
         if (existente == null) {
             throw new Exception("Histórico não encontrado para atualização.");
@@ -107,21 +104,20 @@ public class HistoricoService {
         try {
             conn = SingletonDB.getConexao().getConnection();
             autoCommitOriginal = conn.getAutoCommit();
-            conn.setAutoCommit(false); // Start transaction
+            conn.setAutoCommit(false);
 
-            // Access DAO via Model instance and pass connection
             boolean atualizado = historicoModel.getHistDAO().alterar(historico, conn);
 
             if (atualizado) {
-                conn.commit(); // Commit transaction if successful
+                conn.commit();
             } else {
-                conn.rollback(); // Rollback if update failed
+                conn.rollback();
             }
             return atualizado;
         } catch (SQLException e) {
             if (conn != null) {
                 try {
-                    conn.rollback(); // Rollback on error
+                    conn.rollback();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -130,7 +126,7 @@ public class HistoricoService {
         } finally {
             if (conn != null) {
                 try {
-                    conn.setAutoCommit(autoCommitOriginal); // Restore auto-commit state
+                    conn.setAutoCommit(autoCommitOriginal);
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -139,7 +135,6 @@ public class HistoricoService {
     }
 
     public boolean apagar(Integer id) throws Exception{
-        // Access DAO via Model instance to check if it exists
         HistoricoModel existente = historicoModel.getHistDAO().getId(id);
         if (existente == null) {
             throw new Exception("Histórico não encontrado para exclusão.");
@@ -150,21 +145,20 @@ public class HistoricoService {
         try {
             conn = SingletonDB.getConexao().getConnection();
             autoCommitOriginal = conn.getAutoCommit();
-            conn.setAutoCommit(false); // Start transaction
+            conn.setAutoCommit(false);
 
-            // Access DAO via Model instance and pass connection
             boolean deletado = historicoModel.getHistDAO().apagar(id, conn);
 
             if (deletado) {
-                conn.commit(); // Commit transaction if successful
+                conn.commit();
             } else {
-                conn.rollback(); // Rollback if deletion failed
+                conn.rollback();
             }
             return deletado;
         } catch (SQLException e) {
             if (conn != null) {
                 try {
-                    conn.rollback(); // Rollback on error
+                    conn.rollback();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -173,7 +167,7 @@ public class HistoricoService {
         } finally {
             if (conn != null) {
                 try {
-                    conn.setAutoCommit(autoCommitOriginal); // Restore auto-commit state
+                    conn.setAutoCommit(autoCommitOriginal);
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }

@@ -15,13 +15,13 @@ import java.util.List;
 public class PosologiaService {
 
     @Autowired
-    private PosologiaModel posologiaModel = new PosologiaModel(); // Autowire the PosologiaModel
+    private PosologiaModel posologiaModel = new PosologiaModel();
 
     @Autowired
-    private MedicamentoModel medicamentoModel = new MedicamentoModel(); // Autowire MedicamentoModel for validation
+    private MedicamentoModel medicamentoModel = new MedicamentoModel();
 
     @Autowired
-    private ReceitaMedicamentoModel receitaMedicamentoModel = new ReceitaMedicamentoModel(); // Autowire ReceitaMedicamentoModel for validation
+    private ReceitaMedicamentoModel receitaMedicamentoModel = new ReceitaMedicamentoModel();
 
     public PosologiaModel getId(Integer medicamentoId, Integer receitaId) {
         return posologiaModel.getPosDAO().getId(medicamentoId, receitaId);
@@ -40,7 +40,6 @@ public class PosologiaService {
     }
 
     public PosologiaModel gravar(PosologiaModel posologia) throws Exception {
-        // Basic validations
         if (posologia.getDose() == null || posologia.getDose().trim().isEmpty()) {
             throw new Exception("A dose é obrigatória.");
         }
@@ -57,7 +56,6 @@ public class PosologiaService {
             throw new Exception("ID da receita de medicamento é obrigatório.");
         }
 
-        // Validate existence of related entities
         if (medicamentoModel.getMedDAO().getId(posologia.getMedicamento_idproduto()) == null) {
             throw new Exception("Medicamento não encontrado.");
         }
@@ -75,9 +73,8 @@ public class PosologiaService {
         try {
             conn = SingletonDB.getConexao().getConnection();
             autoCommitOriginal = conn.getAutoCommit();
-            conn.setAutoCommit(false); // Start transaction
+            conn.setAutoCommit(false);
 
-            // Access DAO via Model instance and pass connection
             PosologiaModel novaPosologia = posologiaModel.getPosDAO().gravar(posologia, conn);
 
             conn.commit(); // Commit transaction if successful
@@ -85,7 +82,7 @@ public class PosologiaService {
         } catch (SQLException e) {
             if (conn != null) {
                 try {
-                    conn.rollback(); // Rollback on error
+                    conn.rollback();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -94,7 +91,7 @@ public class PosologiaService {
         } finally {
             if (conn != null) {
                 try {
-                    conn.setAutoCommit(autoCommitOriginal); // Restore auto-commit state
+                    conn.setAutoCommit(autoCommitOriginal);
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -103,11 +100,9 @@ public class PosologiaService {
     }
 
     public boolean alterar(PosologiaModel posologia) throws Exception {
-        // Primary keys must be set for update
         if (posologia.getMedicamento_idproduto() == null || posologia.getReceitamedicamento_idreceita() == null) {
             throw new Exception("IDs de medicamento e receita são obrigatórios para alteração da posologia.");
         }
-        // Basic validations (similar to gravar)
         if (posologia.getDose() == null || posologia.getDose().trim().isEmpty()) {
             throw new Exception("A dose é obrigatória.");
         }
@@ -118,7 +113,6 @@ public class PosologiaService {
             throw new Exception("Intervalo em horas deve ser maior que zero.");
         }
 
-        // Check if the posologia exists before attempting to alter
         if (posologiaModel.getPosDAO().getId(posologia.getMedicamento_idproduto(), posologia.getReceitamedicamento_idreceita()) == null) {
             throw new Exception("Posologia não encontrada para alteração.");
         }
@@ -128,21 +122,20 @@ public class PosologiaService {
         try {
             conn = SingletonDB.getConexao().getConnection();
             autoCommitOriginal = conn.getAutoCommit();
-            conn.setAutoCommit(false); // Start transaction
+            conn.setAutoCommit(false);
 
-            // Access DAO via Model instance and pass connection
             boolean atualizado = posologiaModel.getPosDAO().alterar(posologia, conn);
 
             if (atualizado) {
-                conn.commit(); // Commit transaction if successful
+                conn.commit();
             } else {
-                conn.rollback(); // Rollback if update failed
+                conn.rollback();
             }
             return atualizado;
         } catch (SQLException e) {
             if (conn != null) {
                 try {
-                    conn.rollback(); // Rollback on error
+                    conn.rollback();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -151,7 +144,7 @@ public class PosologiaService {
         } finally {
             if (conn != null) {
                 try {
-                    conn.setAutoCommit(autoCommitOriginal); // Restore auto-commit state
+                    conn.setAutoCommit(autoCommitOriginal);
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -164,7 +157,6 @@ public class PosologiaService {
             throw new Exception("IDs de medicamento e receita são obrigatórios para exclusão da posologia.");
         }
 
-        // Check if the posologia exists before attempting to delete
         if (posologiaModel.getPosDAO().getId(medicamentoId, receitaId) == null) {
             throw new Exception("Posologia não encontrada para exclusão.");
         }
@@ -174,21 +166,20 @@ public class PosologiaService {
         try {
             conn = SingletonDB.getConexao().getConnection();
             autoCommitOriginal = conn.getAutoCommit();
-            conn.setAutoCommit(false); // Start transaction
+            conn.setAutoCommit(false);
 
-            // Access DAO via Model instance and pass connection
             boolean deletado = posologiaModel.getPosDAO().apagar(medicamentoId, receitaId, conn);
 
             if (deletado) {
-                conn.commit(); // Commit transaction if successful
+                conn.commit();
             } else {
-                conn.rollback(); // Rollback if deletion failed
+                conn.rollback();
             }
             return deletado;
         } catch (SQLException e) {
             if (conn != null) {
                 try {
-                    conn.rollback(); // Rollback on error
+                    conn.rollback();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -197,7 +188,7 @@ public class PosologiaService {
         } finally {
             if (conn != null) {
                 try {
-                    conn.setAutoCommit(autoCommitOriginal); // Restore auto-commit state
+                    conn.setAutoCommit(autoCommitOriginal);
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }

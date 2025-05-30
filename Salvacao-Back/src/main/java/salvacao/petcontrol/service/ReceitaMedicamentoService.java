@@ -15,10 +15,10 @@ import java.util.List;
 public class ReceitaMedicamentoService {
 
     @Autowired
-    private ReceitaMedicamentoModel receitaMedicamentoModel = new ReceitaMedicamentoModel(); // Autowire the ReceitaMedicamentoModel
+    private ReceitaMedicamentoModel receitaMedicamentoModel = new ReceitaMedicamentoModel();
 
     @Autowired
-    private AnimalModel animalModel = new AnimalModel(); // Autowire AnimalModel for validation
+    private AnimalModel animalModel = new AnimalModel();
 
     public ReceitaMedicamentoModel getId(Integer id) {
         return receitaMedicamentoModel.getRmDAO().getId(id);
@@ -60,17 +60,16 @@ public class ReceitaMedicamentoService {
         try {
             conn = SingletonDB.getConexao().getConnection();
             autoCommitOriginal = conn.getAutoCommit();
-            conn.setAutoCommit(false); // Start transaction
+            conn.setAutoCommit(false);
 
-            // Access DAO via Model instance and pass connection
             ReceitaMedicamentoModel novaReceita = receitaMedicamentoModel.getRmDAO().gravar(receita, conn);
 
-            conn.commit(); // Commit transaction if successful
+            conn.commit();
             return novaReceita;
         } catch (SQLException e) {
             if (conn != null) {
                 try {
-                    conn.rollback(); // Rollback on error
+                    conn.rollback();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -79,7 +78,7 @@ public class ReceitaMedicamentoService {
         } finally {
             if (conn != null) {
                 try {
-                    conn.setAutoCommit(autoCommitOriginal); // Restore auto-commit state
+                    conn.setAutoCommit(autoCommitOriginal);
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -91,7 +90,6 @@ public class ReceitaMedicamentoService {
         if (receita.getIdreceita() == null) {
             throw new Exception("ID da receita é obrigatório para alteração.");
         }
-        // Basic validations (similar to gravar)
         if (receita.getAnimal_idanimal() == null) {
             throw new Exception("ID do animal é obrigatório para a receita.");
         }
@@ -105,12 +103,10 @@ public class ReceitaMedicamentoService {
             receita.setData(LocalDate.now());
         }
 
-        // Check if the recipe exists before attempting to alter
         if (receitaMedicamentoModel.getRmDAO().getId(receita.getIdreceita()) == null) {
             throw new Exception("Receita de medicamento não encontrada para alteração.");
         }
 
-        // Validate existence of related Animal (again)
         if (animalModel.getAnimalDAO().getId(receita.getAnimal_idanimal()) == null) {
             throw new Exception("Animal não encontrado.");
         }
@@ -120,21 +116,20 @@ public class ReceitaMedicamentoService {
         try {
             conn = SingletonDB.getConexao().getConnection();
             autoCommitOriginal = conn.getAutoCommit();
-            conn.setAutoCommit(false); // Start transaction
+            conn.setAutoCommit(false);
 
-            // Access DAO via Model instance and pass connection
             boolean atualizado = receitaMedicamentoModel.getRmDAO().alterar(receita, conn);
 
             if (atualizado) {
-                conn.commit(); // Commit transaction if successful
+                conn.commit();
             } else {
-                conn.rollback(); // Rollback if update failed
+                conn.rollback();
             }
             return atualizado;
         } catch (SQLException e) {
             if (conn != null) {
                 try {
-                    conn.rollback(); // Rollback on error
+                    conn.rollback();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -143,7 +138,7 @@ public class ReceitaMedicamentoService {
         } finally {
             if (conn != null) {
                 try {
-                    conn.setAutoCommit(autoCommitOriginal); // Restore auto-commit state
+                    conn.setAutoCommit(autoCommitOriginal);
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -155,7 +150,6 @@ public class ReceitaMedicamentoService {
         if (id == null) {
             throw new Exception("ID da receita é obrigatório para exclusão.");
         }
-        // Check if the recipe exists before attempting to delete
         if (receitaMedicamentoModel.getRmDAO().getId(id) == null) {
             throw new Exception("Receita de medicamento não encontrada para exclusão.");
         }
@@ -165,21 +159,20 @@ public class ReceitaMedicamentoService {
         try {
             conn = SingletonDB.getConexao().getConnection();
             autoCommitOriginal = conn.getAutoCommit();
-            conn.setAutoCommit(false); // Start transaction
+            conn.setAutoCommit(false);
 
-            // Access DAO via Model instance and pass connection
             boolean deletado = receitaMedicamentoModel.getRmDAO().apagar(id, conn);
 
             if (deletado) {
-                conn.commit(); // Commit transaction if successful
+                conn.commit();
             } else {
-                conn.rollback(); // Rollback if deletion failed
+                conn.rollback();
             }
             return deletado;
         } catch (SQLException e) {
             if (conn != null) {
                 try {
-                    conn.rollback(); // Rollback on error
+                    conn.rollback();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -188,7 +181,7 @@ public class ReceitaMedicamentoService {
         } finally {
             if (conn != null) {
                 try {
-                    conn.setAutoCommit(autoCommitOriginal); // Restore auto-commit state
+                    conn.setAutoCommit(autoCommitOriginal);
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }

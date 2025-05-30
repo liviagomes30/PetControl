@@ -1,4 +1,3 @@
-// Salvacao-Back/src/main/java/salvacao/petcontrol/service/MedicacaoService.java
 package salvacao.petcontrol.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -6,15 +5,15 @@ import org.springframework.stereotype.Service;
 import salvacao.petcontrol.config.SingletonDB;
 import salvacao.petcontrol.dto.MedicamentoCompletoDTO;
 import salvacao.petcontrol.model.MedicacaoModel;
-import salvacao.petcontrol.model.AnimalModel; // Needed for validation and data retrieval
-import salvacao.petcontrol.model.MedicamentoModel; // Needed for validation and data retrieval
-import salvacao.petcontrol.model.ReceitaMedicamentoModel; // Needed for validation and data retrieval
-import salvacao.petcontrol.model.PosologiaModel; // Needed for validation and data retrieval
-import salvacao.petcontrol.model.EstoqueModel; // Needed for stock update
-import salvacao.petcontrol.model.HistoricoModel; // Needed for history recording
-import salvacao.petcontrol.util.ResultadoOperacao; // For structured response
+import salvacao.petcontrol.model.AnimalModel;
+import salvacao.petcontrol.model.MedicamentoModel;
+import salvacao.petcontrol.model.ReceitaMedicamentoModel;
+import salvacao.petcontrol.model.PosologiaModel;
+import salvacao.petcontrol.model.EstoqueModel;
+import salvacao.petcontrol.model.HistoricoModel;
+import salvacao.petcontrol.util.ResultadoOperacao;
 
-import java.math.BigDecimal; // For quantity handling
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -27,22 +26,22 @@ public class MedicacaoService {
     private MedicacaoModel medicacaoModel = new MedicacaoModel();
 
     @Autowired
-    private AnimalModel animalModel = new AnimalModel(); // Autowire AnimalModel to access AnimalDAO
+    private AnimalModel animalModel = new AnimalModel();
 
     @Autowired
-    private MedicamentoModel medicamentoModel = new MedicamentoModel(); // Autowire MedicamentoModel to access MedicamentoDAO
+    private MedicamentoModel medicamentoModel = new MedicamentoModel();
 
     @Autowired
-    private ReceitaMedicamentoModel receitaMedicamentoModel = new ReceitaMedicamentoModel(); // Autowire ReceitaMedicamentoModel to access its DAO
+    private ReceitaMedicamentoModel receitaMedicamentoModel = new ReceitaMedicamentoModel();
 
     @Autowired
-    private PosologiaModel posologiaModel = new PosologiaModel(); // Autowire PosologiaModel to access its DAO
+    private PosologiaModel posologiaModel = new PosologiaModel();
 
     @Autowired
-    private EstoqueModel estoqueModel = new EstoqueModel(); // Autowire EstoqueModel to access EstoqueDAO
+    private EstoqueModel estoqueModel = new EstoqueModel();
 
     @Autowired
-    private HistoricoModel historicoModel = new HistoricoModel(); // Autowire HistoricoModel to access HistoricoDAO
+    private HistoricoModel historicoModel = new HistoricoModel();
 
     public MedicacaoModel getId(Integer id) {
         return medicacaoModel.getMedDAO().getId(id);
@@ -57,8 +56,7 @@ public class MedicacaoService {
         if (medicacao.getIdanimal() == null) {
             throw new Exception("ID do animal é obrigatório.");
         }
-        // If idReceitaMedicamento is null, it means no posology is required or provided
-        // This validation should be adjusted based on business rules for posology in MedicacaoModel
+
         if (medicacao.getPosologia_medicamento_idproduto() == null && medicacao.getPosologia_receitamedicamento_idreceita() != null) {
             throw new Exception("ID do medicamento para posologia é obrigatório se a receita for informada.");
         }
@@ -71,7 +69,7 @@ public class MedicacaoService {
         try {
             conn = SingletonDB.getConexao().getConnection();
             autoCommitOriginal = conn.getAutoCommit();
-            conn.setAutoCommit(false); // Start transaction
+            conn.setAutoCommit(false);
 
             MedicacaoModel novaMedicacao = medicacaoModel.getMedDAO().gravar(medicacao, conn);
 
@@ -80,7 +78,7 @@ public class MedicacaoService {
         } catch (SQLException e) {
             if (conn != null) {
                 try {
-                    conn.rollback(); // Rollback on error
+                    conn.rollback();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -89,7 +87,7 @@ public class MedicacaoService {
         } finally {
             if (conn != null) {
                 try {
-                    conn.setAutoCommit(autoCommitOriginal); // Restore auto-commit state
+                    conn.setAutoCommit(autoCommitOriginal);
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -105,7 +103,6 @@ public class MedicacaoService {
         if (medicacao.getIdanimal() == null) {
             throw new Exception("ID do animal é obrigatório.");
         }
-        // Adjusted validation for posologia. If a recipe is provided, medicamento ID is required.
         if (medicacao.getPosologia_medicamento_idproduto() == null && medicacao.getPosologia_receitamedicamento_idreceita() != null) {
             throw new Exception("ID do medicamento para posologia é obrigatório se a receita for informada.");
         }
@@ -118,20 +115,20 @@ public class MedicacaoService {
         try {
             conn = SingletonDB.getConexao().getConnection();
             autoCommitOriginal = conn.getAutoCommit();
-            conn.setAutoCommit(false); // Start transaction
+            conn.setAutoCommit(false);
 
             boolean atualizado = medicacaoModel.getMedDAO().alterar(medicacao, conn);
 
             if (atualizado) {
-                conn.commit(); // Commit transaction if successful
+                conn.commit();
             } else {
-                conn.rollback(); // Rollback if update failed
+                conn.rollback();
             }
             return atualizado;
         } catch (SQLException e) {
             if (conn != null) {
                 try {
-                    conn.rollback(); // Rollback on error
+                    conn.rollback();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -140,7 +137,7 @@ public class MedicacaoService {
         } finally {
             if (conn != null) {
                 try {
-                    conn.setAutoCommit(autoCommitOriginal); // Restore auto-commit state
+                    conn.setAutoCommit(autoCommitOriginal);
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -148,12 +145,6 @@ public class MedicacaoService {
         }
     }
 
-    /**
-     * Exclui uma medicação.
-     * @param id O ID da medicação a ser excluída.
-     * @return true se a medicação foi excluída com sucesso, false caso contrário.
-     * @throws Exception Se ocorrer um erro de validação ou de banco de dados.
-     */
     public boolean apagar(Integer id) throws Exception {
         if (id == null) {
             throw new Exception("ID da medicação é obrigatório para exclusão.");
@@ -168,21 +159,20 @@ public class MedicacaoService {
         try {
             conn = SingletonDB.getConexao().getConnection();
             autoCommitOriginal = conn.getAutoCommit();
-            conn.setAutoCommit(false); // Start transaction
+            conn.setAutoCommit(false);
 
-            // Access DAO via Model instance and pass connection
             boolean deletado = medicacaoModel.getMedDAO().apagar(id, conn);
 
             if (deletado) {
-                conn.commit(); // Commit transaction if successful
+                conn.commit();
             } else {
-                conn.rollback(); // Rollback if deletion failed
+                conn.rollback();
             }
             return deletado;
         } catch (SQLException e) {
             if (conn != null) {
                 try {
-                    conn.rollback(); // Rollback on error
+                    conn.rollback();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -191,7 +181,7 @@ public class MedicacaoService {
         } finally {
             if (conn != null) {
                 try {
-                    conn.setAutoCommit(autoCommitOriginal); // Restore auto-commit state
+                    conn.setAutoCommit(autoCommitOriginal);
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -202,7 +192,7 @@ public class MedicacaoService {
     public ResultadoOperacao efetuarMedicacao(
             Integer idAnimal,
             Integer idMedicamentoProduto,
-            Integer idReceitaMedicamento, // Marked as potentially null
+            Integer idReceitaMedicamento,
             BigDecimal quantidadeAdministrada,
             LocalDate dataMedicao,
             String descricaoHistorico
@@ -218,7 +208,7 @@ public class MedicacaoService {
 
         MedicamentoCompletoDTO medicamentoCompleto = medicamentoModel.getMedDAO().findMedicamentoCompleto(idMedicamentoProduto);
         if (medicamentoCompleto == null || medicamentoCompleto.getProduto() == null || medicamentoCompleto.getMedicamento() == null) {
-            throw new Error("Medicamento não encontrado ou dados incompletos."); // Corrected to throw new Error
+            throw new Error("Medicamento não encontrado ou dados incompletos.");
         }
 
         ReceitaMedicamentoModel receita = null;
@@ -292,7 +282,6 @@ public class MedicacaoService {
             }
 
             novaMedicacao.setIdhistorico(novoHistorico.getIdhistorico());
-            // Access MedicacaoDAO via MedicacaoModel instance and pass connection
             boolean medicacaoAtualizadaComHistorico = medicacaoModel.getMedDAO().alterar(novaMedicacao, conn);
             if (!medicacaoAtualizadaComHistorico) {
                 throw new SQLException("Falha ao atualizar medicação com ID de histórico.");

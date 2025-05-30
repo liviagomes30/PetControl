@@ -13,10 +13,10 @@ import java.util.List;
 @Service
 public class PessoaService {
     @Autowired
-    private PessoaModel pessoaModel = new PessoaModel(); // Autowire the Model
+    private PessoaModel pessoaModel = new PessoaModel();
 
     @Autowired
-    private UsuarioModel usuarioModel = new UsuarioModel(); // Autowire UsuarioModel for dependency check
+    private UsuarioModel usuarioModel = new UsuarioModel();
 
     public PessoaModel getId(Integer id){
         return pessoaModel.getPessoaDAO().getId(id);
@@ -45,7 +45,6 @@ public class PessoaService {
         if (pessoa.getCpf() == null || pessoa.getCpf().trim().isEmpty()) {
             throw new Exception("CPF da pessoa é obrigatório.");
         }
-        // Add more comprehensive validation for CPF, email, phone format etc.
 
         Connection conn = null;
         boolean autoCommitOriginal = true;
@@ -54,15 +53,14 @@ public class PessoaService {
             autoCommitOriginal = conn.getAutoCommit();
             conn.setAutoCommit(false); // Start transaction
 
-            // Access DAO via Model instance and pass connection
             PessoaModel novaPessoa = pessoaModel.getPessoaDAO().gravar(pessoa, conn);
 
-            conn.commit(); // Commit transaction if successful
+            conn.commit();
             return novaPessoa;
         } catch (SQLException e) {
             if (conn != null) {
                 try {
-                    conn.rollback(); // Rollback on error
+                    conn.rollback();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -71,7 +69,7 @@ public class PessoaService {
         } finally {
             if (conn != null) {
                 try {
-                    conn.setAutoCommit(autoCommitOriginal); // Restore auto-commit state
+                    conn.setAutoCommit(autoCommitOriginal);
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -86,9 +84,7 @@ public class PessoaService {
         if (pessoa.getNome() == null || pessoa.getNome().trim().isEmpty()) {
             throw new Exception("Nome da pessoa é obrigatório.");
         }
-        // Add more validation as needed
 
-        // Access DAO via Model instance to check if it exists
         PessoaModel existente = pessoaModel.getPessoaDAO().getId(pessoa.getIdpessoa());
         if (existente == null) {
             throw new Exception("Pessoa não encontrada para atualização.");
@@ -99,21 +95,20 @@ public class PessoaService {
         try {
             conn = SingletonDB.getConexao().getConnection();
             autoCommitOriginal = conn.getAutoCommit();
-            conn.setAutoCommit(false); // Start transaction
+            conn.setAutoCommit(false);
 
-            // Access DAO via Model instance and pass connection
             boolean atualizado = pessoaModel.getPessoaDAO().alterar(pessoa, conn);
 
             if (atualizado) {
-                conn.commit(); // Commit transaction if successful
+                conn.commit();
             } else {
-                conn.rollback(); // Rollback if update failed
+                conn.rollback();
             }
             return atualizado;
         } catch (SQLException e) {
             if (conn != null) {
                 try {
-                    conn.rollback(); // Rollback on error
+                    conn.rollback();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -122,7 +117,7 @@ public class PessoaService {
         } finally {
             if (conn != null) {
                 try {
-                    conn.setAutoCommit(autoCommitOriginal); // Restore auto-commit state
+                    conn.setAutoCommit(autoCommitOriginal);
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -131,7 +126,6 @@ public class PessoaService {
     }
 
     public boolean apagar(Integer id) throws Exception{
-        // Access DAO via Model instance to check if it exists
         PessoaModel existente = pessoaModel.getPessoaDAO().getId(id);
         if (existente == null) {
             throw new Exception("Pessoa não encontrada para exclusão.");
@@ -142,29 +136,25 @@ public class PessoaService {
         try {
             conn = SingletonDB.getConexao().getConnection();
             autoCommitOriginal = conn.getAutoCommit();
-            conn.setAutoCommit(false); // Start transaction
+            conn.setAutoCommit(false);
 
-            // Check for dependencies within the same transaction to prevent issues
-            // Access UsuarioDAO via UsuarioModel instance
             boolean isAssociatedWithUser = usuarioModel.getUsuDAO().getId(id, pessoaModel) != null;
             if (isAssociatedWithUser) {
                 throw new SQLException("Pessoa não pode ser excluída pois está associada a um usuário.");
             }
-            // Add other dependency checks here if Pessoa is linked to other entities (e.g., animals, adoptions etc.)
 
-            // Access DAO via Model instance and pass connection
             boolean deletado = pessoaModel.getPessoaDAO().apagar(id, conn);
 
             if (deletado) {
-                conn.commit(); // Commit transaction if successful
+                conn.commit();
             } else {
-                conn.rollback(); // Rollback if deletion failed
+                conn.rollback();
             }
             return deletado;
         } catch (SQLException e) {
             if (conn != null) {
                 try {
-                    conn.rollback(); // Rollback on error
+                    conn.rollback();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -173,7 +163,7 @@ public class PessoaService {
         } finally {
             if (conn != null) {
                 try {
-                    conn.setAutoCommit(autoCommitOriginal); // Restore auto-commit state
+                    conn.setAutoCommit(autoCommitOriginal);
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }

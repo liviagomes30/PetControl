@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import salvacao.petcontrol.model.PosologiaModel;
 import salvacao.petcontrol.service.PosologiaService;
-import salvacao.petcontrol.util.ResultadoOperacao;
+
 
 import java.util.List;
 

@@ -11,10 +11,10 @@ class HistoricoMedicacoesController {
   constructor() {
     this.medicacaoService = new MedicacaoService();
     this.animalService = new AnimalService();
-    this.medicamentoService = medicamentoController.service; // Reutilizando a instância do serviço de Medicamento
+    this.medicamentoService = medicamentoController.service;
     this.historicoService = new HistoricoService();
     this.receitaService = new ReceitaMedicamentoService();
-    this.posologiaService = new PosologiaService(); // Necessário para buscar posologias por IDs compostos
+    this.posologiaService = new PosologiaService();
 
     this.tableBody = document.getElementById("historicoMedicacoesTableBody");
     this.animalFilter = document.getElementById("animalFilter");
@@ -24,7 +24,7 @@ class HistoricoMedicacoesController {
     this.noDataMessage = document.getElementById("noDataMessage");
     this.tableElement = document.getElementById("historicoMedicacoesTable");
 
-    this.allMedications = []; // Cache all medications for client-side filtering
+    this.allMedications = [];
     this.filteredMedications = [];
     this.cachedData = {
       animals: new Map(),
@@ -39,12 +39,10 @@ class HistoricoMedicacoesController {
 
   async init() {
     await this.loadInitialData();
-    // Check for message in URL after a successful operation (e.g., from efetuarMedicacao)
     const urlParams = new URLSearchParams(window.location.search);
     const message = urlParams.get("message");
     if (message) {
       UIComponents.Toast.sucesso(decodeURIComponent(message));
-      // Clear the message from the URL
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.delete("message");
       window.history.replaceState({}, document.title, newUrl.toString());
@@ -69,13 +67,11 @@ class HistoricoMedicacoesController {
       this.dateFilter.addEventListener("change", () => this.applyFilters());
     }
 
-    // Event listeners for sorting (similar to listarUnidades/Tipos)
     const thSortable = document.querySelectorAll("th.sortable");
     thSortable.forEach((th) => {
       th.addEventListener("click", () => this.handleSort(th));
     });
 
-    // Event listeners for delete modal buttons (reusing generic modal)
     const confirmDeleteButton = document.getElementById("confirmDelete");
     if (confirmDeleteButton) {
       confirmDeleteButton.addEventListener("click", () =>
@@ -93,38 +89,32 @@ class HistoricoMedicacoesController {
   async loadInitialData() {
     UIComponents.Loading.mostrar("Carregando histórico de medicações...");
     try {
-      // Fetch all core data first
-      // CORREÇÃO: Altera a chamada para 'listarTodos()' conforme definido em MedicacaoService.js
       const medicacoes = await this.medicacaoService.listarTodos();
 
-      // Pre-fetch all related lookup data for efficiency
       const [animals, medicamentos, receitas, posologias] = await Promise.all([
         this.animalService.listarTodos(),
         this.medicamentoService.listarTodos(),
         this.receitaService.getAll(),
-        this.posologiaService.getAll(), // Assumindo que este método exista em PosologiaService.java
+        this.posologiaService.getAll(),
       ]);
 
-      // Populate lookup maps
       animals.forEach((a) => this.cachedData.animals.set(a.id, a));
       medicamentos.forEach((m) =>
         this.cachedData.medicamentos.set(m.produto.idproduto, m)
       );
       receitas.forEach((r) => this.cachedData.receitas.set(r.idreceita, r));
       posologias.forEach((p) => {
-        // Use a chave composta para o mapa de posologias (medicamentoId-receitaId)
         const key = `${p.medicamento_idproduto}-${p.receitamedicamento_idreceita}`;
         this.cachedData.posologias.set(key, p);
       });
 
-      // Enrich each medication with details from cached data
       this.allMedications = await Promise.all(
         medicacoes.map(async (med) => this.enrichMedicacao(med))
       );
-      this.filteredMedications = [...this.allMedications]; // Start with all medications
+      this.filteredMedications = [...this.allMedications];
 
-      this.populateAnimalFilter(animals); // Popula o dropdown de filtro de animais
-      this.renderTable(this.filteredMedications); // Renderiza a tabela inicial
+      this.populateAnimalFilter(animals);
+      this.renderTable(this.filteredMedications);
     } catch (error) {
       console.error("Erro ao carregar dados iniciais:", error);
       UIComponents.ModalErro.mostrar(
@@ -137,15 +127,12 @@ class HistoricoMedicacoesController {
     }
   }
 
-  // Enriquecer o objeto de medicação com dados relacionados
   async enrichMedicacao(medicacao) {
     const enriched = { ...medicacao };
 
-    // Detalhes do Animal
     enriched.animal = this.cachedData.animals.get(medicacao.idanimal);
     enriched.nomeAnimal = enriched.animal ? enriched.animal.nome : "N/A";
 
-    // Detalhes do Medicamento
     enriched.medicamentoCompleto = this.cachedData.medicamentos.get(
       medicacao.posologia_medicamento_idproduto
     );
@@ -156,7 +143,6 @@ class HistoricoMedicacoesController {
       ? enriched.medicamentoCompleto.medicamento.composicao
       : "N/A";
 
-    // Detalhes da Receita e Posologia (se existirem)
     if (medicacao.posologia_receitamedicamento_idreceita) {
       enriched.receita = this.cachedData.receitas.get(
         medicacao.posologia_receitamedicamento_idreceita
@@ -166,7 +152,7 @@ class HistoricoMedicacoesController {
         : "N/A";
       enriched.nomeClinicaReceita = enriched.receita
         ? enriched.receita.clinica
-        : ""; // Pode ser vazio se não houver clínica
+        : "";
 
       const posologiaKey = `${medicacao.posologia_medicamento_idproduto}-${medicacao.posologia_receitamedicamento_idreceita}`;
       enriched.posologia = this.cachedData.posologias.get(posologiaKey);
@@ -187,7 +173,6 @@ class HistoricoMedicacoesController {
       enriched.quantidadedias = "N/A";
     }
 
-    // Detalhes do Histórico (descrição)
     if (medicacao.idhistorico) {
       try {
         const historico = await this.historicoService.getId(
@@ -258,7 +243,6 @@ class HistoricoMedicacoesController {
       this.tableBody.appendChild(tr);
     });
 
-    // Adiciona event listeners para os botões de ação após a renderização
     this.tableBody.querySelectorAll(".btn-view").forEach((button) => {
       button.addEventListener("click", (e) =>
         this.viewDetails(e.currentTarget.dataset.id)
@@ -274,7 +258,6 @@ class HistoricoMedicacoesController {
   populateAnimalFilter(animals) {
     if (!this.animalFilter) return;
 
-    // Limpa opções existentes, exceto a primeira ("Filtrar por Animal")
     while (this.animalFilter.options.length > 1) {
       this.animalFilter.remove(1);
     }
@@ -289,7 +272,7 @@ class HistoricoMedicacoesController {
 
   applyFilters() {
     const selectedAnimalId = this.animalFilter.value;
-    const selectedDate = this.dateFilter.value; // Formato YYYY-MM-DD
+    const selectedDate = this.dateFilter.value;
 
     this.filteredMedications = this.allMedications.filter((med) => {
       let matchesAnimal = true;
@@ -322,10 +305,9 @@ class HistoricoMedicacoesController {
     const sortBy = headerElement.dataset.sort;
     let sortOrder = headerElement.dataset.order === "asc" ? "desc" : "asc";
 
-    // Limpa indicadores de ordenação anteriores
     document.querySelectorAll("th.sortable").forEach((th) => {
       th.classList.remove("asc", "desc");
-      th.dataset.order = ""; // Reseta a ordem
+      th.dataset.order = "";
     });
 
     headerElement.classList.add(sortOrder);
@@ -340,7 +322,6 @@ class HistoricoMedicacoesController {
           ? aValue.localeCompare(bValue)
           : bValue.localeCompare(aValue);
       }
-      // Para números, datas, etc.
       if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
       if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
       return 0;
@@ -397,7 +378,6 @@ class HistoricoMedicacoesController {
             }</div>
           </div>
         `;
-        // Show the modal using Bootstrap's JS API
         const detailsModalElement = document.getElementById("detailsModal");
         const modal = new bootstrap.Modal(detailsModalElement);
         modal.show();
@@ -414,7 +394,7 @@ class HistoricoMedicacoesController {
   }
 
   showDeleteModal(id) {
-    this.idToDelete = id; // Armazena o ID do item a ser excluído
+    this.idToDelete = id;
     UIComponents.ModalConfirmacao.mostrar(
       "Confirmar Exclusão",
       MensagensPadroes.CONFIRMACAO.EXCLUSAO,
@@ -425,16 +405,11 @@ class HistoricoMedicacoesController {
   async deleteMedicacaoConfirmed() {
     UIComponents.Loading.mostrar("Excluindo medicação...");
     try {
-      // Assuming 'apagar' method in MedicacaoService deletes by ID
       const response = await this.medicacaoService.apagar(this.idToDelete);
 
-      // The apagar method in MedicacaoService (frontend) just uses fetch,
-      // and it should return response.ok directly.
       if (response.ok) {
         UIComponents.Toast.sucesso(MensagensPadroes.SUCESSO.EXCLUSAO);
-        // Recarregar todos os dados para refletir a exclusão
         await this.loadInitialData();
-        // Reset filters and render again
         this.applyFilters();
       } else {
         const errorText = await response.text();
@@ -449,7 +424,6 @@ class HistoricoMedicacoesController {
       );
     } finally {
       UIComponents.Loading.esconder();
-      // Fechar o modal de confirmação, se ele ainda estiver aberto
       const deleteModalElement = document.getElementById("deleteModal");
       const modalInstance = bootstrap.Modal.getInstance(deleteModalElement);
       if (modalInstance) {

@@ -1,6 +1,3 @@
-// assets/js/services/PosologiaService.js
-// Este arquivo não existe, então será criado.
-
 class PosologiaService {
   constructor(baseUrl = "http://localhost:8080") {
     this.baseUrl = baseUrl;
@@ -11,7 +8,7 @@ class PosologiaService {
     try {
       const response = await fetch(`${this.baseUrl}${this.endpoint}`);
       if (!response.ok) {
-        if (response.status === 404) return []; // No posologies found
+        if (response.status === 404) return [];
         throw new Error(`Erro ${response.status}: ${await response.text()}`);
       }
       return await response.json();
@@ -27,7 +24,7 @@ class PosologiaService {
         `${this.baseUrl}${this.endpoint}/${medicamentoId}/${receitaId}`
       );
       if (!response.ok) {
-        if (response.status === 404) return null; // No posology found
+        if (response.status === 404) return null;
         throw new Error(`Erro ${response.status}: ${await response.text()}`);
       }
       return await response.json();
@@ -80,7 +77,7 @@ class PosologiaService {
         throw new Error(errorText || "Erro ao atualizar posologia.");
       }
 
-      return (await response.text()) || {}; // Assuming PUT might return empty body
+      return (await response.text()) || {};
     } catch (error) {
       console.error(
         `Erro ao atualizar posologia ${medicamentoId}/${receitaId}:`,

@@ -18,7 +18,7 @@ class MedicamentoController {
       { id: "unidadeMedida", evento: "change" },
       { id: "preco", evento: "input" },
       { id: "estoqueMinimo", evento: "input" },
-      { id: "fabricante", evento: "input" }, // Adicionado fabricante se também tiver validação de obrigatório
+      { id: "fabricante", evento: "input" },
     ];
 
     campos.forEach((config) => {
@@ -42,7 +42,6 @@ class MedicamentoController {
       const medicamentos = await this.service.listarTodos();
       this.renderizarTabela(medicamentos);
 
-      // NOVO: Adiciona event listeners para os elementos de filtro
       const searchInput = document.getElementById("searchInput");
       const filterSelect = document.getElementById("filterSelect");
       const searchButton = document.getElementById("searchButton");
@@ -51,38 +50,35 @@ class MedicamentoController {
       const applyFilter = () => {
         const termo = searchInput.value.trim();
         const filtro = filterSelect.value;
-        this.filtrarMedicamentos(termo, filtro); // Chama o método de filtragem existente
+        this.filtrarMedicamentos(termo, filtro);
       };
 
       if (searchInput) {
-        searchInput.addEventListener("input", applyFilter); // Filtra ao digitar
+        searchInput.addEventListener("input", applyFilter);
         searchInput.addEventListener("keyup", (e) => {
           if (e.key === "Enter") {
-            applyFilter(); // Filtra ao pressionar Enter
+            applyFilter();
           }
         });
       }
       if (filterSelect) {
-        filterSelect.addEventListener("change", applyFilter); // Filtra ao mudar o tipo
+        filterSelect.addEventListener("change", applyFilter);
       }
       if (searchButton) {
-        searchButton.addEventListener("click", applyFilter); // Filtra ao clicar no botão de busca
+        searchButton.addEventListener("click", applyFilter);
       }
       if (clearSearchButton) {
         clearSearchButton.addEventListener("click", () => {
           searchInput.value = "";
-          filterSelect.value = "1"; // Reseta para o filtro "Nome"
-          applyFilter(); // Aplica o filtro para mostrar todos os dados novamente
+          filterSelect.value = "1";
+          applyFilter();
         });
       }
-      // FIM NOVO BLOCO
 
-      // Verificar mensagem na URL
       const urlParams = new URLSearchParams(window.location.search);
       const message = urlParams.get("message");
       if (message) {
         UIComponents.Toast.sucesso(message);
-        // Limpa a URL para evitar que a mensagem apareça novamente ao recarregar
         const newUrl = new URL(window.location.href);
         newUrl.searchParams.delete("message");
         window.history.replaceState({}, document.title, newUrl.toString());
@@ -257,43 +253,41 @@ class MedicamentoController {
 
   async inicializarFormulario() {
     try {
-      UIComponents.Validacao.limparErros("formMedicamento"); //
+      UIComponents.Validacao.limparErros("formMedicamento");
 
-      const urlParams = new URLSearchParams(window.location.search); //
-      const id = urlParams.get("id"); //
+      const urlParams = new URLSearchParams(window.location.search);
+      const id = urlParams.get("id");
 
       const form = document.getElementById("formMedicamento");
       if (form) {
         if (id) {
-          form.addEventListener("submit", (e) => this.atualizar(e, id)); //
+          form.addEventListener("submit", (e) => this.atualizar(e, id));
         } else {
-          form.addEventListener("submit", (e) => this.cadastrar(e)); //
-          const alertaEstoque = document.getElementById("alertaEstoque"); //
+          form.addEventListener("submit", (e) => this.cadastrar(e));
+          const alertaEstoque = document.getElementById("alertaEstoque");
           if (alertaEstoque) {
-            //
-            alertaEstoque.style.display = "block"; //
+            alertaEstoque.style.display = "block";
           }
         }
       }
 
-      this.configurarMascarasCampos(); //
-      this.vincularLimpezaAutomaticaValidacao(); // Adiciona a chamada aqui
+      this.configurarMascarasCampos();
+      this.vincularLimpezaAutomaticaValidacao();
 
-      UIComponents.Loading.mostrar("Carregando dados..."); //
-      await this.carregarSelectsTipoUnidade(); //
+      UIComponents.Loading.mostrar("Carregando dados...");
+      await this.carregarSelectsTipoUnidade();
 
       if (id) {
-        await this.carregarMedicamento(id); //
+        await this.carregarMedicamento(id);
       }
 
-      UIComponents.Loading.esconder(); //
+      UIComponents.Loading.esconder();
     } catch (error) {
-      console.error("Erro ao inicializar formulário:", error); //
+      console.error("Erro ao inicializar formulário:", error);
       UIComponents.ModalErro.mostrar(
-        //
         "Não foi possível carregar o formulário: " + (error.message || "")
       );
-      UIComponents.Loading.esconder(); //
+      UIComponents.Loading.esconder();
     }
   }
 
@@ -613,22 +607,22 @@ class MedicamentoController {
         const termoBusca = termo.toLowerCase();
 
         switch (parseInt(filtro)) {
-          case 1: // Nome
+          case 1:
             medicamentosFiltrados = todosMedicamentos.filter((med) =>
               med.produto?.nome?.toLowerCase().includes(termoBusca)
             );
             break;
-          case 2: // Composição
+          case 2:
             medicamentosFiltrados = todosMedicamentos.filter((med) =>
               med.medicamento?.composicao?.toLowerCase().includes(termoBusca)
             );
             break;
-          case 3: // Tipo
+          case 3:
             medicamentosFiltrados = todosMedicamentos.filter((med) =>
               med.tipoProduto?.descricao?.toLowerCase().includes(termoBusca)
             );
             break;
-          case 4: // Fabricante
+          case 4:
             medicamentosFiltrados = todosMedicamentos.filter((med) =>
               med.produto?.fabricante?.toLowerCase().includes(termoBusca)
             );

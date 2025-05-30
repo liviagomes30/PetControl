@@ -53,7 +53,7 @@ public class TipoProdutoDAO {
 
     public TipoProdutoModel gravar(TipoProdutoModel tipoProduto, Connection conn) throws SQLException {
         String sql = "INSERT INTO tipoproduto (descricao) VALUES (?)";
-        try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) { // Use provided connection
+        try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, tipoProduto.getDescricao());
             int linhasMod = stmt.executeUpdate();
             if (linhasMod > 0) {
@@ -62,34 +62,34 @@ public class TipoProdutoDAO {
                     tipoProduto.setIdtipoproduto(rs.getInt(1));
                 }
             } else {
-                throw new SQLException("Falha ao adicionar tipo de produto."); // Propagate exception
+                throw new SQLException("Falha ao adicionar tipo de produto.");
             }
         } catch (SQLException e) {
-            throw e; // Re-throw to be caught by the service for rollback
+            throw e;
         }
         return tipoProduto;
     }
 
     public boolean alterar(TipoProdutoModel tipoProduto, Connection conn) throws SQLException {
         String sql = "UPDATE tipoproduto SET descricao = ? WHERE idtipoproduto = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) { // Use provided connection
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, tipoProduto.getDescricao());
             stmt.setInt(2, tipoProduto.getIdtipoproduto());
             int linhasMod = stmt.executeUpdate();
             if (linhasMod == 0) {
-                return false; // Indicate no row was updated
+                return false;
             } else {
                 return true;
             }
         } catch (SQLException e) {
-            throw e; // Re-throw to be caught by the service for rollback
+            throw e;
         }
     }
 
     public boolean apagar(Integer id, Connection conn) throws SQLException {
         // Check if TipoProduto is referenced by any Produto
         String sqlCheck = "SELECT COUNT(*) FROM produto WHERE idtipoproduto = ?";
-        try (PreparedStatement stmtCheck = conn.prepareStatement(sqlCheck)) { // Use provided connection
+        try (PreparedStatement stmtCheck = conn.prepareStatement(sqlCheck)) {
             stmtCheck.setInt(1, id);
             ResultSet rs = stmtCheck.executeQuery();
             if (rs.next() && rs.getInt(1) > 0) {
@@ -98,11 +98,11 @@ public class TipoProdutoDAO {
         }
 
         String sql = "DELETE FROM tipoproduto WHERE idtipoproduto = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) { // Use provided connection
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            throw e; // Re-throw to be caught by the service for rollback
+            throw e;
         }
     }
 

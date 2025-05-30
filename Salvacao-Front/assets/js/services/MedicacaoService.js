@@ -1,22 +1,19 @@
-// assets/js/services/MedicacaoService.js
 class MedicacaoService {
   constructor() {
-    this.baseUrl = "http://localhost:8080"; // Correct base URL
-    this.endpoint = "/medicacoes"; // Correct endpoint
+    this.baseUrl = "http://localhost:8080";
+    this.endpoint = "/medicacoes";
   }
 
-  // NOVO MÉTODO: Para listar todas as medicações
   async listarTodos() {
     try {
-      // Use template literals for correct URL construction
-      const response = await fetch(`${this.baseUrl}${this.endpoint}`); // Corrected URL construction
-      console.log("Response from /medicacoes:", response); // Debug log
+      const response = await fetch(`${this.baseUrl}${this.endpoint}`);
+      console.log("Response from /medicacoes:", response);
       if (!response.ok) {
-        if (response.status === 404) return []; // Se 404, retorna array vazio (sem dados)
+        if (response.status === 404) return [];
         throw new Error(`Erro ${response.status}: ${await response.text()}`);
       }
       const data = await response.json();
-      console.log("Data parsed from /medicacoes:", data); // Debug log
+      console.log("Data parsed from /medicacoes:", data);
       return data;
     } catch (error) {
       console.error("Erro ao listar todas as medicações:", error);
@@ -30,7 +27,7 @@ class MedicacaoService {
         `${this.baseUrl}/receitas-medicamento/animal/${animalId}`
       );
       if (!response.ok) {
-        if (response.status === 404) return []; // No recipes found
+        if (response.status === 404) return [];
         throw new Error(`Erro ${response.status}: ${await response.text()}`);
       }
       return await response.json();
@@ -46,7 +43,7 @@ class MedicacaoService {
         `${this.baseUrl}/posologias/${medicamentoId}/${receitaId}`
       );
       if (!response.ok) {
-        if (response.status === 404) return null; // No posology found
+        if (response.status === 404) return null;
         throw new Error(`Erro ${response.status}: ${await response.text()}`);
       }
       return await response.json();
@@ -93,14 +90,12 @@ class MedicacaoService {
     }
   }
 
-  // NOVO MÉTODO: Para apagar uma medicação (reaproveitado de MedicacaoService.java)
   async apagar(id) {
     try {
       const response = await fetch(`${this.baseUrl}${this.endpoint}/${id}`, {
         method: "DELETE",
       });
 
-      // Retorna a resposta, pois o controller verificará se response.ok
       return response;
     } catch (error) {
       console.error(`Erro ao excluir medicação ${id}:`, error);

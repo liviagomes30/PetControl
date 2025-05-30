@@ -11,7 +11,7 @@ public class PosologiaModel {
     private Integer medicamento_idproduto;
     private Integer receitamedicamento_idreceita;
 
-    private PosologiaDAO posologiaDAO; // DAO instance
+    private PosologiaDAO posologiaDAO;
 
     public PosologiaModel() {
         this.posologiaDAO = new PosologiaDAO();

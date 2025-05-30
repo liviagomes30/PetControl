@@ -10,7 +10,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import java.sql.Connection; // Import Connection
+import java.sql.Connection;
 
 @Repository
 public class PessoaDAO {
@@ -39,9 +39,9 @@ public class PessoaDAO {
         return pessoa;
     }
 
-    public PessoaModel gravar(PessoaModel pessoa, Connection conn) throws SQLException { // Accept Connection
+    public PessoaModel gravar(PessoaModel pessoa, Connection conn) throws SQLException {
         String sql = "INSERT INTO pessoa (nome, cpf, endereco, telefone, email) VALUES (?, ?, ?, ?, ?)";
-        try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) { // Use provided connection
+        try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, pessoa.getNome());
             stmt.setString(2, pessoa.getCpf());
             stmt.setString(3, pessoa.getEndereco());
@@ -54,17 +54,17 @@ public class PessoaDAO {
                     pessoa.setIdpessoa(rs.getInt(1));
                 }
             } else {
-                throw new SQLException("Falha ao adicionar pessoa."); // Propagate exception
+                throw new SQLException("Falha ao adicionar pessoa.");
             }
         } catch (SQLException e) {
-            throw e; // Re-throw to be caught by the service for rollback
+            throw e;
         }
         return pessoa;
     }
 
-    public boolean alterar(PessoaModel pessoa, Connection conn) throws SQLException { // Accept Connection
+    public boolean alterar(PessoaModel pessoa, Connection conn) throws SQLException {
         String sql = "UPDATE pessoa SET nome = ?, cpf = ?, endereco = ?, telefone = ?, email = ? WHERE idpessoa = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) { // Use provided connection
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, pessoa.getNome());
             stmt.setString(2, pessoa.getCpf());
             stmt.setString(3, pessoa.getEndereco());
@@ -73,34 +73,32 @@ public class PessoaDAO {
             stmt.setInt(6, pessoa.getIdpessoa());
             int linhasMod = stmt.executeUpdate();
             if (linhasMod == 0) {
-                return false; // Indicate no row was updated
+                return false;
             } else {
                 return true;
             }
         } catch (SQLException e) {
-            throw e; // Re-throw to be caught by the service for rollback
+            throw e;
         }
     }
 
-    public boolean apagar(Integer id, Connection conn) throws SQLException { // Accept Connection
-        // Check for dependencies before deleting (e.g., if referenced in 'usuario' table)
+    public boolean apagar(Integer id, Connection conn) throws SQLException {
+
         String sqlCheckUsuario = "SELECT COUNT(*) FROM usuario WHERE pessoa_idpessoa = ?";
-        try (PreparedStatement stmtCheck = conn.prepareStatement(sqlCheckUsuario)) { // Use provided connection
+        try (PreparedStatement stmtCheck = conn.prepareStatement(sqlCheckUsuario)) {
             stmtCheck.setInt(1, id);
             ResultSet rs = stmtCheck.executeQuery();
             if (rs.next() && rs.getInt(1) > 0) {
                 throw new SQLException("Pessoa não pode ser excluída pois está associada a um usuário.");
             }
         }
-        // Add more checks if Pessoa is referenced by other tables (e.g., in other DAOs)
-        // For example, if Pessoa is linked to Animal (e.g. as an owner), you'd need to add checks here.
 
         String sql = "DELETE FROM pessoa WHERE idpessoa = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) { // Use provided connection
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            throw e; // Re-throw to be caught by the service for rollback
+            throw e;
         }
     }
 

@@ -1,4 +1,3 @@
-// MedicamentoService.js
 class MedicamentoService {
   constructor(baseUrl = "http://localhost:8080") {
     this.baseUrl = baseUrl;

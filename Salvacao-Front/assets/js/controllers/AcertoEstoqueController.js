@@ -1,4 +1,3 @@
-// assets/js/controllers/AcertoEstoqueController.js
 import AcertoEstoqueService from "../services/AcertoEstoqueService.js";
 import AcertoEstoqueModel from "../models/AcertoEstoqueModel.js";
 import MensagensPadroes from "../utils/mensagensPadroes.js";
@@ -20,15 +19,12 @@ class AcertoEstoqueController {
         form.addEventListener("submit", (e) => this.efetuarAcerto(e));
       }
 
-      // Listener para o campo 'motivo' (formulário principal)
       const motivoSelect = document.getElementById("motivo");
       if (motivoSelect) {
         motivoSelect.addEventListener("change", function () {
           if (this.value) {
-            // Se um valor foi selecionado
             UIComponents.Validacao.limparErroCampo("motivo");
           }
-          // Lógica existente para mostrar/esconder 'motivoOutroContainer'
           const outroContainer = document.getElementById(
             "motivoOutroContainer"
           );
@@ -40,17 +36,15 @@ class AcertoEstoqueController {
             outroContainer.classList.add("d-none");
             motivoOutroInput.removeAttribute("required");
             motivoOutroInput.value = "";
-            UIComponents.Validacao.limparErroCampo("motivoOutro"); // Limpa também se não for mais 'Outro'
+            UIComponents.Validacao.limparErroCampo("motivoOutro");
           }
         });
       }
 
-      // Listener para o campo 'motivoOutro' (formulário principal)
       const motivoOutroInput = document.getElementById("motivoOutro");
       if (motivoOutroInput) {
         motivoOutroInput.addEventListener("input", function () {
           if (this.value.trim()) {
-            // Se o campo tem algum texto
             UIComponents.Validacao.limparErroCampo("motivoOutro");
           }
         });
@@ -58,12 +52,8 @@ class AcertoEstoqueController {
 
       const btnAdicionarItem = document.getElementById("btnAdicionarItem");
       if (btnAdicionarItem) {
-        // A lógica de abrir o modal já está no HTML,
-        // mas o click listener no JS é para prepararModal e outras ações.
-        // Mantemos o listener original do seu código.
         btnAdicionarItem.addEventListener("click", () => {
-          this.prepararModal(); // Chama limparErros para formItem
-          // UIComponents.Loading.esconder(); // Removido daqui, pois pode causar problemas se chamado sem um mostrar antes
+          this.prepararModal();
           UIComponents.ModalHelper.abrirModal("adicionarItemModal");
         });
       }
@@ -73,32 +63,26 @@ class AcertoEstoqueController {
         btnConfirmarItem.addEventListener("click", () => this.adicionarItem());
       }
 
-      // Listener para 'selectProduto' no modal
       const selectProdutoModal = document.getElementById("selectProduto");
       if (selectProdutoModal) {
         selectProdutoModal.addEventListener("change", (e) => {
           if (e.target.value) {
-            // Se um produto foi selecionado
             UIComponents.Validacao.limparErroCampo("selectProduto");
           }
-          this.buscarEstoqueAtual(e.target.value); // Sua lógica existente
+          this.buscarEstoqueAtual(e.target.value);
         });
       }
 
       const novaQuantidadeInput = document.getElementById("novaQuantidade");
       if (novaQuantidadeInput) {
         novaQuantidadeInput.setAttribute("data-mask", "decimal");
-        // Listener para 'novaQuantidade' no modal
         novaQuantidadeInput.addEventListener("input", function () {
           if (this.value.trim()) {
-            // Se algo foi digitado
             UIComponents.Validacao.limparErroCampo("novaQuantidade");
           }
         });
-        // A inicialização da máscara é feita abaixo pelo UIComponents.InputMasks.inicializar();
       }
 
-      // Inicialização de máscaras (se UIComponents.InputMasks existir e estiver configurado)
       if (
         UIComponents.InputMasks &&
         typeof UIComponents.InputMasks.inicializar === "function"
@@ -181,7 +165,7 @@ class AcertoEstoqueController {
     if (selectProduto) selectProduto.value = "";
     if (quantidadeAtual) quantidadeAtual.value = "";
     if (novaQuantidade) novaQuantidade.value = "";
-    UIComponents.Validacao.limparErros("formItem"); // Limpa todos os erros do formItem ao preparar o modal
+    UIComponents.Validacao.limparErros("formItem");
   }
 
   adicionarItem() {
@@ -189,7 +173,6 @@ class AcertoEstoqueController {
     const novaQuantidade = document.getElementById("novaQuantidade")?.value;
     let valido = true;
 
-    // Validate product selection
     if (!produtoId) {
       UIComponents.Validacao.mostrarErro(
         "selectProduto",
@@ -198,7 +181,6 @@ class AcertoEstoqueController {
       valido = false;
     }
 
-    // Validate new quantity
     if (!novaQuantidade) {
       UIComponents.Validacao.mostrarErro(
         "novaQuantidade",

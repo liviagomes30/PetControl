@@ -6,15 +6,13 @@ import java.time.LocalDate;
 public class MedicacaoEfetuarRequestDTO {
     private Integer idAnimal;
     private Integer idMedicamentoProduto;
-    private Integer idReceitaMedicamento; // Opcional
+    private Integer idReceitaMedicamento; 
     private BigDecimal quantidadeAdministrada;
-    private LocalDate dataMedicao; // Opcional
-    private String descricaoHistorico; // Opcional
+    private LocalDate dataMedicao; 
+    private String descricaoHistorico; 
 
-    // Construtor padrão
     public MedicacaoEfetuarRequestDTO() {}
 
-    // Construtor com todos os campos (opcional, mas útil)
     public MedicacaoEfetuarRequestDTO(Integer idAnimal, Integer idMedicamentoProduto, Integer idReceitaMedicamento, BigDecimal quantidadeAdministrada, LocalDate dataMedicao, String descricaoHistorico) {
         this.idAnimal = idAnimal;
         this.idMedicamentoProduto = idMedicamentoProduto;
@@ -24,7 +22,6 @@ public class MedicacaoEfetuarRequestDTO {
         this.descricaoHistorico = descricaoHistorico;
     }
 
-    // Getters e Setters para todos os campos
     public Integer getIdAnimal() {
         return idAnimal;
     }

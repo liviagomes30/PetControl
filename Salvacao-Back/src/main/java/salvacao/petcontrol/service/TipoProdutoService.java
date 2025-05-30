@@ -17,7 +17,7 @@ import java.util.List;
 public class TipoProdutoService {
 
     @Autowired
-    private TipoProdutoModel tipoProdutoModel = new TipoProdutoModel(); // Autowire the Model
+    private TipoProdutoModel tipoProdutoModel = new TipoProdutoModel();
 
     public TipoProdutoModel getId(Integer id) {
         return tipoProdutoModel.getTpDAO().getId(id);
@@ -40,17 +40,16 @@ public class TipoProdutoService {
         try {
             conn = SingletonDB.getConexao().getConnection();
             autoCommitOriginal = conn.getAutoCommit();
-            conn.setAutoCommit(false); // Start transaction
+            conn.setAutoCommit(false);
 
-            // Access DAO via Model instance and pass connection
             TipoProdutoModel novoTipoProduto = tipoProdutoModel.getTpDAO().gravar(tipoProduto, conn);
 
-            conn.commit(); // Commit transaction if successful
+            conn.commit();
             return novoTipoProduto;
         } catch (SQLException e) {
             if (conn != null) {
                 try {
-                    conn.rollback(); // Rollback on error
+                    conn.rollback();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -59,7 +58,7 @@ public class TipoProdutoService {
         } finally {
             if (conn != null) {
                 try {
-                    conn.setAutoCommit(autoCommitOriginal); // Restore auto-commit state
+                    conn.setAutoCommit(autoCommitOriginal);
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -75,7 +74,6 @@ public class TipoProdutoService {
             throw new Exception("A descrição não pode ter mais de 100 caracteres.");
         }
 
-        // Access DAO via Model instance
         TipoProdutoModel existente = tipoProdutoModel.getTpDAO().getId(tipoProduto.getIdtipoproduto());
         if (existente == null) {
             throw new Exception("Tipo de produto não encontrado para atualização.");
@@ -86,21 +84,20 @@ public class TipoProdutoService {
         try {
             conn = SingletonDB.getConexao().getConnection();
             autoCommitOriginal = conn.getAutoCommit();
-            conn.setAutoCommit(false); // Start transaction
+            conn.setAutoCommit(false);
 
-            // Access DAO via Model instance and pass connection
             boolean atualizado = tipoProdutoModel.getTpDAO().alterar(tipoProduto, conn);
 
             if (atualizado) {
-                conn.commit(); // Commit transaction if successful
+                conn.commit();
             } else {
-                conn.rollback(); // Rollback if update failed
+                conn.rollback();
             }
             return atualizado;
         } catch (SQLException e) {
             if (conn != null) {
                 try {
-                    conn.rollback(); // Rollback on error
+                    conn.rollback();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -109,7 +106,7 @@ public class TipoProdutoService {
         } finally {
             if (conn != null) {
                 try {
-                    conn.setAutoCommit(autoCommitOriginal); // Restore auto-commit state
+                    conn.setAutoCommit(autoCommitOriginal);
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -129,21 +126,20 @@ public class TipoProdutoService {
         try {
             conn = SingletonDB.getConexao().getConnection();
             autoCommitOriginal = conn.getAutoCommit();
-            conn.setAutoCommit(false); // Start transaction
+            conn.setAutoCommit(false);
 
-            // Access DAO via Model instance and pass connection
             boolean deletado = tipoProdutoModel.getTpDAO().apagar(id, conn);
 
             if (deletado) {
-                conn.commit(); // Commit transaction if successful
+                conn.commit();
             } else {
-                conn.rollback(); // Rollback if deletion failed
+                conn.rollback();
             }
             return deletado;
         } catch (SQLException e) {
             if (conn != null) {
                 try {
-                    conn.rollback(); // Rollback on error
+                    conn.rollback();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -152,7 +148,7 @@ public class TipoProdutoService {
         } finally {
             if (conn != null) {
                 try {
-                    conn.setAutoCommit(autoCommitOriginal); // Restore auto-commit state
+                    conn.setAutoCommit(autoCommitOriginal);
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }

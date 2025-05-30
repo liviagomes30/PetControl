@@ -1,4 +1,3 @@
-// UnidadeMedidaModel.js
 class UnidadeMedidaModel {
   constructor(idunidademedida = null, descricao = "", sigla = "") {
     this.idunidademedida = idunidademedida;
@@ -26,7 +25,6 @@ class UnidadeMedidaModel {
     const errors = {};
     let isValid = true;
 
-    // Validar descrição
     if (!this.descricao || this.descricao.trim() === "") {
       errors.descricao = "A descrição é obrigatória.";
       isValid = false;
@@ -35,7 +33,6 @@ class UnidadeMedidaModel {
       isValid = false;
     }
 
-    // Validar sigla
     if (!this.sigla || this.sigla.trim() === "") {
       errors.sigla = "A sigla é obrigatória.";
       isValid = false;

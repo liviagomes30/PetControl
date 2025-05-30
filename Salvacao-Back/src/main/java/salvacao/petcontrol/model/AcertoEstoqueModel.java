@@ -26,7 +26,6 @@ public class AcertoEstoqueModel {
         this.observacao = observacao;
     }
 
-    // Getters e Setters
     public Integer getIdacerto() {
         return idacerto;
     }

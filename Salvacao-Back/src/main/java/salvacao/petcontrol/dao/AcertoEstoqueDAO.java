@@ -4,20 +4,15 @@ import org.springframework.stereotype.Repository;
 import salvacao.petcontrol.config.SingletonDB;
 import salvacao.petcontrol.model.AcertoEstoqueModel;
 import salvacao.petcontrol.model.ItemAcertoEstoqueModel;
-import salvacao.petcontrol.model.EstoqueModel; // EstoqueModel will be passed from service to access its DAO
-import salvacao.petcontrol.model.ProdutoModel; // ProdutoModel will be passed from service to access its DAO
+
 
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.math.BigDecimal;
 
 @Repository
 public class AcertoEstoqueDAO {
-
-    // Removed @Autowired EstoqueModel estoqueModel = new EstoqueModel();
-    // It will be passed from the service.
 
     public AcertoEstoqueModel getId(Integer id) {
         AcertoEstoqueModel acerto = null;
@@ -208,7 +203,4 @@ public class AcertoEstoqueDAO {
         return item;
     }
 
-    // This method is no longer responsible for transaction management.
-    // It's broken down into smaller, single-responsibility methods to be orchestrated by the Service.
-    // The previous 'efetuarAcertoEstoque' logic is now in AcertoEstoqueService.gravar.
 }

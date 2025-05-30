@@ -21,7 +21,7 @@ public class HistoricoDAO {
         String sql = "INSERT INTO historico (descricao, data, animal_idanimal, vacinacao_idvacinacao, medicacao_idmedicacao) " +
                 "VALUES (?, ?, ?, ?, ?)";
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) { // Use provided connection
+        try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) { 
             stmt.setString(1, historico.getDescricao());
 
             if (historico.getData() != null) {
@@ -68,7 +68,7 @@ public class HistoricoDAO {
         String sql = "UPDATE historico SET descricao = ?, data = ?, animal_idanimal = ?, " +
                 "vacinacao_idvacinacao = ?, medicacao_idmedicacao = ? WHERE idhistorico = ?";
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) { // Use provided connection
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) { 
             stmt.setString(1, historico.getDescricao());
 
             if (historico.getData() != null) {
@@ -105,14 +105,14 @@ public class HistoricoDAO {
             else
                 return true;
         } catch (SQLException e) {
-            throw e; // Re-throw to be caught by the service for rollback
+            throw e; 
         }
     }
 
     public boolean apagar(Integer id, Connection conn) throws SQLException {
         // Check for dependencies before deleting
         String sqlCheckVacinacao = "SELECT COUNT(*) FROM vacinacao WHERE idhistorico = ?";
-        try (PreparedStatement stmtCheck = conn.prepareStatement(sqlCheckVacinacao)) { // Use provided connection
+        try (PreparedStatement stmtCheck = conn.prepareStatement(sqlCheckVacinacao)) { 
             stmtCheck.setInt(1, id);
             ResultSet rs = stmtCheck.executeQuery();
             if (rs.next() && rs.getInt(1) > 0) {
@@ -121,7 +121,7 @@ public class HistoricoDAO {
         }
 
         String sqlCheckMedicacao = "SELECT COUNT(*) FROM medicacao WHERE idhistorico = ?";
-        try (PreparedStatement stmtCheck = conn.prepareStatement(sqlCheckMedicacao)) { // Use provided connection
+        try (PreparedStatement stmtCheck = conn.prepareStatement(sqlCheckMedicacao)) { 
             stmtCheck.setInt(1, id);
             ResultSet rs = stmtCheck.executeQuery();
             if (rs.next() && rs.getInt(1) > 0) {
@@ -130,11 +130,11 @@ public class HistoricoDAO {
         }
 
         String sql = "DELETE FROM historico WHERE idhistorico = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) { // Use provided connection
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) { 
             stmt.setInt(1, id);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            throw e; // Re-throw to be caught by the service for rollback
+            throw e; 
         }
     }
 

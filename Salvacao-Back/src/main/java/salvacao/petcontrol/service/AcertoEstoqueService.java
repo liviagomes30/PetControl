@@ -3,15 +3,15 @@ package salvacao.petcontrol.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import salvacao.petcontrol.config.SingletonDB; // Import SingletonDB
+import salvacao.petcontrol.config.SingletonDB;
 import salvacao.petcontrol.dto.AcertoEstoqueCompletoDTO;
 import salvacao.petcontrol.dto.AcertoEstoqueRequestDTO;
 import salvacao.petcontrol.dto.ItemAcertoEstoqueDTO;
 import salvacao.petcontrol.model.*;
 import salvacao.petcontrol.util.ResultadoOperacao;
 
-import java.sql.Connection; // Import Connection
-import java.sql.SQLException; // Import SQLException
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,22 +21,22 @@ import java.math.BigDecimal;
 public class AcertoEstoqueService {
 
     @Autowired
-    private AcertoEstoqueModel acertoEstoqueModel = new AcertoEstoqueModel(); // Autowire the Model
+    private AcertoEstoqueModel acertoEstoqueModel = new AcertoEstoqueModel(); 
 
     @Autowired
-    private EstoqueModel estoqueModel = new EstoqueModel(); // Autowire the Model
+    private EstoqueModel estoqueModel = new EstoqueModel(); 
 
     @Autowired
-    private ProdutoModel produtoModel = new ProdutoModel(); // Autowire the Model
+    private ProdutoModel produtoModel = new ProdutoModel(); 
 
     @Autowired
-    private UsuarioModel usuarioModel = new UsuarioModel(); // Autowire the Model
+    private UsuarioModel usuarioModel = new UsuarioModel(); 
 
     @Autowired
-    private TipoProdutoModel tipoProdutoModel = new TipoProdutoModel(); // Autowire the Model
+    private TipoProdutoModel tipoProdutoModel = new TipoProdutoModel(); 
 
     @Autowired
-    private UnidadeMedidaModel unidadeMedidaModel = new UnidadeMedidaModel(); // Autowire the Model
+    private UnidadeMedidaModel unidadeMedidaModel = new UnidadeMedidaModel(); 
     @Autowired
     private PessoaModel pessoaModel;
 
@@ -54,7 +54,6 @@ public class AcertoEstoqueService {
 
         for (ItemAcertoEstoqueModel item : itensModel) {
             ProdutoModel produto = produtoModel.getProdDAO().getId(item.getProduto_id());
-            // Access DAOs via Model instances
             TipoProdutoModel tipoProduto = tipoProdutoModel.getTpDAO().getId(produto.getIdtipoproduto());
             UnidadeMedidaModel unidadeMedida = unidadeMedidaModel.getUnDAO().getId(produto.getIdunidademedida());
 
@@ -100,13 +99,12 @@ public class AcertoEstoqueService {
             throw new Exception("É necessário ao menos um item para acerto de estoque");
         }
 
-        // Access DAO via Model instance
         UsuarioModel usuario = usuarioModel.getUsuDAO().getId(request.getUsuario_pessoa_id(), pessoaModel);
         if (usuario == null) {
             throw new Exception("Usuário não encontrado");
         }
 
-        AcertoEstoqueModel acertoEstoque = new AcertoEstoqueModel(); // Create new instance for recording
+        AcertoEstoqueModel acertoEstoque = new AcertoEstoqueModel();
         acertoEstoque.setData(LocalDate.now());
         acertoEstoque.setUsuario_pessoa_id(request.getUsuario_pessoa_id());
         acertoEstoque.setMotivo(request.getMotivo());
@@ -115,7 +113,6 @@ public class AcertoEstoqueService {
         List<ItemAcertoEstoqueModel> itensParaGravar = new ArrayList<>();
 
         for (AcertoEstoqueRequestDTO.ItemAcertoRequestDTO itemRequest : request.getItens()) {
-            // Access DAO via Model instance
             EstoqueModel estoque = estoqueModel.getEstDAO().getByProdutoId(itemRequest.getProduto_id());
             if (estoque == null) {
                 throw new Exception("Produto ID " + itemRequest.getProduto_id() + " não encontrado no estoque");
@@ -128,7 +125,7 @@ public class AcertoEstoqueService {
             ItemAcertoEstoqueModel item = new ItemAcertoEstoqueModel();
             item.setProduto_id(itemRequest.getProduto_id());
             item.setQuantidade_depois(itemRequest.getQuantidade_nova());
-            item.setQuantidade_antes(estoque.getQuantidade()); // Store current quantity before adjustment
+            item.setQuantidade_antes(estoque.getQuantidade());
 
             if (item.getQuantidade_depois().compareTo(item.getQuantidade_antes()) > 0) {
                 item.setTipoajuste("ENTRADA");
@@ -144,23 +141,19 @@ public class AcertoEstoqueService {
         try {
             conn = SingletonDB.getConexao().getConnection();
             autoCommitOriginal = conn.getAutoCommit();
-            conn.setAutoCommit(false); // Start transaction
+            conn.setAutoCommit(false);
 
-            // 1. Gravar o cabeçalho do acerto de estoque
             AcertoEstoqueModel acertoInserido = acertoEstoqueModel.getAcDAO().gravarAcerto(acertoEstoque, conn);
 
-            // 2. Gravar os itens e atualizar o estoque
             for (ItemAcertoEstoqueModel item : itensParaGravar) {
                 item.setAcerto_id(acertoInserido.getIdacerto());
 
-                // Update stock using EstoqueDAO, ensuring it uses the same connection
-                // Assuming EstoqueDAO.alterar accepts a Connection
                 EstoqueModel estoqueAtualizado = new EstoqueModel(
-                        null, // idEstoque - not needed for update by product_id if `alterar` updates by product ID
+                        null,
                         item.getProduto_id(),
                         item.getQuantidade_depois()
                 );
-                // Need to get the actual idestoque for the update.
+
                 EstoqueModel currentEstoque = estoqueModel.getEstDAO().getByProdutoId(item.getProduto_id());
                 if (currentEstoque == null) {
                     throw new SQLException("Estoque não encontrado para o produto " + item.getProduto_id() + " durante a atualização.");
@@ -168,16 +161,15 @@ public class AcertoEstoqueService {
                 estoqueAtualizado.setIdestoque(currentEstoque.getIdestoque());
 
 
-                boolean estoqueUpdated = estoqueModel.getEstDAO().alterar(estoqueAtualizado); // Use alter method that takes EstoqueModel
+                boolean estoqueUpdated = estoqueModel.getEstDAO().alterar(estoqueAtualizado);
                 if (!estoqueUpdated) {
                     throw new SQLException("Falha ao atualizar estoque para o produto: " + item.getProduto_id());
                 }
 
-                // Gravar o item do acerto
                 acertoEstoqueModel.getAcDAO().gravarItemAcerto(item, conn);
             }
 
-            conn.commit(); // Commit transaction
+            conn.commit();
             ResultadoOperacao resultado = new ResultadoOperacao();
             resultado.setOperacao("acertoEstoque");
             resultado.setSucesso(true);
@@ -188,7 +180,7 @@ public class AcertoEstoqueService {
         } catch (SQLException e) {
             if (conn != null) {
                 try {
-                    conn.rollback(); // Rollback on error
+                    conn.rollback();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -197,7 +189,7 @@ public class AcertoEstoqueService {
         } finally {
             if (conn != null) {
                 try {
-                    conn.setAutoCommit(autoCommitOriginal); // Restore auto-commit state
+                    conn.setAutoCommit(autoCommitOriginal);
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }

@@ -1,5 +1,3 @@
-// assets/js/services/ReceitaMedicamentoService.js
-
 class ReceitaMedicamentoService {
   constructor(baseUrl = "http://localhost:8080") {
     this.baseUrl = baseUrl;
@@ -10,7 +8,7 @@ class ReceitaMedicamentoService {
     try {
       const response = await fetch(`${this.baseUrl}${this.endpoint}`);
       if (!response.ok) {
-        if (response.status === 404) return []; // Retorna array vazio se não houver receitas
+        if (response.status === 404) return [];
         throw new Error(`Erro ${response.status}: ${await response.text()}`);
       }
       return await response.json();
@@ -24,7 +22,7 @@ class ReceitaMedicamentoService {
     try {
       const response = await fetch(`${this.baseUrl}${this.endpoint}/${id}`);
       if (!response.ok) {
-        if (response.status === 404) return null; // Retorna null se receita não encontrada
+        if (response.status === 404) return null;
         throw new Error(`Erro ${response.status}: ${await response.text()}`);
       }
       return await response.json();
@@ -40,7 +38,7 @@ class ReceitaMedicamentoService {
         `${this.baseUrl}${this.endpoint}/animal/${animalId}`
       );
       if (!response.ok) {
-        if (response.status === 404) return []; // Retorna array vazio se não houver receitas para o animal
+        if (response.status === 404) return [];
         throw new Error(`Erro ${response.status}: ${await response.text()}`);
       }
       return await response.json();
@@ -52,8 +50,6 @@ class ReceitaMedicamentoService {
       throw error;
     }
   }
-
-  // Adicione outros métodos conforme necessário, baseando-se no ReceitaMedicamentoService.java
 }
 
 export default ReceitaMedicamentoService;

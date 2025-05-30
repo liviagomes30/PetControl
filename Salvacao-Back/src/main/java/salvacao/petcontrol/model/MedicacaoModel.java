@@ -14,7 +14,7 @@ public class MedicacaoModel {
     private Integer posologia_receitamedicamento_idreceita;
     private LocalDate data;
 
-    private MedicacaoDAO medicacaoDAO; // DAO instance
+    private MedicacaoDAO medicacaoDAO;
 
     public MedicacaoModel() {
         this.medicacaoDAO = new MedicacaoDAO();
@@ -29,7 +29,6 @@ public class MedicacaoModel {
         this.data = data;
     }
 
-    // Getters and Setters
     public Integer getIdmedicacao() {
         return idmedicacao;
     }
@@ -78,7 +77,6 @@ public class MedicacaoModel {
         this.data = data;
     }
 
-    // Getter for DAO
     public MedicacaoDAO getMedDAO() {
         return medicacaoDAO;
     }

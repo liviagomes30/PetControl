@@ -55,7 +55,7 @@ public class UnidadeMedidaDAO {
 
     public UnidadeMedidaModel gravar(UnidadeMedidaModel unidadeMedida, Connection conn) throws SQLException {
         String sql = "INSERT INTO unidadedemedida (descricao, sigla) VALUES (?, ?)";
-        try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) { // Use provided connection
+        try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, unidadeMedida.getDescricao());
             stmt.setString(2, unidadeMedida.getSigla());
             int linhasMod = stmt.executeUpdate();
@@ -65,10 +65,10 @@ public class UnidadeMedidaDAO {
                     unidadeMedida.setIdUnidadeMedida(rs.getInt(1));
                 }
             } else {
-                throw new SQLException("Falha ao adicionar unidade de medida."); // Propagate exception
+                throw new SQLException("Falha ao adicionar unidade de medida.");
             }
         } catch (SQLException e) {
-            throw e; // Re-throw to be caught by the service for rollback
+            throw e;
         }
         return unidadeMedida;
     }
@@ -81,12 +81,12 @@ public class UnidadeMedidaDAO {
             stmt.setInt(3, unidadeMedida.getIdUnidadeMedida());
             int linhasMod = stmt.executeUpdate();
             if (linhasMod == 0) {
-                return false; // Indicate no row was updated
+                return false;
             } else {
                 return true;
             }
         } catch (SQLException e) {
-            throw e; // Re-throw to be caught by the service for rollback
+            throw e;
         }
     }
 
@@ -106,7 +106,7 @@ public class UnidadeMedidaDAO {
             stmt.setInt(1, id);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            throw e; // Re-throw to be caught by the service for rollback
+            throw e;
         }
     }
 

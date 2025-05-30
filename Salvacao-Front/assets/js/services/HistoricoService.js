@@ -1,5 +1,3 @@
-// assets/js/services/HistoricoService.js
-
 class HistoricoService {
   constructor(baseUrl = "http://localhost:8080") {
     this.baseUrl = baseUrl;
@@ -10,7 +8,7 @@ class HistoricoService {
     try {
       const response = await fetch(`${this.baseUrl}${this.endpoint}`);
       if (!response.ok) {
-        if (response.status === 404) return []; // Retorna array vazio se não houver históricos
+        if (response.status === 404) return [];
         throw new Error(`Erro ${response.status}: ${await response.text()}`);
       }
       return await response.json();
@@ -24,7 +22,7 @@ class HistoricoService {
     try {
       const response = await fetch(`${this.baseUrl}${this.endpoint}/${id}`);
       if (!response.ok) {
-        if (response.status === 404) return null; // Retorna null se histórico não encontrado
+        if (response.status === 404) return null;
         throw new Error(`Erro ${response.status}: ${await response.text()}`);
       }
       return await response.json();
@@ -65,8 +63,6 @@ class HistoricoService {
       throw error;
     }
   }
-
-  // Adicione outros métodos conforme necessário, baseando-se no HistoricoService.java
 }
 
 export default HistoricoService;

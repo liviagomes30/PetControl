@@ -8,7 +8,7 @@ import salvacao.petcontrol.model.MedicamentoModel;
 import salvacao.petcontrol.model.ProdutoModel;
 import salvacao.petcontrol.model.TipoProdutoModel;
 import salvacao.petcontrol.model.UnidadeMedidaModel;
-import salvacao.petcontrol.model.EstoqueModel; // Import EstoqueModel
+import salvacao.petcontrol.model.EstoqueModel;
 import salvacao.petcontrol.util.ResultadoOperacao;
 
 import java.sql.Connection;
@@ -31,7 +31,7 @@ public class MedicamentoService {
     private UnidadeMedidaModel unidadeMedidaModel;
 
     @Autowired
-    private EstoqueModel estoqueModel; // Autowire EstoqueModel
+    private EstoqueModel estoqueModel;
 
     public MedicamentoCompletoDTO getId(Integer id) {
         return medicamentoModel.getMedDAO().findMedicamentoCompleto(id);
@@ -63,17 +63,15 @@ public class MedicamentoService {
 
         Connection conn = null;
         boolean autoCommitOriginal = true;
-        MedicamentoModel novoMedicamento = null; // Declare here to be accessible in finally block
+        MedicamentoModel novoMedicamento = null;
         try {
             conn = SingletonDB.getConexao().getConnection();
             autoCommitOriginal = conn.getAutoCommit();
-            conn.setAutoCommit(false); // Start transaction
+            conn.setAutoCommit(false);
 
-            // 1. Gravar o medicamento (que internamente grava o produto)
             novoMedicamento = medicamentoModel.getMedDAO().gravar(dto.getMedicamento(), dto.getProduto(), conn);
 
-            // CRUCIAL FIX: Initialize stock for the newly created product
-            // Ensure novoMedicamento.getIdproduto() is available after the gravar call
+
             if (novoMedicamento != null && novoMedicamento.getIdproduto() != null) {
                 if (!estoqueModel.getEstDAO().inicializarEstoqueComConexao(novoMedicamento.getIdproduto(), conn)) {
                     throw new SQLException("Erro ao inicializar estoque para o novo medicamento.");
@@ -82,12 +80,12 @@ public class MedicamentoService {
                 throw new SQLException("ID do produto não obtido após a gravação do medicamento.");
             }
 
-            conn.commit(); // Commit transaction if successful
+            conn.commit();
             return novoMedicamento;
         } catch (SQLException e) {
             if (conn != null) {
                 try {
-                    conn.rollback(); // Rollback on error
+                    conn.rollback();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -96,7 +94,7 @@ public class MedicamentoService {
         } finally {
             if (conn != null) {
                 try {
-                    conn.setAutoCommit(autoCommitOriginal); // Restore auto-commit state
+                    conn.setAutoCommit(autoCommitOriginal);
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -135,20 +133,20 @@ public class MedicamentoService {
         try {
             conn = SingletonDB.getConexao().getConnection();
             autoCommitOriginal = conn.getAutoCommit();
-            conn.setAutoCommit(false); // Start transaction
+            conn.setAutoCommit(false);
 
             boolean atualizado = medicamentoModel.getMedDAO().alterar(id, dto.getMedicamento(), dto.getProduto(), conn);
 
             if (atualizado) {
-                conn.commit(); // Commit transaction if successful
+                conn.commit();
             } else {
-                conn.rollback(); // Rollback if update failed
+                conn.rollback();
             }
             return atualizado;
         } catch (SQLException e) {
             if (conn != null) {
                 try {
-                    conn.rollback(); // Rollback on error
+                    conn.rollback();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -157,7 +155,7 @@ public class MedicamentoService {
         } finally {
             if (conn != null) {
                 try {
-                    conn.setAutoCommit(autoCommitOriginal); // Restore auto-commit state
+                    conn.setAutoCommit(autoCommitOriginal);
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -181,9 +179,8 @@ public class MedicamentoService {
             if (podeExcluir) {
                 conn = SingletonDB.getConexao().getConnection();
                 autoCommitOriginal = conn.getAutoCommit();
-                conn.setAutoCommit(false); // Start transaction
+                conn.setAutoCommit(false);
 
-                // Pass produtoModel to apagar as it needs its DAO to delete the base product
                 boolean sucesso = medicamentoModel.getMedDAO().apagar(id, produtoModel, conn);
 
                 if (sucesso) {
@@ -192,7 +189,7 @@ public class MedicamentoService {
                     resultado.setSucesso(true);
                     resultado.setMensagem("Medicamento excluído com sucesso");
                 } else {
-                    conn.rollback(); // Rollback if deletion failed in DAO
+                    conn.rollback();
                     resultado.setOperacao("excluido");
                     resultado.setSucesso(false);
                     resultado.setMensagem("Falha ao excluir o medicamento");
@@ -211,7 +208,7 @@ public class MedicamentoService {
         } catch (SQLException e) {
             if (conn != null) {
                 try {
-                    conn.rollback(); // Rollback on any SQL Exception
+                    conn.rollback();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -220,7 +217,7 @@ public class MedicamentoService {
         } finally {
             if (conn != null) {
                 try {
-                    conn.setAutoCommit(autoCommitOriginal); // Restore auto-commit state
+                    conn.setAutoCommit(autoCommitOriginal);
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }

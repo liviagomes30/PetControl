@@ -15,7 +15,6 @@ public class Conexao
     public boolean conectar(String local, String banco, String usuario, String senha) {
         boolean conectado = false;
         try {
-            //forçando carregamento do driver
             Class.forName("org.postgresql.Driver");
 
             String url = local + banco;
@@ -39,7 +38,7 @@ public class Conexao
         return (connect != null);
     }
 
-    public boolean manipular(String sql) { // inserir, alterar, excluir
+    public boolean manipular(String sql) {
         boolean executou = false;
         try (Statement statement = connect.createStatement()) {
             int result = statement.executeUpdate(sql);
