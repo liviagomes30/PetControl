@@ -120,10 +120,6 @@ public class ReceitaMedicamentoDAO {
         }
     }
 
-    /**
-     * Lista todas as receitas de medicamento.
-     * @return Uma lista de objetos ReceitaMedicamentoModel.
-     */
     public List<ReceitaMedicamentoModel> getAll() {
         List<ReceitaMedicamentoModel> receitas = new ArrayList<>();
         String sql = "SELECT * FROM receitamedicamento ORDER BY data DESC";
@@ -147,11 +143,6 @@ public class ReceitaMedicamentoDAO {
         return receitas;
     }
 
-    /**
-     * Lista receitas de medicamento para um animal específico.
-     * @param animalId O ID do animal.
-     * @return Uma lista de objetos ReceitaMedicamentoModel.
-     */
     public List<ReceitaMedicamentoModel> getReceitasByAnimal(Integer animalId) {
         List<ReceitaMedicamentoModel> receitas = new ArrayList<>();
         String sql = "SELECT * FROM receitamedicamento WHERE animal_idanimal = ? ORDER BY data DESC";
@@ -177,11 +168,6 @@ public class ReceitaMedicamentoDAO {
         return receitas;
     }
 
-    /**
-     * Busca receitas com base em um termo de busca no nome do médico ou clínica.
-     * @param searchTerm O termo de busca (parcial ou completo).
-     * @return Uma lista de ReceitaMedicamentoModel que correspondem ao termo.
-     */
     public List<ReceitaMedicamentoModel> searchReceitas(String searchTerm) {
         List<ReceitaMedicamentoModel> receitas = new ArrayList<>();
         String sql = "SELECT * FROM receitamedicamento WHERE UPPER(medico) LIKE UPPER(?) OR UPPER(clinica) LIKE UPPER(?) ORDER BY data DESC";

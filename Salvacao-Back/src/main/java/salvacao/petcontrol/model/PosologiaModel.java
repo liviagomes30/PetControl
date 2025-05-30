@@ -1,7 +1,7 @@
 package salvacao.petcontrol.model;
 
 import org.springframework.stereotype.Repository;
-import salvacao.petcontrol.dao.PosologiaDAO; // Import PosologiaDAO
+import salvacao.petcontrol.dao.PosologiaDAO;
 
 @Repository
 public class PosologiaModel {
@@ -14,7 +14,7 @@ public class PosologiaModel {
     private PosologiaDAO posologiaDAO; // DAO instance
 
     public PosologiaModel() {
-        this.posologiaDAO = new PosologiaDAO(); // Instantiate DAO in default constructor
+        this.posologiaDAO = new PosologiaDAO();
     }
 
     public PosologiaModel(String dose, Integer quantidadedias, Integer intervalohoras, Integer medicamento_idproduto, Integer receitamedicamento_idreceita) {
@@ -23,10 +23,8 @@ public class PosologiaModel {
         this.intervalohoras = intervalohoras;
         this.medicamento_idproduto = medicamento_idproduto;
         this.receitamedicamento_idreceita = receitamedicamento_idreceita;
-        this.posologiaDAO = new PosologiaDAO(); // Instantiate DAO in parameterized constructor
     }
 
-    // Getters and Setters
     public String getDose() {
         return dose;
     }
@@ -67,7 +65,6 @@ public class PosologiaModel {
         this.receitamedicamento_idreceita = receitamedicamento_idreceita;
     }
 
-    // Getter for DAO
     public PosologiaDAO getPosDAO() {
         return posologiaDAO;
     }

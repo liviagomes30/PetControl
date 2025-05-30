@@ -69,11 +69,10 @@
 
           <div class="row g-3 mb-3">
             <div class="col-md-6">
-              <label for="receita" class="form-label required">Receita</label>
+              <label for="receita" class="form-label">Receita</label>
               <select
                 class="form-select"
                 id="receita"
-                required
                 aria-describedby="validationReceitaFeedback"
               >
                 <option value="">Selecione uma receita</option>
@@ -84,13 +83,10 @@
             </div>
 
             <div class="col-md-6">
-              <label for="posologia" class="form-label required"
-                >Posologia</label
-              >
+              <label for="posologia" class="form-label">Posologia</label>
               <select
                 class="form-select"
                 id="posologia"
-                required
                 aria-describedby="validationPosologiaFeedback"
                 disabled
               >
@@ -98,6 +94,20 @@
               </select>
               <div id="validationPosologiaFeedback" class="invalid-feedback">
                 Por favor, selecione uma posologia.
+              </div>
+              <div
+                id="posologiaCadastrarContainer"
+                class="mt-2"
+                style="display: none"
+              >
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-primary"
+                  id="btnCadastrarPosologia"
+                >
+                  <i class="bi bi-plus-circle me-1"></i> Cadastrar Nova
+                  Posologia
+                </button>
               </div>
             </div>
           </div>
@@ -193,12 +203,120 @@
       </div>
     </div>
 
+    <div
+      class="modal fade"
+      id="modalCadastrarPosologia"
+      tabindex="-1"
+      aria-labelledby="modalCadastrarPosologiaLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title" id="modalCadastrarPosologiaLabel">
+              Cadastrar Nova Posologia
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Fechar"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form id="formCadastrarPosologia" novalidate>
+              <input type="hidden" id="modalMedicamentoId" />
+              <input type="hidden" id="modalReceitaId" />
+
+              <div class="mb-3">
+                <label for="modalPosologiaDose" class="form-label required"
+                  >Dose</label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  id="modalPosologiaDose"
+                  required
+                  maxlength="50"
+                  aria-describedby="validationModalDoseFeedback"
+                />
+                <div id="validationModalDoseFeedback" class="invalid-feedback">
+                  Por favor, informe a dose.
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label
+                  for="modalPosologiaQuantidadeDias"
+                  class="form-label required"
+                  >Quantidade de Dias</label
+                >
+                <input
+                  type="number"
+                  class="form-control"
+                  id="modalPosologiaQuantidadeDias"
+                  required
+                  min="1"
+                  aria-describedby="validationModalQuantidadeDiasFeedback"
+                />
+                <div
+                  id="validationModalQuantidadeDiasFeedback"
+                  class="invalid-feedback"
+                >
+                  Por favor, informe a quantidade de dias (mínimo 1).
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label
+                  for="modalPosologiaIntervaloHoras"
+                  class="form-label required"
+                  >Intervalo (horas)</label
+                >
+                <input
+                  type="number"
+                  class="form-control"
+                  id="modalPosologiaIntervaloHoras"
+                  required
+                  min="1"
+                  aria-describedby="validationModalIntervaloHorasFeedback"
+                />
+                <div
+                  id="validationModalIntervaloHorasFeedback"
+                  class="invalid-feedback"
+                >
+                  Por favor, informe o intervalo em horas (mínimo 1).
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              id="btnSalvarNovaPosologia"
+            >
+              Salvar Posologia
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script type="module">
       import MedicacaoController from "../../assets/js/controllers/MedicacaoController.js";
 
       document.addEventListener("DOMContentLoaded", () => {
-        new MedicacaoController();
+        // Instantiate the controller once the DOM is loaded
+        window.medicacaoControllerInstance = new MedicacaoController();
       });
     </script>
   </body>

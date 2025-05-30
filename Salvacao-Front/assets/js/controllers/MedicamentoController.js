@@ -16,11 +16,50 @@ class MedicamentoController {
       const medicamentos = await this.service.listarTodos();
       this.renderizarTabela(medicamentos);
 
+      // NOVO: Adiciona event listeners para os elementos de filtro
+      const searchInput = document.getElementById("searchInput");
+      const filterSelect = document.getElementById("filterSelect");
+      const searchButton = document.getElementById("searchButton");
+      const clearSearchButton = document.getElementById("clearSearchButton");
+
+      const applyFilter = () => {
+        const termo = searchInput.value.trim();
+        const filtro = filterSelect.value;
+        this.filtrarMedicamentos(termo, filtro); // Chama o método de filtragem existente
+      };
+
+      if (searchInput) {
+        searchInput.addEventListener("input", applyFilter); // Filtra ao digitar
+        searchInput.addEventListener("keyup", (e) => {
+          if (e.key === "Enter") {
+            applyFilter(); // Filtra ao pressionar Enter
+          }
+        });
+      }
+      if (filterSelect) {
+        filterSelect.addEventListener("change", applyFilter); // Filtra ao mudar o tipo
+      }
+      if (searchButton) {
+        searchButton.addEventListener("click", applyFilter); // Filtra ao clicar no botão de busca
+      }
+      if (clearSearchButton) {
+        clearSearchButton.addEventListener("click", () => {
+          searchInput.value = "";
+          filterSelect.value = "1"; // Reseta para o filtro "Nome"
+          applyFilter(); // Aplica o filtro para mostrar todos os dados novamente
+        });
+      }
+      // FIM NOVO BLOCO
+
       // Verificar mensagem na URL
       const urlParams = new URLSearchParams(window.location.search);
       const message = urlParams.get("message");
       if (message) {
         UIComponents.Toast.sucesso(message);
+        // Limpa a URL para evitar que a mensagem apareça novamente ao recarregar
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete("message");
+        window.history.replaceState({}, document.title, newUrl.toString());
       }
     } catch (error) {
       console.error("Erro ao carregar medicamentos:", error);

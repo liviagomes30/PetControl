@@ -1,5 +1,6 @@
 package salvacao.petcontrol.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.stereotype.Repository;
 import salvacao.petcontrol.dao.ReceitaMedicamentoDAO; // Import ReceitaMedicamentoDAO
 
@@ -25,7 +26,6 @@ public class ReceitaMedicamentoModel {
         this.medico = medico;
         this.clinica = clinica;
         this.animal_idanimal = animal_idanimal;
-        this.receitaMedicamentoDAO = new ReceitaMedicamentoDAO(); // Instantiate DAO in parameterized constructor
     }
 
     // Getters and Setters
@@ -69,7 +69,6 @@ public class ReceitaMedicamentoModel {
         this.animal_idanimal = animal_idanimal;
     }
 
-    // Getter for DAO
     public ReceitaMedicamentoDAO getRmDAO() {
         return receitaMedicamentoDAO;
     }

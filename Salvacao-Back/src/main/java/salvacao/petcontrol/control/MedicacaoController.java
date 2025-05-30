@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import salvacao.petcontrol.dto.MedicacaoEfetuarRequestDTO;
 import salvacao.petcontrol.model.MedicacaoModel;
 import salvacao.petcontrol.service.MedicacaoService;
 import salvacao.petcontrol.util.ResultadoOperacao;
@@ -12,6 +13,7 @@ import java.time.LocalDate;
 import java.math.BigDecimal;
 import java.util.List;
 
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/medicacoes")
 public class MedicacaoController {
@@ -78,21 +80,16 @@ public class MedicacaoController {
 
     @PostMapping("/efetuar")
     public ResponseEntity<ResultadoOperacao> efetuarMedicacao(
-            @RequestParam Integer idAnimal,
-            @RequestParam Integer idMedicamentoProduto,
-            @RequestParam(required = false) Integer idReceitaMedicamento, // Marked as optional
-            @RequestParam BigDecimal quantidadeAdministrada,
-            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate dataMedicao,
-            @RequestParam(required = false) String descricaoHistorico
+            @RequestBody MedicacaoEfetuarRequestDTO requestDTO // Altere para @RequestBody e use o DTO
     ) {
         try {
             ResultadoOperacao resultado = medicacaoService.efetuarMedicacao(
-                    idAnimal,
-                    idMedicamentoProduto,
-                    idReceitaMedicamento,
-                    quantidadeAdministrada,
-                    dataMedicao,
-                    descricaoHistorico
+                    requestDTO.getIdAnimal(),
+                    requestDTO.getIdMedicamentoProduto(),
+                    requestDTO.getIdReceitaMedicamento(),
+                    requestDTO.getQuantidadeAdministrada(),
+                    requestDTO.getDataMedicao(),
+                    requestDTO.getDescricaoHistorico()
             );
             if (resultado.isSucesso()) {
                 return ResponseEntity.ok(resultado);

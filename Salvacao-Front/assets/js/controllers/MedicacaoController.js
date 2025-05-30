@@ -39,11 +39,29 @@ class MedicacaoController {
       .getElementById("quantidade")
       .addEventListener("input", () => this.validarQuantidadeEstoque());
 
-    // Set today's date as default for dataMedicao
+    // Configuração do botão "Cadastrar Nova Posologia"
+    const btnCadastrarPosologia = document.getElementById(
+      "btnCadastrarPosologia"
+    );
+    if (btnCadastrarPosologia) {
+      btnCadastrarPosologia.addEventListener("click", () =>
+        this.abrirModalCadastrarPosologia()
+      );
+    }
+    const btnSalvarNovaPosologia = document.getElementById(
+      "btnSalvarNovaPosologia"
+    );
+    if (btnSalvarNovaPosologia) {
+      btnSalvarNovaPosologia.addEventListener("click", () =>
+        this.salvarNovaPosologia()
+      );
+    }
+
+    // Define a data de hoje como padrão para dataMedicao
     const today = new Date().toISOString().split("T")[0];
     document.getElementById("dataMedicao").value = today;
 
-    // Bootstrap validation (client-side)
+    // Validação Bootstrap (lado do cliente)
     (() => {
       "use strict";
       const forms = document.querySelectorAll(".needs-validation");
@@ -114,17 +132,19 @@ class MedicacaoController {
   async handleAnimalChange() {
     const animalId = document.getElementById("animal").value;
     const selectReceita = document.getElementById("receita");
+    // Receitas agora podem ser carregadas mas o select pode estar vazio
     selectReceita.innerHTML = '<option value="">Selecione uma receita</option>';
-    selectReceita.disabled = true; // Disable until a valid animal is selected
+    selectReceita.disabled = false; // Mantenha habilitado para permitir "Nenhuma Receita"
+
     const selectPosologia = document.getElementById("posologia");
     selectPosologia.innerHTML =
-      '<option value="">Selecione um medicamento e receita</option>';
-    selectPosologia.disabled = true;
+      '<option value="">Selecione um medicamento e/ou receita</option>';
+    selectPosologia.disabled = true; // Posologia desabilitada até que receita e medicamento sejam selecionados ou seja uma medicação sem receita.
+    this.toggleBotaoCadastrarPosologia(false);
 
     if (animalId) {
       UIComponents.Loading.mostrar("Carregando receitas do animal...");
       try {
-        // Assume a service method for fetching recipes by animalId
         const receitas = await this.medicacaoService.listarReceitasPorAnimal(
           parseInt(animalId)
         );
@@ -136,7 +156,6 @@ class MedicacaoController {
           " - ",
           "clinica"
         );
-        selectReceita.disabled = false;
       } catch (error) {
         console.error("Erro ao carregar receitas:", error);
         UIComponents.Toast.erro(
@@ -146,6 +165,8 @@ class MedicacaoController {
         UIComponents.Loading.esconder();
       }
     }
+    // Chame handleMedicamentoChange para reavaliar o estado da posologia
+    this.handleMedicamentoChange();
   }
 
   async handleMedicamentoChange() {
@@ -153,39 +174,59 @@ class MedicacaoController {
     const animalId = document.getElementById("animal").value;
     const selectReceita = document.getElementById("receita");
     const selectPosologia = document.getElementById("posologia");
-    selectPosologia.innerHTML =
-      '<option value="">Selecione um medicamento e receita</option>';
-    selectPosologia.disabled = true;
 
-    if (medicamentoId && animalId && selectReceita.value) {
-      // Ensure recipe is also selected to enable posology
-      await this.updatePosologiaOptions(
-        parseInt(medicamentoId),
-        parseInt(selectReceita.value)
-      );
+    selectPosologia.innerHTML =
+      '<option value="">Selecione um medicamento e/ou receita</option>';
+    selectPosologia.disabled = true;
+    this.toggleBotaoCadastrarPosologia(false);
+
+    if (medicamentoId) {
       await this.updateEstoqueDisplay(parseInt(medicamentoId));
     } else {
-      // Reset estoque display if no valid medication is selected
       document.getElementById("estoqueDisponivel").textContent = "0,00";
       document.getElementById("unidadeMedidaDisplay").textContent = "";
       this.estoqueAtual = 0;
       this.unidadeMedidaSigla = "";
+    }
+
+    // Se medicamento, animal e receita foram selecionados, tente carregar a posologia
+    if (medicamentoId && animalId && selectReceita.value) {
+      await this.updatePosologiaOptions(
+        parseInt(medicamentoId),
+        parseInt(selectReceita.value)
+      );
+    } else if (medicamentoId && animalId && !selectReceita.value) {
+      // Se medicamento e animal selecionados, mas SEM receita
+      UIComponents.Toast.info(
+        "Posologia opcional: Cadastre uma nova posologia ou proceda sem uma."
+      );
+      // Habilita o botão de cadastrar posologia se houver medicamento e animal e NÃO receita
+      this.toggleBotaoCadastrarPosologia(true);
     }
   }
 
   async handleReceitaChange() {
     const receitaId = document.getElementById("receita").value;
     const medicamentoId = document.getElementById("medicamento").value;
+    const animalId = document.getElementById("animal").value;
     const selectPosologia = document.getElementById("posologia");
-    selectPosologia.innerHTML =
-      '<option value="">Selecione um medicamento e receita</option>';
-    selectPosologia.disabled = true;
 
-    if (receitaId && medicamentoId) {
+    selectPosologia.innerHTML =
+      '<option value="">Selecione um medicamento e/ou receita</option>';
+    selectPosologia.disabled = true;
+    this.toggleBotaoCadastrarPosologia(false);
+
+    if (receitaId && medicamentoId && animalId) {
       await this.updatePosologiaOptions(
         parseInt(medicamentoId),
         parseInt(receitaId)
       );
+    } else if (!receitaId && medicamentoId && animalId) {
+      // Se a receita foi desmarcada, mas medicamento e animal ainda estão selecionados
+      UIComponents.Toast.info(
+        "Posologia opcional: Cadastre uma nova posologia ou proceda sem uma."
+      );
+      this.toggleBotaoCadastrarPosologia(true);
     }
   }
 
@@ -194,9 +235,10 @@ class MedicacaoController {
     selectPosologia.innerHTML =
       '<option value="">Carregando posologias...</option>';
     selectPosologia.disabled = true;
+    this.toggleBotaoCadastrarPosologia(false);
+
     UIComponents.Loading.mostrar("Carregando posologias...");
     try {
-      // Assume a service method for fetching posology by medicationId and recipeId
       const posologia = await this.medicacaoService.buscarPosologia(
         medicamentoId,
         receitaId
@@ -206,15 +248,18 @@ class MedicacaoController {
         '<option value="">Selecione uma posologia</option>'; // Reset
       if (posologia) {
         const option = document.createElement("option");
+        // O valor da posologia é a combinação das chaves primárias
         option.value = `${posologia.medicamento_idproduto}-${posologia.receitamedicamento_idreceita}`;
         option.textContent = `Dose: ${posologia.dose}, Dias: ${posologia.quantidadedias}, Intervalo: ${posologia.intervalohoras}h`;
         selectPosologia.appendChild(option);
-        selectPosologia.value = option.value; // Select it automatically
+        selectPosologia.value = option.value; // Seleciona automaticamente
         selectPosologia.disabled = false;
+        UIComponents.Toast.sucesso("Posologia carregada com sucesso!");
       } else {
         UIComponents.Toast.alerta(
           "Nenhuma posologia encontrada para a combinação de medicamento e receita selecionada."
         );
+        this.toggleBotaoCadastrarPosologia(true); // Habilita o botão para cadastrar nova posologia
       }
     } catch (error) {
       console.error("Erro ao carregar posologias:", error);
@@ -229,7 +274,7 @@ class MedicacaoController {
     try {
       const estoque = await this.medicacaoService.obterEstoqueAtual(
         medicamentoId
-      ); // Assume this method in MedicacaoService
+      );
       const medicamentoDetalhes = await this.medicamentoService.buscarPorId(
         medicamentoId
       );
@@ -242,7 +287,7 @@ class MedicacaoController {
       document.getElementById("unidadeMedidaDisplay").textContent =
         this.unidadeMedidaSigla;
 
-      this.validarQuantidadeEstoque(); // Re-validate quantity after stock update
+      this.validarQuantidadeEstoque(); // Revalida a quantidade após a atualização do estoque
     } catch (error) {
       console.error("Erro ao obter estoque:", error);
       this.estoqueAtual = 0;
@@ -263,6 +308,10 @@ class MedicacaoController {
       UIComponents.InputMasks.obterValorNumerico(quantidadeInput);
     const alertaEstoque = document.getElementById("alertaEstoqueBaixo");
 
+    // Limpa erros anteriores de quantidade
+    UIComponents.Validacao.limparErros("formEfetuarMedicacao"); // Limpa todos, pode ser mais específico se necessário
+    quantidadeInput.classList.remove("is-invalid");
+
     if (quantidadeValue !== null && quantidadeValue > this.estoqueAtual) {
       alertaEstoque.style.display = "flex";
       quantidadeInput.classList.add("is-invalid");
@@ -273,8 +322,6 @@ class MedicacaoController {
       return false;
     } else {
       alertaEstoque.style.display = "none";
-      cantidadInput.classList.remove("is-invalid");
-      UIComponents.Validacao.limparErros("formEfetuarMedicacao"); // Clears all errors, consider clearing specific ones
       return true;
     }
   }
@@ -304,6 +351,126 @@ class MedicacaoController {
     return path.split(".").reduce((acc, part) => acc && acc[part], obj);
   }
 
+  toggleBotaoCadastrarPosologia(mostrar) {
+    const container = document.getElementById("posologiaCadastrarContainer");
+    if (container) {
+      container.style.display = mostrar ? "block" : "none";
+    }
+  }
+
+  abrirModalCadastrarPosologia() {
+    const medicamentoId = document.getElementById("medicamento").value;
+    const receitaId = document.getElementById("receita").value;
+
+    if (!medicamentoId) {
+      UIComponents.Toast.alerta("Selecione um medicamento antes.");
+      return;
+    }
+    if (!receitaId) {
+      UIComponents.Toast.alerta("Selecione uma receita antes.");
+      return;
+    }
+
+    document.getElementById("modalMedicamentoId").value = medicamentoId;
+    document.getElementById("modalReceitaId").value = receitaId;
+
+    document.getElementById("formCadastrarPosologia").reset();
+    UIComponents.Validacao.limparErros("formCadastrarPosologia");
+    const form = document.getElementById("formCadastrarPosologia");
+    form.classList.remove("was-validated");
+
+    const modalElement = document.getElementById("modalCadastrarPosologia");
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
+  }
+
+  async salvarNovaPosologia() {
+    const formModal = document.getElementById("formCadastrarPosologia");
+    UIComponents.Validacao.limparErros("formCadastrarPosologia");
+
+    const dose = document.getElementById("modalPosologiaDose").value.trim();
+    const quantidadeDias = document.getElementById(
+      "modalPosologiaQuantidadeDias"
+    ).value;
+    const intervaloHoras = document.getElementById(
+      "modalPosologiaIntervaloHoras"
+    ).value;
+    const medicamentoId = document.getElementById("modalMedicamentoId").value;
+    const receitaId = document.getElementById("modalReceitaId").value;
+
+    let isValid = true;
+    if (!dose) {
+      UIComponents.Validacao.mostrarErro(
+        "modalPosologiaDose",
+        "Dose é obrigatória."
+      );
+      isValid = false;
+    }
+    if (!quantidadeDias || parseInt(quantidadeDias) < 1) {
+      UIComponents.Validacao.mostrarErro(
+        "modalPosologiaQuantidadeDias",
+        "Quantidade de dias deve ser no mínimo 1."
+      );
+      isValid = false;
+    }
+    if (!intervaloHoras || parseInt(intervaloHoras) < 1) {
+      UIComponents.Validacao.mostrarErro(
+        "modalPosologiaIntervaloHoras",
+        "Intervalo em horas deve ser no mínimo 1."
+      );
+      isValid = false;
+    }
+
+    if (!isValid) {
+      formModal.classList.add("was-validated");
+      return;
+    }
+
+    const novaPosologia = {
+      dose: dose,
+      quantidadedias: parseInt(quantidadeDias),
+      intervalohoras: parseInt(intervaloHoras),
+      medicamento_idproduto: parseInt(medicamentoId),
+      receitamedicamento_idreceita: parseInt(receitaId),
+    };
+
+    UIComponents.Loading.mostrar("Salvando posologia...");
+    try {
+      const response = await fetch("http://localhost:8080/posologias", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(novaPosologia),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Erro ao salvar posologia.");
+      }
+
+      const savedPosologia = await response.json(); // Ou parseie o resultado se houver
+
+      UIComponents.Toast.sucesso("Posologia cadastrada com sucesso!");
+
+      const modalElement = document.getElementById("modalCadastrarPosologia");
+      const modal = bootstrap.Modal.getInstance(modalElement);
+      modal.hide();
+
+      await this.updatePosologiaOptions(
+        parseInt(medicamentoId),
+        parseInt(receitaId)
+      );
+    } catch (error) {
+      console.error("Erro ao salvar posologia:", error);
+      UIComponents.ModalErro.mostrar(
+        error.message || "Erro ao cadastrar posologia. Tente novamente."
+      );
+    } finally {
+      UIComponents.Loading.esconder();
+    }
+  }
+
   async handleSubmit(event) {
     event.preventDefault();
     UIComponents.Validacao.limparErros("formEfetuarMedicacao");
@@ -317,7 +484,11 @@ class MedicacaoController {
 
     const animalId = document.getElementById("animal").value;
     const medicamentoId = document.getElementById("medicamento").value;
+
     const receitaId = document.getElementById("receita").value;
+
+    const posologiaSelecionada = document.getElementById("posologia").value;
+
     const quantidade = UIComponents.InputMasks.obterValorNumerico(
       document.getElementById("quantidade")
     );
@@ -325,12 +496,25 @@ class MedicacaoController {
     const descricaoHistorico =
       document.getElementById("descricaoHistorico").value;
 
+    if (receitaId && !posologiaSelecionada) {
+      UIComponents.Toast.alerta(
+        "Se uma receita for selecionada, uma posologia deve ser escolhida ou cadastrada."
+      );
+      UIComponents.Validacao.mostrarErro(
+        "posologia",
+        "Por favor, selecione ou cadastre uma posologia para a receita."
+      );
+      form.classList.add("was-validated");
+      return;
+    }
+
     try {
       UIComponents.Loading.mostrar("Efetuando medicação...");
       const result = await this.medicacaoService.efetuarMedicacao({
         idAnimal: parseInt(animalId),
         idMedicamentoProduto: parseInt(medicamentoId),
-        idReceitaMedicamento: parseInt(receitaId),
+        idReceitaMedicamento: receitaId ? parseInt(receitaId) : null,
+
         quantidadeAdministrada: quantidade,
         dataMedicao: dataMedicao,
         descricaoHistorico: descricaoHistorico,
@@ -359,8 +543,4 @@ class MedicacaoController {
   }
 }
 
-const medicacaoController = new MedicacaoController();
-window.medicacaoController = medicacaoController;
-
-export { medicacaoController };
 export default MedicacaoController;

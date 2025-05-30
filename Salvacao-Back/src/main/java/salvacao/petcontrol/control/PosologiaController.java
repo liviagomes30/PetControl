@@ -1,4 +1,3 @@
-// salvacao.petcontrol.control.PosologiaController.java
 package salvacao.petcontrol.control;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,9 +18,20 @@ public class PosologiaController {
     @Autowired
     private PosologiaService posologiaService;
 
-    // As DAOs e Services para Posologia não possuem métodos de listagem, alteração ou exclusão
-    // baseados apenas no ID da posologia, pois a chave primária é composta.
-    // Portanto, este controller terá foco no método de gravação e, se aplicável, busca por chaves compostas.
+    // NOVO MÉTODO: Listar todas as posologias
+    @GetMapping
+    public ResponseEntity<Object> getAll() {
+        try {
+            List<PosologiaModel> posologias = posologiaService.getAll();
+            if (!posologias.isEmpty()) {
+                return ResponseEntity.ok(posologias);
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Nenhuma posologia encontrada.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Erro ao buscar posologias: " + e.getMessage());
+        }
+    }
 
     @PostMapping
     public ResponseEntity<Object> gravar(@RequestBody PosologiaModel posologia) {
@@ -33,22 +43,9 @@ public class PosologiaController {
         }
     }
 
-    // Example of a GET endpoint if a composite key search was needed in the service
-    // @GetMapping("/{medicamentoId}/{receitaId}")
-    // public ResponseEntity<Object> getByIds(@PathVariable Integer medicamentoId, @PathVariable Integer receitaId) {
-    //     try {
-    //         PosologiaModel posologia = posologiaService.getByIds(medicamentoId, receitaId);
-    //         return ResponseEntity.ok(posologia);
-    //     } catch (Exception e) {
-    //         ResultadoOperacao resultado = new ResultadoOperacao("buscar", false, e.getMessage());
-    //         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(resultado);
-    //     }
-    // }
-
     @GetMapping("/{medicamentoId}/{receitaId}")
     public ResponseEntity<Object> getPosologiaByIds(@PathVariable Integer medicamentoId, @PathVariable Integer receitaId) {
         try {
-            // Este método já existe em PosologiaService.java
             PosologiaModel posologia = posologiaService.getId(medicamentoId, receitaId);
             if (posologia != null) {
                 return ResponseEntity.ok(posologia);

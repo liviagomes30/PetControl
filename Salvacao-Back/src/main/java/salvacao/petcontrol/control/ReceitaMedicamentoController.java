@@ -53,4 +53,18 @@ public class ReceitaMedicamentoController {
                     .body("Erro ao buscar receitas por animal: " + e.getMessage());
         }
     }
+
+    @GetMapping
+    public ResponseEntity<Object> getAll() {
+        try {
+            List<ReceitaMedicamentoModel> receitas = receitaMedicamentoService.getAll();
+            if (!receitas.isEmpty()) {
+                return ResponseEntity.ok(receitas);
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Nenhuma receita de medicamento encontrada.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Erro ao buscar receitas de medicamento: " + e.getMessage());
+        }
+    }
 }
