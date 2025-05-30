@@ -43,7 +43,7 @@ class AcertoEstoqueController {
       const novaQuantidadeInput = document.getElementById("novaQuantidade");
       if (novaQuantidadeInput) {
         novaQuantidadeInput.setAttribute("data-mask", "decimal");
-        UIComponents.InputMasks.inicializar(); // Still using UIComponents.InputMasks
+        UIComponents.InputMasks.inicializar();
       }
 
       UIComponents.Loading.mostrar("Carregando produtos...");
@@ -52,7 +52,6 @@ class AcertoEstoqueController {
     } catch (error) {
       console.error("Erro ao inicializar formulário:", error);
       UIComponents.ModalErro.mostrar(
-        // Still using UIComponents.ModalErro
         "Não foi possível carregar o formulário. " +
           (error.message || "Erro desconhecido.")
       );

@@ -32,7 +32,6 @@
 
       <div class="bg-white shadow rounded p-4">
         <form id="formMedicamento" class="needs-validation" novalidate>
-          <!-- Campo oculto para ID do produto (usado na edição) -->
           <input type="hidden" id="idproduto" name="idproduto" />
 
           <div class="row g-3 mb-3">
@@ -93,7 +92,6 @@
                 aria-describedby="validationTipoProdutoFeedback"
               >
                 <option value="">Selecione</option>
-                <!-- Opções serão carregadas dinamicamente -->
               </select>
               <div id="validationTipoProdutoFeedback" class="invalid-feedback">
                 Por favor, selecione o tipo de produto.
@@ -112,7 +110,6 @@
                 aria-describedby="validationUnidadeMedidaFeedback"
               >
                 <option value="">Selecione</option>
-                <!-- Opções serão carregadas dinamicamente -->
               </select>
               <div
                 id="validationUnidadeMedidaFeedback"
@@ -215,17 +212,13 @@
       import UIComponents from "../../assets/js/components/uiComponents.js";
 
       document.addEventListener("DOMContentLoaded", () => {
-        // Inicializar o formulário do medicamento
         medicamentoController.inicializarFormulario();
 
-        // Script de validação do Bootstrap
         (() => {
           "use strict";
 
-          // Fetch all the forms we want to apply custom Bootstrap validation styles to
           const forms = document.querySelectorAll(".needs-validation");
 
-          // Loop over them and prevent submission
           Array.from(forms).forEach((form) => {
             form.addEventListener(
               "submit",

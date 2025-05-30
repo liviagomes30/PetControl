@@ -65,7 +65,6 @@
               >
               <select class="form-select" id="tipoProduto" required>
                 <option value="">Selecione</option>
-                <!-- Será carregado dinamicamente -->
               </select>
               <div id="tipoError" class="input-error"></div>
             </div>
@@ -76,7 +75,6 @@
               >
               <select class="form-select" id="unidadeMedida" required>
                 <option value="">Selecione</option>
-                <!-- Será carregado dinamicamente -->
               </select>
               <div id="unidadeError" class="input-error"></div>
             </div>
@@ -92,7 +90,6 @@
             />
           </div>
 
-          <!-- Novos campos para preço e estoque mínimo -->
           <div class="row mb-3">
             <div class="col-md-6">
               <label for="preco" class="form-label">Preço (R$)</label>
@@ -135,7 +132,6 @@
       </div>
     </div>
 
-    <!-- Loading overlay para operações assíncronas -->
     <div id="loadingOverlay" class="loading-overlay">
       <div class="spinner" role="status">
         <span class="visually-hidden">Carregando...</span>
@@ -148,13 +144,10 @@
       import UIComponents from "../../assets/js/components/uiComponents.js";
 
       document.addEventListener("DOMContentLoaded", () => {
-        // Inicializar máscaras de input
         UIComponents.InputMasks.inicializar();
 
-        // Inicializar controller e formulário
         medicamentoController.inicializarFormulario();
 
-        // Implementar função para mostrar toast se necessário
         window.mostrarToast = function (titulo, mensagem, tipo = "success") {
           if (tipo === "success") {
             UIComponents.Toast.sucesso(mensagem);
