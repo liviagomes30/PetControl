@@ -43,6 +43,21 @@ public class Validation {
         return !dataAdocao.isAfter(LocalDate.now());
     }
 
+    public static boolean isDataEventoValida(LocalDate dataEvento) {
+        if (dataEvento == null) {
+            return false;
+        }
+
+        // Permite eventos para hoje ou no futuro (diferente da adoção)
+        return !dataEvento.isBefore(LocalDate.now());
+    }
+
+    public static boolean isAnimalValidoParaEvento(int idAnimal) {
+        // Validação simples - se for informado, deve ser maior que 0
+        // Se for 0, significa que o evento não é específico de um animal
+        return idAnimal >= 0;
+    }
+
     public static boolean isAnimalDisponivel(int idAnimal) {
         // Aqui você poderia adicionar uma verificação no banco para confirmar
         // se o animal está com status "Disponível"

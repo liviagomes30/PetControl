@@ -138,7 +138,7 @@ class PessoaController {
 
             // Redirecionar para listagem
             setTimeout(() => {
-                window.location.href = 'listarAdotante.html?message=' + 
+                window.location.href = 'listarPessoa.html?message=' +
                     encodeURIComponent(cpfEdicao ? 'Adotante atualizado com sucesso!' : 'Adotante cadastrado com sucesso!');
             }, 1500);
 
@@ -288,7 +288,7 @@ class PessoaController {
             // Redirecionar após 2 segundos
             setTimeout(() => {
                 window.location.href =
-                    "listarAdotante.html?message=" +
+                    "listarPessoa.html?message=" +
                     encodeURIComponent(MensagensPadroes.SUCESSO.ATUALIZACAO);
             }, 2000);
         } catch (error) {

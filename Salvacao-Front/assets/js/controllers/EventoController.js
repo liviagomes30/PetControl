@@ -101,7 +101,7 @@ class EventoController {
             await this.service.cadastrar(evento);
             
             // Redirecionar com mensagem de sucesso
-            window.location.href = "gerenciarEvento.html?message=Evento cadastrado com sucesso!";
+            window.location.href = "listarEventos.html?message=Evento cadastrado com sucesso!";
             
         } catch (error) {
             console.error("Erro ao cadastrar evento:", error);
@@ -242,7 +242,7 @@ class EventoController {
             await this.service.atualizar(evento);
             
             // Redirecionar com mensagem de sucesso
-            window.location.href = "gerenciarEvento.html?message=Evento atualizado com sucesso!";
+            window.location.href = "listarEventos.html?message=Evento atualizado com sucesso!";
             
         } catch (error) {
             console.error("Erro ao atualizar evento:", error);

@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", function () {
           <a href="${getBasePath()}pages/animal/gerenciarAnimal.html" class="sidebar-submenu-item" id="submenu-animais-gerenciar">Gerenciar Animais</a>
         </li>
         <li>
-          <a href="${getBasePath()}pages/eventos/gerenciarEvento.html" class="sidebar-submenu-item" id="submenu-eventos-gerenciar">Gerenciar Eventos</a>
+          <a href="${getBasePath()}pages/eventos/listarEventos.html" class="sidebar-submenu-item" id="submenu-eventos-gerenciar">Gerenciar Eventos</a>
         </li>
       </ul>
       
@@ -72,7 +72,7 @@ document.addEventListener("DOMContentLoaded", function () {
         <i class="bi bi-chevron-down sidebar-item-arrow"></i>
       </div>
       <ul id="pessoasSubmenu" class="sidebar-submenu">
-        <a href="${getBasePath()}pages/pessoas/listarAdotante.html" class="sidebar-submenu-item" id="submenu-pessoas-gerenciar">Gerenciar Adotante</a>
+        <a href="${getBasePath()}pages/pessoas/listarPessoa.html" class="sidebar-submenu-item" id="submenu-pessoas-gerenciar">Gerenciar Adotante</a>
         <a href="${getBasePath()}pages/doacao/listarDoacao.html" class="sidebar-submenu-item" id="submenu-pessoas-cadastrar">Gerenciar Adoção</a>
       </ul>
       
@@ -170,7 +170,7 @@ function markActiveMenuItem() {
 
     const arrow = document.querySelector("#menu-medicacao .sidebar-item-arrow");
     arrow.classList.remove("bi-chevron-down");
-    arrow.classList.add("bi-chevron-up");
+    arrow.classList.add("bi-chevron-up") ;
   } else if (currentPath.includes("/vacinacao/")) {
     document.getElementById("menu-vacinacao").classList.add("active");
   } else if (currentPath.includes("/pessoas/")) {
