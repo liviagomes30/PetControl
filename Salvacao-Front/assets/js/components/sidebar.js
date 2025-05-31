@@ -77,6 +77,18 @@ document.addEventListener("DOMContentLoaded", function () {
         <a href="${getBasePath()}pages/medicamentos/historicoMedicacoes.html" class="sidebar-submenu-item" id="submenu-medicacao-historico">Histórico Medicações</a>
       </ul>
       
+      <div class="sidebar-item" id="menu-receituario" onclick="toggleSubmenu('receituarioSubmenu')">
+        <div class="sidebar-item-content">
+          <i class="bi bi-clipboard-plus sidebar-item-icon"></i>
+          <span class="sidebar-item-text">Receituários</span>
+        </div>
+        <i class="bi bi-chevron-down sidebar-item-arrow"></i>
+      </div>
+      <ul id="receituarioSubmenu" class="sidebar-submenu">
+        <a href="${getBasePath()}pages/receituario/listarReceituario.html" class="sidebar-submenu-item" id="submenu-receituario-listar">Gerenciar Receituários</a>
+        <a href="${getBasePath()}pages/receituario/cadastrarReceituario.html" class="sidebar-submenu-item" id="submenu-receituario-novo">Novo Receituário</a>
+      </ul>
+      
       <a href="${getBasePath()}pages/vacinacao/index.html" class="sidebar-item" id="menu-vacinacao">
         <div class="sidebar-item-content">
           <i class="bi bi-bandaid sidebar-item-icon"></i>
@@ -194,6 +206,23 @@ function markActiveMenuItem() {
     }
 
     const arrow = document.querySelector("#menu-medicacao .sidebar-item-arrow");
+    arrow.classList.remove("bi-chevron-down");
+    arrow.classList.add("bi-chevron-up");
+  } else if (currentPath.includes("/receituario/")) {
+    document.getElementById("menu-receituario").classList.add("active");
+    document.getElementById("receituarioSubmenu").classList.add("open");
+
+    if (currentPath.includes("listarReceituario.html")) {
+      document
+        .getElementById("submenu-receituario-listar")
+        .classList.add("active");
+    } else if (currentPath.includes("cadastrarReceituario.html") || currentPath.includes("editarReceituario.html")) {
+      document
+        .getElementById("submenu-receituario-novo")
+        .classList.add("active");
+    }
+
+    const arrow = document.querySelector("#menu-receituario .sidebar-item-arrow");
     arrow.classList.remove("bi-chevron-down");
     arrow.classList.add("bi-chevron-up");
   } else if (currentPath.includes("/vacinacao/")) {
