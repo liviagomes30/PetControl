@@ -2,6 +2,7 @@ package salvacao.petcontrol.model;
 
 import org.springframework.stereotype.Repository;
 import salvacao.petcontrol.dao.PosologiaDAO;
+import salvacao.petcontrol.dao.PosologiaDAO;
 
 @Repository
 public class PosologiaModel {
