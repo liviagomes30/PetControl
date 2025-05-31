@@ -224,6 +224,53 @@ public class UsuarioDAO {
         return getByNome(filtro); // Reusing nome search since fabricante doesn't apply to users
     }
 
+    public List<UsuarioCompletoDTO> listarUsuariosFiltrados(String filtro) throws SQLException {
+        List<UsuarioCompletoDTO> list = new ArrayList<>();
+        String sql = "SELECT u.login, u.senha, u.pessoa_idpessoa, " +
+                "p.idpessoa, p.nome, p.cpf, p.endereco, p.telefone, p.email " +
+                "FROM usuario u " +
+                "INNER JOIN pessoa p ON u.pessoa_idpessoa = p.idpessoa ";
+
+        if (filtro != null && !filtro.trim().isEmpty()) {
+            sql += "WHERE UPPER(u.login) LIKE UPPER(?) " +
+                    "OR UPPER(p.nome) LIKE UPPER(?) " +
+                    "OR UPPER(p.cpf) LIKE UPPER(?) " +
+                    "OR UPPER(p.email) LIKE UPPER(?)";
+        }
+
+        sql += " ORDER BY p.nome";
+
+        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+            if (filtro != null && !filtro.trim().isEmpty()) {
+                String searchPattern = "%" + filtro + "%";
+                stmt.setString(1, searchPattern);
+                stmt.setString(2, searchPattern);
+                stmt.setString(3, searchPattern);
+                stmt.setString(4, searchPattern);
+            }
+            ResultSet rs = stmt.executeQuery();
+            
+            while (rs.next()) {
+                UsuarioModel usuario = new UsuarioModel(
+                        rs.getString("login"),
+                        rs.getString("senha"),
+                        rs.getInt("pessoa_idpessoa"));
+
+                PessoaModel pessoa = new PessoaModel(
+                        rs.getInt("idpessoa"),
+                        rs.getString("nome"),
+                        rs.getString("cpf"),
+                        rs.getString("endereco"),
+                        rs.getString("telefone"),
+                        rs.getString("email"));
+
+                list.add(new UsuarioCompletoDTO(usuario, pessoa));
+            }
+        }
+
+        return list;
+    }
+
     // Get users by "tipo descricao" - adapting to search by login
     public List<UsuarioCompletoDTO> getByTipoDescricao(String filtro) {
         List<UsuarioCompletoDTO> list = new ArrayList<>();

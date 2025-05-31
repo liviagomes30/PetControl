@@ -1,22 +1,19 @@
-package salvacao.petcontrol.model;
+package salvacao.petcontrol.dto;
 
-import org.springframework.stereotype.Repository;
-import salvacao.petcontrol.dao.PosologiaDAO;
-
-@Repository
-public class PosologiaModel {
+public class PosologiaDTO {
     private String dose;
     private Integer quantidadedias;
     private Integer intervalohoras;
     private Integer medicamento_idproduto;
+    private String medicamentoNome;
+    private String medicamentoComposicao;
     private Integer receitamedicamento_idreceita;
-    private PosologiaDAO posologiaDAO;
 
-    public PosologiaModel() {
-        posologiaDAO = new PosologiaDAO();
+    public PosologiaDTO() {
     }
 
-    public PosologiaModel(String dose, Integer quantidadedias, Integer intervalohoras, Integer medicamento_idproduto, Integer receitamedicamento_idreceita) {
+    public PosologiaDTO(String dose, Integer quantidadedias, Integer intervalohoras, 
+                       Integer medicamento_idproduto, Integer receitamedicamento_idreceita) {
         this.dose = dose;
         this.quantidadedias = quantidadedias;
         this.intervalohoras = intervalohoras;
@@ -56,6 +53,22 @@ public class PosologiaModel {
         this.medicamento_idproduto = medicamento_idproduto;
     }
 
+    public String getMedicamentoNome() {
+        return medicamentoNome;
+    }
+
+    public void setMedicamentoNome(String medicamentoNome) {
+        this.medicamentoNome = medicamentoNome;
+    }
+
+    public String getMedicamentoComposicao() {
+        return medicamentoComposicao;
+    }
+
+    public void setMedicamentoComposicao(String medicamentoComposicao) {
+        this.medicamentoComposicao = medicamentoComposicao;
+    }
+
     public Integer getReceitamedicamento_idreceita() {
         return receitamedicamento_idreceita;
     }
@@ -63,8 +76,4 @@ public class PosologiaModel {
     public void setReceitamedicamento_idreceita(Integer receitamedicamento_idreceita) {
         this.receitamedicamento_idreceita = receitamedicamento_idreceita;
     }
-
-    public PosologiaDAO getPosologiaDAO() {
-        return posologiaDAO;
-    }
-}
+} 

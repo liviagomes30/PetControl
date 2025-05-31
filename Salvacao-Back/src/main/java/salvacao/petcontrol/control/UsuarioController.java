@@ -104,6 +104,16 @@ public class UsuarioController {
         }
     }
 
+    @GetMapping("/listar-filtrados")
+    public ResponseEntity<Object> listarUsuariosFiltrados(@RequestParam(value = "filtro", required = false, defaultValue = "") String filtro) {
+        try {
+            List<UsuarioCompletoDTO> usuarios = usuarioService.listarUsuariosFiltrados(filtro);
+            return ResponseEntity.ok(usuarios);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Erro ao filtrar usuários: " + e.getMessage());
+        }
+    }
+
     @GetMapping("/nome/{filtro}")
     public ResponseEntity<Object> getNome(@PathVariable String filtro) {
         List<UsuarioCompletoDTO> usuarioList = usuarioService.getByName(filtro);

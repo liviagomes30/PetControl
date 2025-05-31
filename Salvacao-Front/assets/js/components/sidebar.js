@@ -1,5 +1,10 @@
 // sidebar.js
 document.addEventListener("DOMContentLoaded", function () {
+  if (!window.location.pathname.includes('login.html') && !AuthService.isAuthenticated()) {
+    AuthService.requireAuth();
+    return;
+  }
+
   const bootstrapIconsLoaded = Array.from(
     document.querySelectorAll("link")
   ).some((link) => link.href.includes("bootstrap-icons"));
@@ -11,6 +16,10 @@ document.addEventListener("DOMContentLoaded", function () {
       "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css";
     document.head.appendChild(iconLink);
   }
+  
+  const currentUser = AuthService.getCurrentUser();
+  const userName = currentUser ? (currentUser.pessoa?.nome || currentUser.usuario?.login || 'Usuário') : 'Usuário';
+  
   const sidebar = document.createElement("div");
   sidebar.className = "sidebar";
 
@@ -18,6 +27,23 @@ document.addEventListener("DOMContentLoaded", function () {
     <div class="sidebar-logo">
       PetControl
     </div>
+    
+    <!-- User Info Section -->
+    <div class="sidebar-user">
+      <div class="sidebar-user-avatar">
+        <i class="bi bi-person-circle"></i>
+      </div>
+      <div class="sidebar-user-info">
+        <span class="sidebar-user-name">${userName}</span>
+        <small class="sidebar-user-role">Usuário</small>
+      </div>
+      <div class="sidebar-user-actions">
+        <button class="btn btn-link btn-sm text-black" onclick="handleLogout()" title="Sair">
+          <i class="bi bi-box-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+    
     <ul class="sidebar-menu">
       <a href="${getBasePath()}index.html" class="sidebar-item" id="menu-home">
         <div class="sidebar-item-content">
@@ -49,6 +75,18 @@ document.addEventListener("DOMContentLoaded", function () {
         <a href="${getBasePath()}pages/medicamentos/listarMedicamentos.html" class="sidebar-submenu-item" id="submenu-medicacao-gerenciar">Gerenciar Medicamentos</a>
         <a href="${getBasePath()}pages/medicamentos/efetuarMedicacao.html" class="sidebar-submenu-item" id="submenu-medicacao-efetuar">Efetuar Medicação</a>
         <a href="${getBasePath()}pages/medicamentos/historicoMedicacoes.html" class="sidebar-submenu-item" id="submenu-medicacao-historico">Histórico Medicações</a>
+      </ul>
+      
+      <div class="sidebar-item" id="menu-receituario" onclick="toggleSubmenu('receituarioSubmenu')">
+        <div class="sidebar-item-content">
+          <i class="bi bi-clipboard-plus sidebar-item-icon"></i>
+          <span class="sidebar-item-text">Receituários</span>
+        </div>
+        <i class="bi bi-chevron-down sidebar-item-arrow"></i>
+      </div>
+      <ul id="receituarioSubmenu" class="sidebar-submenu">
+        <a href="${getBasePath()}pages/receituario/listarReceituario.html" class="sidebar-submenu-item" id="submenu-receituario-listar">Gerenciar Receituários</a>
+        <a href="${getBasePath()}pages/receituario/cadastrarReceituario.html" class="sidebar-submenu-item" id="submenu-receituario-novo">Novo Receituário</a>
       </ul>
       
       <a href="${getBasePath()}pages/vacinacao/index.html" class="sidebar-item" id="menu-vacinacao">
@@ -170,6 +208,23 @@ function markActiveMenuItem() {
     const arrow = document.querySelector("#menu-medicacao .sidebar-item-arrow");
     arrow.classList.remove("bi-chevron-down");
     arrow.classList.add("bi-chevron-up");
+  } else if (currentPath.includes("/receituario/")) {
+    document.getElementById("menu-receituario").classList.add("active");
+    document.getElementById("receituarioSubmenu").classList.add("open");
+
+    if (currentPath.includes("listarReceituario.html")) {
+      document
+        .getElementById("submenu-receituario-listar")
+        .classList.add("active");
+    } else if (currentPath.includes("cadastrarReceituario.html") || currentPath.includes("editarReceituario.html")) {
+      document
+        .getElementById("submenu-receituario-novo")
+        .classList.add("active");
+    }
+
+    const arrow = document.querySelector("#menu-receituario .sidebar-item-arrow");
+    arrow.classList.remove("bi-chevron-down");
+    arrow.classList.add("bi-chevron-up");
   } else if (currentPath.includes("/vacinacao/")) {
     document.getElementById("menu-vacinacao").classList.add("active");
   } else if (currentPath.includes("/pessoas/")) {
@@ -223,4 +278,8 @@ function getBasePath() {
   }
 
   return "";
+}
+
+function handleLogout() {
+    AuthService.logout();
 }
