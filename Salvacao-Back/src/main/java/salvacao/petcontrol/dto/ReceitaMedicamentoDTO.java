@@ -1,24 +1,21 @@
-package salvacao.petcontrol.model;
+package salvacao.petcontrol.dto;
 
 import java.time.LocalDate;
+import java.util.List;
 
-import org.springframework.stereotype.Repository;
-import salvacao.petcontrol.dao.ReceitaMedicamentoDAO;
-
-@Repository
-public class ReceitaMedicamentoModel {
+public class ReceitaMedicamentoDTO {
     private Integer idreceita;
     private LocalDate data;
     private String medico;
     private String clinica;
     private Integer animal_idanimal;
-    private ReceitaMedicamentoDAO receitaDAO;
+    private String animalNome;
+    private List<PosologiaDTO> posologias;
 
-    public ReceitaMedicamentoModel() {
-        receitaDAO = new ReceitaMedicamentoDAO();
+    public ReceitaMedicamentoDTO() {
     }
 
-    public ReceitaMedicamentoModel(Integer idreceita, LocalDate data, String medico, String clinica, Integer animal_idanimal) {
+    public ReceitaMedicamentoDTO(Integer idreceita, LocalDate data, String medico, String clinica, Integer animal_idanimal) {
         this.idreceita = idreceita;
         this.data = data;
         this.medico = medico;
@@ -66,7 +63,19 @@ public class ReceitaMedicamentoModel {
         this.animal_idanimal = animal_idanimal;
     }
 
-    public ReceitaMedicamentoDAO getReceitaDAO() {
-        return receitaDAO;
+    public String getAnimalNome() {
+        return animalNome;
     }
-}
+
+    public void setAnimalNome(String animalNome) {
+        this.animalNome = animalNome;
+    }
+
+    public List<PosologiaDTO> getPosologias() {
+        return posologias;
+    }
+
+    public void setPosologias(List<PosologiaDTO> posologias) {
+        this.posologias = posologias;
+    }
+} 

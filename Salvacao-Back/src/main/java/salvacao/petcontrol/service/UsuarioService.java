@@ -7,8 +7,10 @@ import salvacao.petcontrol.util.ResultadoOperacao;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.ArrayList;
 import salvacao.petcontrol.dto.UsuarioDTO;
 import salvacao.petcontrol.dto.UsuarioCompletoDTO;
+import salvacao.petcontrol.model.PessoaModel;
 
 @Service
 public class UsuarioService {
@@ -87,6 +89,15 @@ public class UsuarioService {
         return usuarioModel.getUsuDAO().reativarUsuario(id);
     }
 
+    public List<UsuarioCompletoDTO> listarUsuariosFiltrados(String filtro) throws Exception {
+        try {
+            return usuarioModel.getUsuDAO().listarUsuariosFiltrados(filtro);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new Exception("Erro ao buscar usuários com filtro: " + e.getMessage(), e);
+        }
+    }
+
     public List<UsuarioCompletoDTO> getByFabricante(String filtro) {
         return usuarioModel.getUsuDAO().getByFabricante(filtro);
     }
@@ -134,11 +145,23 @@ public class UsuarioService {
             throw new Exception("Login do usuario é obrigatório");
         }
 
-        if (dto.getUsuario().getPessoa_idpessoa() == null) {
-            throw new Exception("ID da pessoa é obrigatório");
+        if (dto.getPessoa() == null) {
+            throw new Exception("Dados da pessoa são obrigatórios");
         }
 
         try {
+            Integer pessoaId;
+            
+            if (dto.getUsuario().getPessoa_idpessoa() == null) {
+                PessoaModel pessoaModel = new PessoaModel();
+                PessoaModel novaPessoa = pessoaModel.getPessoaDAO().gravar(dto.getPessoa());
+                pessoaId = novaPessoa.getIdpessoa();
+            } else {
+                pessoaId = dto.getUsuario().getPessoa_idpessoa();
+            }
+            
+            dto.getUsuario().setPessoa_idpessoa(pessoaId);
+            
             return usuarioModel.getUsuDAO().gravar(dto.getUsuario());
         } catch (RuntimeException e) {
             throw new Exception("Erro ao adicionar usuario: " + e.getMessage(), e);

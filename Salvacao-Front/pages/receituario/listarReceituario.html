@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Receituários - PetControl</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+    />
+    <link rel="stylesheet" href="../../assets/css/style.css" />
+
+    <script>
+      window.API_BASE_URL = "http://localhost:8080";
+    </script>
+
+    <script src="../../assets/js/services/authService.js"></script>
+    <script src="../../assets/js/components/sidebar.js" defer></script>
+  </head>
+  <body>
+    <div class="main-content">
+      <div class="content-header">
+        <h1><i class="bi bi-clipboard-plus"></i> Receituários Médicos</h1>
+        <p class="text-muted">Gerencie os receituários médicos dos animais</p>
+      </div>
+
+      <div class="container-fluid">
+        <div class="row mb-4">
+          <div class="col-md-8">
+            <div class="search-container">
+              <div class="input-group">
+                <input
+                  type="text"
+                  class="form-control search-input"
+                  id="filtroMedico"
+                  placeholder="Buscar por médico, animal ou clínica..."
+                />
+                <button class="btn btn-outline-secondary search-button" id="btnBuscar">
+                  <i class="bi bi-search"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 text-end">
+            <a href="cadastrarReceituario.html" class="btn btn-primary">
+              <i class="bi bi-plus-circle me-2"></i>Novo Receituário
+            </a>
+          </div>
+        </div>
+
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-funnel me-2"></i>Filtros Avançados</h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label for="filtroAnimal" class="form-label">Animal</label>
+                <select class="form-select" id="filtroAnimal">
+                  <option value="">Todos os animais</option>
+                </select>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label for="filtroData" class="form-label">Data</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="filtroData" 
+                  placeholder="DD/MM/AAAA"
+                  maxlength="10"
+                  autocomplete="off"
+                />
+              </div>
+              <div class="col-md-4 mb-3 d-flex align-items-end">
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  id="btnLimparFiltros"
+                >
+                  <i class="bi bi-x-circle me-2"></i>Limpar Filtros
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="table table-striped table-hover">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Data</th>
+                <th>Animal</th>
+                <th>Médico</th>
+                <th>Clínica</th>
+                <th width="150">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tabelaReceituarios">
+              <tr>
+                <td colspan="6" class="text-center py-4">
+                  <div class="no-data">
+                    <i class="bi bi-inbox text-muted"></i>
+                    <p class="text-muted mt-2">Carregando receituários...</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="modalVisualizacao" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="bi bi-eye me-2"></i>Detalhes do Receituário
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body" id="modalVisualizacaoBody">
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Fechar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay d-none">
+      <div class="text-center text-white">
+        <div class="spinner-border text-light mb-3" role="status">
+          <span class="visually-hidden">Carregando...</span>
+        </div>
+        <p id="loadingMessage">Carregando...</p>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../assets/js/utils/toast.js"></script>
+
+    <script type="module">
+      import ReceituarioController from "../../assets/js/controllers/ReceituarioController.js";
+
+      window.receituarioController = new ReceituarioController();
+
+      document.addEventListener("DOMContentLoaded", function () {
+        receituarioController.inicializarListagem();
+      });
+    </script>
+
+    <style>
+      .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .loading-overlay.d-none {
+        display: none !important;
+      }
+
+      .no-data {
+        text-align: center;
+        padding: 2rem 0;
+      }
+
+      .no-data i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+      }
+
+      .actions {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+      }
+
+      .actions .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+      }
+    </style>
+  </body>
+</html>
