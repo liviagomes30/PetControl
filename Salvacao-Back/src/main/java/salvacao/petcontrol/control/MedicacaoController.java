@@ -4,13 +4,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import salvacao.petcontrol.dto.MedicacaoEfetuarRequestDTO;
+import salvacao.petcontrol.dto.BatchMedicacaoRequestDTO;
 import salvacao.petcontrol.model.MedicacaoModel;
 import salvacao.petcontrol.service.MedicacaoService;
 import salvacao.petcontrol.util.ResultadoOperacao;
 
-import java.time.LocalDate;
-import java.math.BigDecimal;
 import java.util.List;
 
 @CrossOrigin(origins = "*")
@@ -20,6 +18,21 @@ public class MedicacaoController {
 
     @Autowired
     private MedicacaoService medicacaoService;
+
+    @PostMapping("/efetuar-lote")
+    public ResponseEntity<ResultadoOperacao> efetuarMedicacaoEmLote(@RequestBody BatchMedicacaoRequestDTO request) {
+        try {
+            ResultadoOperacao resultado = medicacaoService.efetuarMedicacaoEmLote(request);
+            if (resultado.isSucesso()) {
+                return ResponseEntity.ok(resultado);
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(resultado);
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ResultadoOperacao("efetuarMedicacaoEmLote", false, e.getMessage()));
+        }
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<MedicacaoModel> getMedicacaoById(@PathVariable Integer id) {
@@ -78,28 +91,7 @@ public class MedicacaoController {
         }
     }
 
-    @PostMapping("/efetuar")
-    public ResponseEntity<ResultadoOperacao> efetuarMedicacao(
-            @RequestBody MedicacaoEfetuarRequestDTO requestDTO // Altere para @RequestBody e use o DTO
-    ) {
-        try {
-            ResultadoOperacao resultado = medicacaoService.efetuarMedicacao(
-                    requestDTO.getIdAnimal(),
-                    requestDTO.getIdMedicamentoProduto(),
-                    requestDTO.getIdReceitaMedicamento(),
-                    requestDTO.getQuantidadeAdministrada(),
-                    requestDTO.getDataMedicao(),
-                    requestDTO.getDescricaoHistorico()
-            );
-            if (resultado.isSucesso()) {
-                return ResponseEntity.ok(resultado);
-            } else {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(resultado);
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResultadoOperacao("efetuarMedicacao", false, e.getMessage()));
-        }
-    }
+
 
     @GetMapping("/animal/{idAnimal}")
     public ResponseEntity<List<MedicacaoModel>> getMedicacoesByAnimal(@PathVariable Integer idAnimal) {

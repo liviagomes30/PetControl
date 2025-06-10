@@ -12,7 +12,19 @@ public class ReceitaMedicamentoModel {
     private LocalDate data;
     private String medico;
     private String clinica;
+
+    public ReceitaMedicamentoModel(Integer idreceita, LocalDate data, String medico, String clinica, Integer animal_idanimal, String status, ReceitaMedicamentoDAO receitaMedicamentoDAO) {
+        this.idreceita = idreceita;
+        this.data = data;
+        this.medico = medico;
+        this.clinica = clinica;
+        this.animal_idanimal = animal_idanimal;
+        this.status = status;
+        this.receitaMedicamentoDAO = receitaMedicamentoDAO;
+    }
+
     private Integer animal_idanimal;
+    private String status;
 
     private ReceitaMedicamentoDAO receitaMedicamentoDAO;
 
@@ -20,12 +32,23 @@ public class ReceitaMedicamentoModel {
         this.receitaMedicamentoDAO = new ReceitaMedicamentoDAO();
     }
 
-    public ReceitaMedicamentoModel(Integer idreceita, LocalDate data, String medico, String clinica, Integer animal_idanimal) {
+
+
+    public ReceitaMedicamentoModel(int idreceita, LocalDate data, String medico, String clinica, int animalIdanimal, String status) {
         this.idreceita = idreceita;
         this.data = data;
         this.medico = medico;
         this.clinica = clinica;
-        this.animal_idanimal = animal_idanimal;
+        this.animal_idanimal = animalIdanimal;
+        this.status = status;
+    }
+
+    public ReceitaMedicamentoModel(int idreceita, LocalDate data, String medico, String clinica, int animalIdanimal) {
+        this.idreceita = idreceita;
+        this.data = data;
+        this.medico = medico;
+        this.clinica = clinica;
+        this.animal_idanimal = animalIdanimal;
     }
 
     public Integer getIdreceita() {
@@ -66,6 +89,14 @@ public class ReceitaMedicamentoModel {
 
     public void setAnimal_idanimal(Integer animal_idanimal) {
         this.animal_idanimal = animal_idanimal;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public ReceitaMedicamentoDAO getRmDAO() {

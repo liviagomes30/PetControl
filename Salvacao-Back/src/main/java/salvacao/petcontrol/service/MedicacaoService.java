@@ -3,7 +3,10 @@ package salvacao.petcontrol.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import salvacao.petcontrol.config.SingletonDB;
+import salvacao.petcontrol.dto.BatchMedicacaoRequestDTO;
+import salvacao.petcontrol.dto.ItemMedicacaoRequestDTO;
 import salvacao.petcontrol.dto.MedicamentoCompletoDTO;
+import salvacao.petcontrol.dto.PosologiaDTO;
 import salvacao.petcontrol.model.MedicacaoModel;
 import salvacao.petcontrol.model.AnimalModel;
 import salvacao.petcontrol.model.MedicamentoModel;
@@ -18,6 +21,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class MedicacaoService {
@@ -149,19 +154,25 @@ public class MedicacaoService {
         if (id == null) {
             throw new Exception("ID da medicação é obrigatório para exclusão.");
         }
-        MedicacaoModel existente = medicacaoModel.getMedDAO().getId(id);
-        if (existente == null) {
-            throw new Exception("Medicação não encontrada para exclusão.");
-        }
 
         Connection conn = null;
         boolean autoCommitOriginal = true;
         try {
             conn = SingletonDB.getConexao().getConnection();
             autoCommitOriginal = conn.getAutoCommit();
-            conn.setAutoCommit(false);
+            conn.setAutoCommit(false); // Inicia a transação
+
+            MedicacaoModel medicacaoParaApagar = medicacaoModel.getMedDAO().getId(id);
+            if (medicacaoParaApagar == null) {
+                throw new Exception("Medicação não encontrada para exclusão.");
+            }
+            Integer receitaId = medicacaoParaApagar.getPosologia_receitamedicamento_idreceita();
 
             boolean deletado = medicacaoModel.getMedDAO().apagar(id, conn);
+
+            if (deletado && receitaId != null) {
+                receitaMedicamentoModel.getRmDAO().reativarReceita(receitaId, conn);
+            }
 
             if (deletado) {
                 conn.commit();
@@ -169,6 +180,7 @@ public class MedicacaoService {
                 conn.rollback();
             }
             return deletado;
+
         } catch (SQLException e) {
             if (conn != null) {
                 try {
@@ -186,6 +198,96 @@ public class MedicacaoService {
                     ex.printStackTrace();
                 }
             }
+        }
+    }
+
+    public ResultadoOperacao efetuarMedicacaoEmLote(BatchMedicacaoRequestDTO request) throws Exception {
+        if (request.getIdAnimal() == null || request.getMedicacoes() == null || request.getMedicacoes().isEmpty()) {
+            throw new Exception("Requisição inválida: ID do animal e lista de medicações são obrigatórios.");
+        }
+
+        Connection conn = null;
+        boolean autoCommitOriginal = true;
+
+        try {
+            conn = SingletonDB.getConexao().getConnection();
+            autoCommitOriginal = conn.getAutoCommit();
+            conn.setAutoCommit(false); 
+            for (ItemMedicacaoRequestDTO item : request.getMedicacoes()) {
+                if (item.getIdMedicamentoProduto() == null || item.getQuantidadeAdministrada() == null || item.getQuantidadeAdministrada().compareTo(BigDecimal.ZERO) <= 0) {
+                    throw new Exception("Dados inválidos para o medicamento ID: " + item.getIdMedicamentoProduto() + ". Quantidade deve ser maior que zero.");
+                }
+                EstoqueModel estoqueAtual = estoqueModel.getEstDAO().getByProdutoId(item.getIdMedicamentoProduto());
+                if (estoqueAtual == null || estoqueAtual.getQuantidade().compareTo(item.getQuantidadeAdministrada()) < 0) {
+                    MedicamentoCompletoDTO medInfo = medicamentoModel.getMedDAO().findMedicamentoCompleto(item.getIdMedicamentoProduto());
+                    String nomeMed = medInfo != null ? medInfo.getProduto().getNome() : "ID " + item.getIdMedicamentoProduto();
+                    throw new Exception("Estoque insuficiente para o medicamento: " + nomeMed);
+                }
+                boolean estoqueDecrementado = estoqueModel.getEstDAO().decrementarEstoque(item.getIdMedicamentoProduto(), item.getQuantidadeAdministrada());
+                if (!estoqueDecrementado) {
+                    throw new SQLException("Falha ao decrementar o estoque para o medicamento ID: " + item.getIdMedicamentoProduto());
+                }
+                MedicacaoModel medicacao = new MedicacaoModel();
+                medicacao.setIdanimal(request.getIdAnimal());
+                medicacao.setPosologia_medicamento_idproduto(item.getIdMedicamentoProduto());
+                medicacao.setPosologia_receitamedicamento_idreceita(request.getIdReceitaMedicamento());
+                medicacao.setData(request.getDataMedicao() != null ? request.getDataMedicao() : LocalDate.now());
+                MedicacaoModel novaMedicacao = medicacaoModel.getMedDAO().gravar(medicacao, conn);
+                HistoricoModel historico = new HistoricoModel();
+                historico.setAnimal_idanimal(request.getIdAnimal());
+                historico.setData(medicacao.getData());
+                historico.setMedicacao_idmedicacao(novaMedicacao.getIdmedicacao());
+                MedicamentoCompletoDTO medCompleto = medicamentoModel.getMedDAO().findMedicamentoCompleto(item.getIdMedicamentoProduto());
+                String nomeMedicamento = medCompleto != null ? medCompleto.getProduto().getNome() : "ID " + item.getIdMedicamentoProduto();
+                historico.setDescricao(item.getDescricaoHistorico() != null && !item.getDescricaoHistorico().trim().isEmpty() ?
+                        item.getDescricaoHistorico() :
+                        "Medicação de " + nomeMedicamento + " administrada (Qtd: " + item.getQuantidadeAdministrada() + ").");
+                HistoricoModel novoHistorico = historicoModel.getHistDAO().gravar(historico, conn);
+                novaMedicacao.setIdhistorico(novoHistorico.getIdhistorico());
+                boolean medicacaoAtualizada = medicacaoModel.getMedDAO().alterar(novaMedicacao, conn);
+                if (!medicacaoAtualizada) {
+                    throw new SQLException("Falha ao vincular o histórico à medicação para o produto ID: " + item.getIdMedicamentoProduto());
+                }
+            }
+
+            if (request.getIdReceitaMedicamento() != null) {
+                List<PosologiaModel> posologiasDaReceita = posologiaModel.getPosDAO().getByReceita(request.getIdReceitaMedicamento());
+
+                if (!posologiasDaReceita.isEmpty()) {
+                    boolean todosTratamentosConcluidos = true;
+
+                    for (PosologiaModel posologia : posologiasDaReceita) {
+                        double dosesPorDia = 24.0 / posologia.getIntervalohoras();
+                        int totalDosesRequeridas = (int) Math.ceil(dosesPorDia * posologia.getQuantidadedias());
+
+                        int dosesAdministradas = medicacaoModel.getMedDAO().countAdministracoes(
+                                request.getIdAnimal(),
+                                request.getIdReceitaMedicamento(),
+                                posologia.getMedicamento_idproduto(),
+                                conn
+                        );
+
+                        if (dosesAdministradas < totalDosesRequeridas) {
+                            todosTratamentosConcluidos = false;
+                            break;
+                        }
+                    }
+
+                    if (todosTratamentosConcluidos) {
+                        receitaMedicamentoModel.getRmDAO().inativarReceita(request.getIdReceitaMedicamento(), conn);
+                    }
+                }
+            }
+
+            conn.commit();
+
+            return new ResultadoOperacao("efetuarMedicacaoEmLote", true, "Medicações efetuadas com sucesso!");
+
+        } catch (Exception e) {
+            if (conn != null) { try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); } }
+            throw new Exception("Erro ao processar lote de medicações: " + e.getMessage(), e);
+        } finally {
+            if (conn != null) { try { conn.setAutoCommit(autoCommitOriginal); } catch (SQLException ex) { ex.printStackTrace(); } }
         }
     }
 

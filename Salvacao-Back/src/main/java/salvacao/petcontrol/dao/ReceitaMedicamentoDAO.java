@@ -143,30 +143,6 @@ public class ReceitaMedicamentoDAO {
         return receitas;
     }
 
-    public List<ReceitaMedicamentoModel> getReceitasByAnimal(Integer animalId) {
-        List<ReceitaMedicamentoModel> receitas = new ArrayList<>();
-        String sql = "SELECT * FROM receitamedicamento WHERE animal_idanimal = ? ORDER BY data DESC";
-        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
-            stmt.setInt(1, animalId);
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                Date dataSql = rs.getDate("data");
-                LocalDate data = (dataSql != null) ? dataSql.toLocalDate() : null;
-
-                ReceitaMedicamentoModel receita = new ReceitaMedicamentoModel(
-                        rs.getInt("idreceita"),
-                        data,
-                        rs.getString("medico"),
-                        rs.getString("clinica"),
-                        rs.getInt("animal_idanimal")
-                );
-                receitas.add(receita);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return receitas;
-    }
 
     public List<ReceitaMedicamentoModel> searchReceitas(String searchTerm) {
         List<ReceitaMedicamentoModel> receitas = new ArrayList<>();
@@ -192,5 +168,47 @@ public class ReceitaMedicamentoDAO {
             e.printStackTrace();
         }
         return receitas;
+    }
+
+    public List<ReceitaMedicamentoModel> getReceitasByAnimal(Integer animalId) {
+        List<ReceitaMedicamentoModel> receitas = new ArrayList<>();
+        String sql = "SELECT * FROM receitamedicamento WHERE animal_idanimal = ? AND status = 'ATIVA' ORDER BY data DESC";
+        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+            stmt.setInt(1, animalId);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Date dataSql = rs.getDate("data");
+                LocalDate data = (dataSql != null) ? dataSql.toLocalDate() : null;
+
+                ReceitaMedicamentoModel receita = new ReceitaMedicamentoModel(
+                        rs.getInt("idreceita"),
+                        data,
+                        rs.getString("medico"),
+                        rs.getString("clinica"),
+                        rs.getInt("animal_idanimal"),
+                        rs.getString("status")
+                );
+                receitas.add(receita);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return receitas;
+    }
+
+    public void inativarReceita(Integer idReceita, Connection conn) throws SQLException {
+        String sql = "UPDATE receitamedicamento SET status = 'CONCLUIDA' WHERE idreceita = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, idReceita);
+            stmt.executeUpdate();
+        }
+    }
+
+    public void reativarReceita(Integer idReceita, Connection conn) throws SQLException {
+        String sql = "UPDATE receitamedicamento SET status = 'ATIVA' WHERE idreceita = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, idReceita);
+            stmt.executeUpdate();
+        }
     }
 }

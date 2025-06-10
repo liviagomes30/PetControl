@@ -18,7 +18,7 @@
   </head>
   <body>
     <div class="container py-4">
-      <div class="header d-flex align-items-center">
+      <div class="header d-flex align-items-center mb-4">
         <a
           href="historicoMedicacoes.html"
           class="btn btn-outline-secondary me-3"
@@ -36,12 +36,7 @@
           <div class="row g-3 mb-3">
             <div class="col-md-6">
               <label for="animal" class="form-label required">Animal</label>
-              <select
-                class="form-select"
-                id="animal"
-                required
-                aria-describedby="validationAnimalFeedback"
-              >
+              <select class="form-select" id="animal" required>
                 <option value="">Selecione um animal</option>
               </select>
               <div id="validationAnimalFeedback" class="invalid-feedback">
@@ -50,93 +45,39 @@
             </div>
 
             <div class="col-md-6">
-              <label for="medicamento" class="form-label required"
-                >Medicamento</label
-              >
-              <select
-                class="form-select"
-                id="medicamento"
-                required
-                aria-describedby="validationMedicamentoFeedback"
-              >
-                <option value="">Selecione um medicamento</option>
-              </select>
-              <div id="validationMedicamentoFeedback" class="invalid-feedback">
-                Por favor, selecione um medicamento.
-              </div>
-            </div>
-          </div>
-
-          <div class="row g-3 mb-3">
-            <div class="col-md-6">
               <label for="receita" class="form-label">Receita</label>
-              <select
-                class="form-select"
-                id="receita"
-                aria-describedby="validationReceitaFeedback"
-              >
-                <option value="">Selecione uma receita</option>
+              <select class="form-select" id="receita">
+                <option value="">Sem receita</option>
               </select>
-              <div id="validationReceitaFeedback" class="invalid-feedback">
-                Por favor, selecione uma receita.
-              </div>
             </div>
+          </div>
 
-            <div class="col-md-6">
-              <label for="posologia" class="form-label">Posologia</label>
-              <select
-                class="form-select"
-                id="posologia"
-                aria-describedby="validationPosologiaFeedback"
-                disabled
-              >
-                <option value="">Selecione um medicamento e receita</option>
-              </select>
-              <div id="validationPosologiaFeedback" class="invalid-feedback">
-                Por favor, selecione uma posologia.
-              </div>
-              <div
-                id="posologiaCadastrarContainer"
-                class="mt-2"
-                style="display: none"
-              >
-                <button
-                  type="button"
-                  class="btn btn-sm btn-outline-primary"
-                  id="btnCadastrarPosologia"
-                >
-                  <i class="bi bi-plus-circle me-1"></i> Cadastrar Nova
-                  Posologia
-                </button>
-              </div>
+          <div class="mb-3">
+            <label class="form-label required">Medicamentos a Aplicar</label>
+            <div
+              id="medicamentoListContainer"
+              class="card p-3"
+              style="
+                max-height: 300px;
+                overflow-y: auto;
+                background-color: #f8f9fa;
+              "
+            >
+              <p id="medicamentoListPlaceholder" class="text-muted mb-0">
+                Selecione um animal para continuar.
+              </p>
+            </div>
+            <div
+              id="validationMedicamentosFeedback"
+              class="invalid-feedback"
+              style="display: none"
+            >
+              Por favor, selecione e preencha os dados de ao menos um
+              medicamento.
             </div>
           </div>
 
           <div class="row g-3 mb-3">
-            <div class="col-md-6">
-              <label for="quantidade" class="form-label required"
-                >Quantidade a Administrar</label
-              >
-              <div class="input-group">
-                <input
-                  type="text"
-                  class="form-control"
-                  id="quantidade"
-                  required
-                  data-mask="decimal"
-                  placeholder="0,00"
-                  aria-describedby="validationQuantidadeFeedback"
-                />
-                <span class="input-group-text" id="unidadeMedidaDisplay"></span>
-              </div>
-              <div id="validationQuantidadeFeedback" class="invalid-feedback">
-                Por favor, informe a quantidade.
-              </div>
-              <small class="form-text text-muted">
-                Estoque disponível: <span id="estoqueDisponivel">0,00</span>
-              </small>
-            </div>
-
             <div class="col-md-6">
               <label for="dataMedicao" class="form-label required"
                 >Data da Medicação</label
@@ -146,44 +87,10 @@
                 class="form-control"
                 id="dataMedicao"
                 required
-                aria-describedby="validationDataMedicaoFeedback"
               />
               <div id="validationDataMedicaoFeedback" class="invalid-feedback">
                 Por favor, informe a data da medicação.
               </div>
-            </div>
-          </div>
-
-          <div class="mb-3">
-            <label for="descricaoHistorico" class="form-label"
-              >Descrição para Histórico (Opcional)</label
-            >
-            <textarea
-              class="form-control"
-              id="descricaoHistorico"
-              rows="3"
-              maxlength="500"
-              data-max-length="500"
-              data-show-counter="true"
-              aria-describedby="descricaoHistoricoHelp"
-            ></textarea>
-            <small id="descricaoHistoricoHelp" class="form-text text-muted"
-              >Breve descrição sobre a medicação para o histórico do
-              animal.</small
-            >
-          </div>
-
-          <div
-            class="alert alert-warning d-flex align-items-center mt-4"
-            id="alertaEstoqueBaixo"
-            style="display: none"
-          >
-            <i
-              class="bi bi-exclamation-triangle-fill me-2"
-              style="font-size: 1.2rem"
-            ></i>
-            <div>
-              Atenção: A quantidade informada é maior que o estoque disponível.
             </div>
           </div>
 
@@ -203,121 +110,10 @@
       </div>
     </div>
 
-    <div
-      class="modal fade"
-      id="modalCadastrarPosologia"
-      tabindex="-1"
-      aria-labelledby="modalCadastrarPosologiaLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header text-white">
-            <h5 class="modal-title" id="modalCadastrarPosologiaLabel">
-              Cadastrar Nova Posologia
-            </h5>
-            <button
-              type="button"
-              class="btn-close btn-close-white"
-              data-bs-dismiss="modal"
-              aria-label="Fechar"
-            ></button>
-          </div>
-          <div class="modal-body">
-            <form id="formCadastrarPosologia" novalidate>
-              <input type="hidden" id="modalMedicamentoId" />
-              <input type="hidden" id="modalReceitaId" />
-
-              <div class="mb-3">
-                <label for="modalPosologiaDose" class="form-label required"
-                  >Dose</label
-                >
-                <input
-                  type="text"
-                  class="form-control"
-                  id="modalPosologiaDose"
-                  required
-                  maxlength="50"
-                  aria-describedby="validationModalDoseFeedback"
-                />
-                <div id="validationModalDoseFeedback" class="invalid-feedback">
-                  Por favor, informe a dose.
-                </div>
-              </div>
-
-              <div class="mb-3">
-                <label
-                  for="modalPosologiaQuantidadeDias"
-                  class="form-label required"
-                  >Quantidade de Dias</label
-                >
-                <input
-                  type="number"
-                  class="form-control"
-                  id="modalPosologiaQuantidadeDias"
-                  required
-                  min="1"
-                  aria-describedby="validationModalQuantidadeDiasFeedback"
-                />
-                <div
-                  id="validationModalQuantidadeDiasFeedback"
-                  class="invalid-feedback"
-                >
-                  Por favor, informe a quantidade de dias (mínimo 1).
-                </div>
-              </div>
-
-              <div class="mb-3">
-                <label
-                  for="modalPosologiaIntervaloHoras"
-                  class="form-label required"
-                  >Intervalo (horas)</label
-                >
-                <input
-                  type="number"
-                  class="form-control"
-                  id="modalPosologiaIntervaloHoras"
-                  required
-                  min="1"
-                  aria-describedby="validationModalIntervaloHorasFeedback"
-                />
-                <div
-                  id="validationModalIntervaloHorasFeedback"
-                  class="invalid-feedback"
-                >
-                  Por favor, informe o intervalo em horas (mínimo 1).
-                </div>
-              </div>
-            </form>
-          </div>
-          <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-bs-dismiss="modal"
-            >
-              Cancelar
-            </button>
-            <button
-              type="button"
-              class="btn btn-primary"
-              id="btnSalvarNovaPosologia"
-            >
-              Salvar Posologia
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script type="module">
-      import MedicacaoController from "../../assets/js/controllers/MedicacaoController.js";
-
-      document.addEventListener("DOMContentLoaded", () => {
-        // Instantiate the controller once the DOM is loaded
-        window.medicacaoControllerInstance = new MedicacaoController();
-      });
-    </script>
+    <script
+      type="module"
+      src="../../assets/js/controllers/MedicacaoController.js"
+    ></script>
   </body>
 </html>

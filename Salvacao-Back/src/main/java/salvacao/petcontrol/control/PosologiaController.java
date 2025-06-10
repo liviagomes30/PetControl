@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import salvacao.petcontrol.dto.PosologiaDTO;
 import salvacao.petcontrol.model.PosologiaModel;
 import salvacao.petcontrol.service.PosologiaService;
 
@@ -54,6 +55,21 @@ public class PosologiaController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Erro ao buscar posologia: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/receita/{receitaId}")
+    public ResponseEntity<Object> getMedicamentosByReceita(@PathVariable Integer receitaId) {
+        try {
+            // Reutiliza o método de serviço que busca DTOs de posologia
+            List<PosologiaDTO> posologias = posologiaService.listarPorReceita(receitaId);
+            if (posologias.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Nenhum medicamento encontrado para esta receita.");
+            }
+            return ResponseEntity.ok(posologias);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Erro ao buscar medicamentos da receita: " + e.getMessage());
         }
     }
 }

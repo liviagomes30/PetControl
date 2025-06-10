@@ -141,22 +141,21 @@ public class MedicacaoDAO {
 
 
     public boolean apagar(Integer id, Connection conn) throws SQLException {
-        String sqlCheckHistorico = "SELECT COUNT(*) FROM historico WHERE medicacao_idmedicacao = ?";
-        try (PreparedStatement stmtCheck = conn.prepareStatement(sqlCheckHistorico)) {
-            stmtCheck.setInt(1, id);
-            ResultSet rs = stmtCheck.executeQuery();
-            if (rs.next() && rs.getInt(1) > 0) {
-                throw new SQLException("Medicação não pode ser excluída pois está associada a registros de histórico.");
-            }
+        String sqlUpdateHistorico = "UPDATE historico SET medicacao_idmedicacao = NULL WHERE medicacao_idmedicacao = ?";
+        try (PreparedStatement stmtUpdate = conn.prepareStatement(sqlUpdateHistorico)) {
+            stmtUpdate.setInt(1, id);
+            stmtUpdate.executeUpdate();
+        } catch (SQLException e) {
+            throw new SQLException("Erro ao desvincular o histórico da medicação: " + e.getMessage(), e);
         }
 
-        String sql = "DELETE FROM medicacao WHERE idmedicacao = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, id);
-            int rowsAffected = stmt.executeUpdate();
+        String sqlDeleteMedicacao = "DELETE FROM medicacao WHERE idmedicacao = ?";
+        try (PreparedStatement stmtDelete = conn.prepareStatement(sqlDeleteMedicacao)) {
+            stmtDelete.setInt(1, id);
+            int rowsAffected = stmtDelete.executeUpdate();
             return rowsAffected > 0;
         } catch (SQLException e) {
-            throw e;
+            throw new SQLException("Erro ao apagar a medicação: " + e.getMessage(), e);
         }
     }
 
@@ -229,5 +228,33 @@ public class MedicacaoDAO {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public List<Integer> getMedicamentosAplicadosPorReceita(Integer idAnimal, Integer idReceita, Connection conn) throws SQLException {
+        List<Integer> idsMedicamentos = new ArrayList<>();
+        String sql = "SELECT DISTINCT posologia_medicamento_idproduto FROM medicacao WHERE idanimal = ? AND posologia_receitamedicamento_idreceita = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, idAnimal);
+            stmt.setInt(2, idReceita);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                idsMedicamentos.add(rs.getInt(1));
+            }
+        }
+        return idsMedicamentos;
+    }
+
+    public int countAdministracoes(Integer idAnimal, Integer idReceita, Integer idMedicamento, Connection conn) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM medicacao WHERE idanimal = ? AND posologia_receitamedicamento_idreceita = ? AND posologia_medicamento_idproduto = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, idAnimal);
+            stmt.setInt(2, idReceita);
+            stmt.setInt(3, idMedicamento);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return 0;
     }
 }

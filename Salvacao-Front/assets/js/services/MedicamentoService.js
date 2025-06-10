@@ -25,6 +25,24 @@ class MedicamentoService {
     }
   }
 
+  async listarTodosDisponiveis() {
+    try {
+      const response = await fetch(
+        `${this.baseUrl}${this.endpoint}/disponiveis`
+      );
+      if (response.status === 404) {
+        return []; // Retorna um array vazio se nenhum for encontrado
+      }
+      if (!response.ok) {
+        throw new Error(`Erro ${response.status}: ${await response.text()}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error("Erro ao listar medicamentos disponíveis:", error);
+      throw error;
+    }
+  }
+
   async buscarPorId(id) {
     try {
       const response = await fetch(`${this.baseUrl}${this.endpoint}/${id}`);

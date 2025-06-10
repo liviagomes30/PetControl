@@ -3,6 +3,7 @@ package salvacao.petcontrol.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import salvacao.petcontrol.config.SingletonDB; // Import SingletonDB
+import salvacao.petcontrol.dto.PosologiaDTO;
 import salvacao.petcontrol.model.PosologiaModel;
 import salvacao.petcontrol.model.MedicamentoModel; // For validation
 import salvacao.petcontrol.model.ReceitaMedicamentoModel; // For validation
@@ -194,5 +195,9 @@ public class PosologiaService {
                 }
             }
         }
+    }
+
+    public List<PosologiaDTO> listarPorReceita(Integer receitaId) {
+        return posologiaModel.getPosDAO().listarPorReceita(receitaId);
     }
 }
