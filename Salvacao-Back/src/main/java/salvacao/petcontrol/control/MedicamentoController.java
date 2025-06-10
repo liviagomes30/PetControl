@@ -107,4 +107,13 @@ public class MedicamentoController {
             return ResponseEntity.badRequest().body("Erro ao buscar medicamentos disponíveis: " + e.getMessage());
         }
     }
+
+    @GetMapping("/inativos")
+    public ResponseEntity<Object> getAllInactive() {
+        List<MedicamentoCompletoDTO> medicamentos = medicamentoService.getAllInactive();
+        if (!medicamentos.isEmpty()) {
+            return ResponseEntity.ok(medicamentos);
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Nenhum medicamento inativo encontrado");
+    }
 }

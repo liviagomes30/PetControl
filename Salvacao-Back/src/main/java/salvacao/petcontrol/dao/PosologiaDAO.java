@@ -154,14 +154,15 @@ public class PosologiaDAO {
 
     public List<PosologiaDTO> listarPorReceita(Integer receitaId) {
         List<PosologiaDTO> lista = new ArrayList<>();
-        // Adicionando a nova coluna 'frequencia_diaria' na consulta
+
+        // SQL ATUALIZADO para incluir "AND pr.ativo = true"
         String sql = "SELECT p.dose, p.quantidadedias, p.intervalohoras, p.frequencia_diaria, " +
                 "p.medicamento_idproduto, p.receitamedicamento_idreceita, " +
                 "pr.nome AS medicamento_nome, m.composicao " +
                 "FROM posologia p " +
                 "JOIN produto pr ON p.medicamento_idproduto = pr.idproduto " +
                 "JOIN medicamento m ON pr.idproduto = m.idproduto " +
-                "WHERE p.receitamedicamento_idreceita = ? " +
+                "WHERE p.receitamedicamento_idreceita = ? AND pr.ativo = true " +
                 "ORDER BY pr.nome";
 
         try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
@@ -173,7 +174,6 @@ public class PosologiaDAO {
                 posologia.setDose(rs.getString("dose"));
                 posologia.setQuantidadedias(rs.getInt("quantidadedias"));
                 posologia.setIntervalohoras(rs.getInt("intervalohoras"));
-                // Populando o novo campo no DTO (lembre-se de adicionar o campo no DTO também)
                 posologia.setFrequencia_diaria(rs.getObject("frequencia_diaria") != null ? rs.getInt("frequencia_diaria") : null);
                 posologia.setMedicamento_idproduto(rs.getInt("medicamento_idproduto"));
                 posologia.setReceitamedicamento_idreceita(receitaId);

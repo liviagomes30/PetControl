@@ -15,6 +15,33 @@ import java.util.List;
 @Repository
 public class ProdutoDAO {
 
+    private ProdutoCompletoDTO buildDTOFromResultSet(ResultSet rs) throws SQLException {
+        ProdutoModel produto = new ProdutoModel(
+                rs.getInt("idproduto"),
+                rs.getString("nome"),
+                rs.getInt("idtipoproduto"),
+                rs.getInt("idunidademedida"),
+                rs.getString("fabricante"),
+                rs.getBigDecimal("preco"),
+                rs.getInt("estoque_minimo"),
+                rs.getDate("data_cadastro")
+        );
+        produto.setAtivo(rs.getBoolean("ativo"));
+
+        TipoProdutoModel tipoProduto = new TipoProdutoModel(
+                rs.getInt("idtipoproduto"),
+                rs.getString("tipo_descricao")
+        );
+
+        UnidadeMedidaModel unidadeMedida = new UnidadeMedidaModel(
+                rs.getInt("idunidademedida"),
+                rs.getString("unidade_descricao"),
+                rs.getString("unidade_sigla")
+        );
+
+        return new ProdutoCompletoDTO(produto, tipoProduto, unidadeMedida);
+    }
+
     public ProdutoModel getId(Integer id) {
         ProdutoModel produto = null;
         String sql = "SELECT * FROM produto WHERE idproduto = ?";
@@ -201,49 +228,21 @@ public class ProdutoDAO {
 
     public List<ProdutoCompletoDTO> getAllProdutos() {
         List<ProdutoCompletoDTO> list = new ArrayList<>();
-
-        String sql = "SELECT p.idproduto, p.nome, p.idtipoproduto, p.idunidademedida, " +
-                "p.fabricante, p.preco, p.estoque_minimo, p.data_cadastro, " +
-                "t.descricao AS tipo_descricao, " +
-                "u.descricao AS unidade_descricao, u.sigla AS unidade_sigla " +
+        String sql = "SELECT p.*, t.descricao AS tipo_descricao, u.descricao AS unidade_descricao, u.sigla AS unidade_sigla " +
                 "FROM produto p " +
                 "JOIN tipoproduto t ON p.idtipoproduto = t.idtipoproduto " +
                 "JOIN unidadedemedida u ON p.idunidademedida = u.idunidademedida " +
+                "WHERE p.ativo = true " +
                 "ORDER BY p.nome";
 
-        try {
-            ResultSet rs = SingletonDB.getConexao().consultar(sql);
-
+        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                ProdutoModel produto = new ProdutoModel(
-                        rs.getInt("idproduto"),
-                        rs.getString("nome"),
-                        rs.getInt("idtipoproduto"),
-                        rs.getInt("idunidademedida"),
-                        rs.getString("fabricante"),
-                        rs.getBigDecimal("preco"),
-                        rs.getInt("estoque_minimo"),
-                        rs.getDate("data_cadastro")
-                );
-
-                TipoProdutoModel tipoProduto = new TipoProdutoModel(
-                        rs.getInt("idtipoproduto"),
-                        rs.getString("tipo_descricao")
-                );
-
-                UnidadeMedidaModel unidadeMedida = new UnidadeMedidaModel(
-                        rs.getInt("idunidademedida"),
-                        rs.getString("unidade_descricao"),
-                        rs.getString("unidade_sigla")
-                );
-
-                ProdutoCompletoDTO dto = new ProdutoCompletoDTO(produto, tipoProduto, unidadeMedida);
-                list.add(dto);
+                list.add(buildDTOFromResultSet(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
         return list;
     }
 

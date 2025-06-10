@@ -249,4 +249,8 @@ public class MedicamentoService {
     public List<MedicamentoCompletoDTO> getTipo(String filtro){
         return medicamentoModel.getMedDAO().getTipo(filtro);
     }
+
+    public List<MedicamentoCompletoDTO> getAllInactive() {
+        return medicamentoModel.getMedDAO().getAllInactiveMedicamentos();
+    }
 }

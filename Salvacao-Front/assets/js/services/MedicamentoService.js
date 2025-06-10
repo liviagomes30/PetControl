@@ -143,6 +143,40 @@ class MedicamentoService {
       throw error;
     }
   }
+
+  async listarTodosInativos() {
+    try {
+      const response = await fetch(`${this.baseUrl}${this.endpoint}/inativos`);
+      if (response.status === 404) return [];
+      if (!response.ok) {
+        throw new Error(`Erro ${response.status}: ${await response.text()}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error("Erro ao listar medicamentos inativos:", error);
+      throw error;
+    }
+  }
+
+  async reativar(id) {
+    try {
+      // A rota de reativação está no controlador de PRODUTOS
+      const response = await fetch(`${this.baseUrl}/produtos/${id}/reativar`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+      return await response.text();
+    } catch (error) {
+      console.error(`Erro ao reativar medicamento ${id}:`, error);
+      throw error;
+    }
+  }
 }
 
 export default MedicamentoService;

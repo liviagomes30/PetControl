@@ -15,6 +15,37 @@ import java.util.List;
 @Repository
 public class MedicamentoDAO {
 
+    private MedicamentoCompletoDTO buildDTOFromResultSet(ResultSet rs) throws SQLException {
+        ProdutoModel produto = new ProdutoModel();
+        produto.setIdproduto(rs.getInt("idproduto"));
+        produto.setNome(rs.getString("nome"));
+        produto.setIdtipoproduto(rs.getInt("idtipoproduto"));
+        produto.setIdunidademedida(rs.getInt("idunidademedida"));
+        produto.setFabricante(rs.getString("fabricante"));
+        produto.setPreco(rs.getBigDecimal("preco"));
+        produto.setEstoqueMinimo(rs.getInt("estoque_minimo"));
+        produto.setDataCadastro(rs.getDate("data_cadastro"));
+        produto.setAtivo(rs.getBoolean("ativo"));
+
+        MedicamentoModel medicamento = new MedicamentoModel(
+                rs.getInt("idproduto"),
+                rs.getString("composicao")
+        );
+
+        TipoProdutoModel tipoProduto = new TipoProdutoModel(
+                rs.getInt("idtipoproduto"),
+                rs.getString("tipo_descricao")
+        );
+
+        UnidadeMedidaModel unidadeMedida = new UnidadeMedidaModel(
+                rs.getInt("idunidademedida"),
+                rs.getString("unidade_descricao"),
+                rs.getString("unidade_sigla")
+        );
+
+        return new MedicamentoCompletoDTO(produto, medicamento, tipoProduto, unidadeMedida);
+    }
+
     public MedicamentoModel getId(Integer id) {
         MedicamentoModel medicamento = null;
         String sql = "SELECT * FROM medicamento WHERE idproduto = ?";
@@ -36,48 +67,21 @@ public class MedicamentoDAO {
     public MedicamentoCompletoDTO findMedicamentoCompleto(Integer id) {
         MedicamentoCompletoDTO dto = null;
         String sql = "SELECT m.idproduto, m.composicao, " +
-                "p.nome, p.idtipoproduto, p.idunidademedida, p.fabricante, p.preco, p.estoque_minimo, p.data_cadastro, " +
+                "p.nome, p.idtipoproduto, p.idunidademedida, p.fabricante, p.preco, p.estoque_minimo, p.data_cadastro, p.ativo, " + // Adicionada vírgula após p.ativo
                 "t.descricao AS tipo_descricao, " +
                 "u.descricao AS unidade_descricao, u.sigla AS unidade_sigla " +
                 "FROM medicamento m " +
                 "JOIN produto p ON m.idproduto = p.idproduto " +
                 "JOIN tipoproduto t ON p.idtipoproduto = t.idtipoproduto " +
                 "JOIN unidadedemedida u ON p.idunidademedida = u.idunidademedida " +
-                "WHERE m.idproduto = ?";
+                "WHERE m.idproduto = ? AND p.ativo = true";
 
         try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
-                ProdutoModel produto = new ProdutoModel(
-                        rs.getInt("idproduto"),
-                        rs.getString("nome"),
-                        rs.getInt("idtipoproduto"),
-                        rs.getInt("idunidademedida"),
-                        rs.getString("fabricante"),
-                        rs.getBigDecimal("preco"),
-                        rs.getInt("estoque_minimo"),
-                        rs.getDate("data_cadastro")
-                );
-
-                MedicamentoModel medicamento = new MedicamentoModel(
-                        rs.getInt("idproduto"),
-                        rs.getString("composicao")
-                );
-
-                TipoProdutoModel tipoProduto = new TipoProdutoModel(
-                        rs.getInt("idtipoproduto"),
-                        rs.getString("tipo_descricao")
-                );
-
-                UnidadeMedidaModel unidadeMedida = new UnidadeMedidaModel(
-                        rs.getInt("idunidademedida"),
-                        rs.getString("unidade_descricao"),
-                        rs.getString("unidade_sigla")
-                );
-
-                dto = new MedicamentoCompletoDTO(produto, medicamento, tipoProduto, unidadeMedida);
+                dto = buildDTOFromResultSet(rs);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -87,7 +91,6 @@ public class MedicamentoDAO {
     }
 
     public MedicamentoModel gravar(MedicamentoModel medicamento, ProdutoModel produtoModel, Connection conn) throws SQLException {
-        // Access ProdutoDAO via the provided ProdutoModel instance
         ProdutoModel novoProduto = produtoModel.getProdDAO().gravar(produtoModel, conn);
 
         if (novoProduto == null || novoProduto.getIdproduto() == null) {
@@ -111,7 +114,6 @@ public class MedicamentoDAO {
     }
 
     public boolean alterar(Integer id, MedicamentoModel medicamento, ProdutoModel produtoModel, Connection conn) throws SQLException {
-        // Access ProdutoDAO via the provided ProdutoModel instance
         boolean produtoAtualizado = produtoModel.getProdDAO().alterar(id, produtoModel);
 
         if (!produtoAtualizado) {
@@ -157,7 +159,6 @@ public class MedicamentoDAO {
             }
         }
 
-        // Access ProdutoDAO via the provided ProdutoModel instance
         boolean produtoDeletado = produtoModel.getProdDAO().apagar(id, conn);
         if (!produtoDeletado) {
             throw new SQLException("Falha ao excluir o produto associado ao medicamento.");
@@ -165,6 +166,32 @@ public class MedicamentoDAO {
 
         return true;
     }
+
+    public List<MedicamentoCompletoDTO> getAllInactiveMedicamentos() {
+        List<MedicamentoCompletoDTO> list = new ArrayList<>();
+        String sql = "SELECT " +
+                "  p.idproduto, p.nome, p.idtipoproduto, p.idunidademedida, p.fabricante, p.preco, p.estoque_minimo, p.data_cadastro, p.ativo, " +
+                "  m.composicao, " +
+                "  t.descricao AS tipo_descricao, " +
+                "  u.descricao AS unidade_descricao, u.sigla AS unidade_sigla " +
+                "FROM medicamento m " +
+                "JOIN produto p ON m.idproduto = p.idproduto " +
+                "JOIN tipoproduto t ON p.idtipoproduto = t.idtipoproduto " +
+                "JOIN unidadedemedida u ON p.idunidademedida = u.idunidademedida " +
+                "WHERE p.ativo = false " +
+                "ORDER BY p.nome";
+
+        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                list.add(buildDTOFromResultSet(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
 
     public boolean desativarMedicamento(Integer id) {
         try {
@@ -212,54 +239,27 @@ public class MedicamentoDAO {
 
     public List<MedicamentoCompletoDTO> getAllMedicamentos() {
         List<MedicamentoCompletoDTO> list = new ArrayList<>();
-
-        String sql = "SELECT m.idproduto, m.composicao, " +
-                "p.nome, p.idtipoproduto, p.idunidademedida, p.fabricante, p.preco, p.estoque_minimo, p.data_cadastro, " +
-                "t.descricao AS tipo_descricao, " +
-                "u.descricao AS unidade_descricao, u.sigla AS unidade_sigla " +
+        // SQL CORRIGIDO: Removida a cláusula WHERE que estava faltando
+        String sql = "SELECT " +
+                "  p.idproduto, p.nome, p.idtipoproduto, p.idunidademedida, p.fabricante, p.preco, p.estoque_minimo, p.data_cadastro, p.ativo, " +
+                "  m.composicao, " +
+                "  t.descricao AS tipo_descricao, " +
+                "  u.descricao AS unidade_descricao, u.sigla AS unidade_sigla " +
                 "FROM medicamento m " +
                 "JOIN produto p ON m.idproduto = p.idproduto " +
                 "JOIN tipoproduto t ON p.idtipoproduto = t.idtipoproduto " +
-                "JOIN unidadedemedida u ON p.idunidademedida = u.idunidademedida";
+                "JOIN unidadedemedida u ON p.idunidademedida = u.idunidademedida " +
+                "WHERE p.ativo = true " + // FILTRO ADICIONADO AQUI
+                "ORDER BY p.nome";
 
-        try {
-            ResultSet rs = SingletonDB.getConexao().consultar(sql);
-
+        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                ProdutoModel produto = new ProdutoModel(
-                        rs.getInt("idproduto"),
-                        rs.getString("nome"),
-                        rs.getInt("idtipoproduto"),
-                        rs.getInt("idunidademedida"),
-                        rs.getString("fabricante"),
-                        rs.getBigDecimal("preco"),
-                        rs.getInt("estoque_minimo"),
-                        rs.getDate("data_cadastro")
-                );
-
-                MedicamentoModel medicamento = new MedicamentoModel(
-                        rs.getInt("idproduto"),
-                        rs.getString("composicao")
-                );
-
-                TipoProdutoModel tipoProduto = new TipoProdutoModel(
-                        rs.getInt("idtipoproduto"),
-                        rs.getString("tipo_descricao")
-                );
-
-                UnidadeMedidaModel unidadeMedida = new UnidadeMedidaModel(
-                        rs.getInt("idunidademedida"),
-                        rs.getString("unidade_descricao"),
-                        rs.getString("unidade_sigla")
-                );
-
-                MedicamentoCompletoDTO dto = new MedicamentoCompletoDTO(produto, medicamento, tipoProduto, unidadeMedida);
-                list.add(dto);
+                list.add(buildDTOFromResultSet(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
         return list;
     }
 
@@ -463,54 +463,24 @@ public class MedicamentoDAO {
 
     public List<MedicamentoCompletoDTO> buscarTodosDisponiveis() {
         List<MedicamentoCompletoDTO> lista = new ArrayList<>();
-
-        // Consulta SQL corrigida para refletir a estrutura real do banco de dados
-        String sql = "SELECT p.idproduto, p.nome, p.fabricante, p.preco, p.estoque_minimo, p.data_cadastro, " +
+        String sql = "SELECT p.idproduto, p.nome, p.fabricante, p.preco, p.estoque_minimo, p.data_cadastro, p.ativo, " +
                 "m.composicao, " +
                 "e.quantidade, " +
                 "t.idtipoproduto, t.descricao AS tipo_descricao, " +
                 "u.idunidademedida, u.descricao AS unidade_descricao, u.sigla AS unidade_sigla " +
                 "FROM produto p " +
                 "JOIN medicamento m ON p.idproduto = m.idproduto " +
-                "JOIN estoque e ON p.idproduto = e.idproduto " + // Junta com a tabela de estoque
+                "JOIN estoque e ON p.idproduto = e.idproduto " +
                 "JOIN tipoproduto t ON p.idtipoproduto = t.idtipoproduto " +
                 "JOIN unidadedemedida u ON p.idunidademedida = u.idunidademedida " +
-                "WHERE e.quantidade > 0 " + // Filtra por quantidade em estoque
+                "WHERE p.ativo = true AND e.quantidade > 0 " +
                 "ORDER BY p.nome";
 
         try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
-                ProdutoModel produto = new ProdutoModel(
-                        rs.getInt("idproduto"),
-                        rs.getString("nome"),
-                        rs.getInt("idtipoproduto"),
-                        rs.getInt("idunidademedida"),
-                        rs.getString("fabricante"),
-                        rs.getBigDecimal("preco"),
-                        rs.getInt("estoque_minimo"),
-                        rs.getDate("data_cadastro")
-                );
-
-                MedicamentoModel medicamento = new MedicamentoModel(
-                        rs.getInt("idproduto"),
-                        rs.getString("composicao")
-                );
-
-                TipoProdutoModel tipoProduto = new TipoProdutoModel(
-                        rs.getInt("idtipoproduto"),
-                        rs.getString("tipo_descricao")
-                );
-
-                UnidadeMedidaModel unidadeMedida = new UnidadeMedidaModel(
-                        rs.getInt("idunidademedida"),
-                        rs.getString("unidade_descricao"),
-                        rs.getString("unidade_sigla")
-                );
-
-                // Cria o DTO e define a quantidade vinda da tabela de estoque
-                MedicamentoCompletoDTO dto = new MedicamentoCompletoDTO(produto, medicamento, tipoProduto, unidadeMedida);
+                MedicamentoCompletoDTO dto = buildDTOFromResultSet(rs);
                 dto.setQuantidade(rs.getInt("quantidade"));
                 lista.add(dto);
             }
