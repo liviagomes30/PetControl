@@ -1,4 +1,3 @@
-// salvacao.petcontrol.dal.HistoricoDAO.java
 package salvacao.petcontrol.dao;
 
 import org.springframework.stereotype.Repository;
@@ -13,15 +12,16 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.sql.Date;
+import java.sql.Connection; // Import Connection
 
 @Repository
 public class HistoricoDAO {
 
-    public HistoricoModel gravar(HistoricoModel historico) {
+    public HistoricoModel gravar(HistoricoModel historico, Connection conn) throws SQLException {
         String sql = "INSERT INTO historico (descricao, data, animal_idanimal, vacinacao_idvacinacao, medicacao_idmedicacao) " +
                 "VALUES (?, ?, ?, ?, ?)";
 
-        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) { 
             stmt.setString(1, historico.getDescricao());
 
             if (historico.getData() != null) {
@@ -54,19 +54,21 @@ public class HistoricoDAO {
                 if (rs.next()) {
                     historico.setIdhistorico(rs.getInt(1));
                 }
+            } else {
+                throw new SQLException("Falha ao adicionar histórico."); // Propagate exception
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Erro ao adicionar histórico: " + e.getMessage(), e);
+            throw e; // Re-throw to be caught by the service for rollback
         }
         return historico;
     }
 
 
-    public boolean alterar(HistoricoModel historico) {
+    public boolean alterar(HistoricoModel historico, Connection conn) throws SQLException {
         String sql = "UPDATE historico SET descricao = ?, data = ?, animal_idanimal = ?, " +
                 "vacinacao_idvacinacao = ?, medicacao_idmedicacao = ? WHERE idhistorico = ?";
 
-        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) { 
             stmt.setString(1, historico.getDescricao());
 
             if (historico.getData() != null) {
@@ -98,19 +100,19 @@ public class HistoricoDAO {
             int linhasMod = stmt.executeUpdate();
 
             if (linhasMod == 0) {
-                throw new RuntimeException("Nenhum histórico foi atualizado.");
+                return false; // Indicate no row was updated
             }
             else
                 return true;
         } catch (SQLException e) {
-            throw new RuntimeException("Erro ao atualizar histórico: " + e.getMessage(), e);
+            throw e; 
         }
     }
 
-    public boolean apagar(Integer id) throws SQLException {
+    public boolean apagar(Integer id, Connection conn) throws SQLException {
         // Check for dependencies before deleting
         String sqlCheckVacinacao = "SELECT COUNT(*) FROM vacinacao WHERE idhistorico = ?";
-        try (PreparedStatement stmtCheck = SingletonDB.getConexao().getPreparedStatement(sqlCheckVacinacao)) {
+        try (PreparedStatement stmtCheck = conn.prepareStatement(sqlCheckVacinacao)) { 
             stmtCheck.setInt(1, id);
             ResultSet rs = stmtCheck.executeQuery();
             if (rs.next() && rs.getInt(1) > 0) {
@@ -119,7 +121,7 @@ public class HistoricoDAO {
         }
 
         String sqlCheckMedicacao = "SELECT COUNT(*) FROM medicacao WHERE idhistorico = ?";
-        try (PreparedStatement stmtCheck = SingletonDB.getConexao().getPreparedStatement(sqlCheckMedicacao)) {
+        try (PreparedStatement stmtCheck = conn.prepareStatement(sqlCheckMedicacao)) { 
             stmtCheck.setInt(1, id);
             ResultSet rs = stmtCheck.executeQuery();
             if (rs.next() && rs.getInt(1) > 0) {
@@ -128,12 +130,11 @@ public class HistoricoDAO {
         }
 
         String sql = "DELETE FROM historico WHERE idhistorico = ?";
-        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) { 
             stmt.setInt(1, id);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+            throw e; 
         }
     }
 

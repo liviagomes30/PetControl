@@ -1,4 +1,3 @@
-// TipoProdutoController.js
 import TipoProdutoService from "../services/TipoProdutoService.js";
 import UIComponents from "../utils/uiComponents.js";
 import MensagensPadroes from "../utils/mensagensPadroes.js";
@@ -15,7 +14,6 @@ class TipoProdutoController {
   }
 
   bindEvents() {
-    // Binding de eventos para a página de listagem
     if (this.searchButton) {
       this.searchButton.addEventListener("click", () => this.filterTable());
     }
@@ -28,7 +26,6 @@ class TipoProdutoController {
       });
     }
 
-    // Binding de evento para o formulário de criação/edição
     const form = document.getElementById("tipoProdutoForm");
     if (form) {
       form.addEventListener("submit", (e) => {
@@ -38,7 +35,6 @@ class TipoProdutoController {
         }
       });
 
-      // Carregar dados para edição se estiver no modo de edição
       const urlParams = new URLSearchParams(window.location.search);
       const id = urlParams.get("id");
       if (id) {
@@ -151,7 +147,7 @@ class TipoProdutoController {
       UIComponents.Loading.mostrar("Excluindo tipo de produto...");
       await this.service.excluir(id);
       UIComponents.Toast.sucesso("Tipo de produto excluído com sucesso!");
-      this.loadTiposProduto(); // Recarrega a tabela
+      this.loadTiposProduto();
     } catch (error) {
       UIComponents.ModalErro.mostrar("Erro ao excluir: " + error.message);
     } finally {
@@ -163,10 +159,8 @@ class TipoProdutoController {
     let isValid = true;
     const descricao = document.getElementById("descricao");
 
-    // Limpar erros anteriores
     UIComponents.Validacao.limparErros("tipoProdutoForm");
 
-    // Validar campo de descrição
     if (!descricao.value.trim()) {
       UIComponents.Validacao.mostrarErro(
         "descricao",
@@ -182,7 +176,6 @@ class TipoProdutoController {
     const id = document.getElementById("idTipoProduto").value;
     const descricao = document.getElementById("descricao").value;
 
-    // Criar objeto com os dados do formulário
     const tipoProduto = {
       idtipoproduto: id !== "0" ? parseInt(id) : null,
       descricao: descricao,
@@ -203,7 +196,6 @@ class TipoProdutoController {
         UIComponents.Toast.sucesso(MensagensPadroes.SUCESSO.CADASTRO);
       }
 
-      // Após 2 segundos, redirecionar para a lista
       setTimeout(() => {
         window.location.href = "listarTipos.html";
       }, 2000);
@@ -215,7 +207,6 @@ class TipoProdutoController {
   }
 }
 
-// Inicializar o controlador e carregar dados se estiver na página de listagem
 document.addEventListener("DOMContentLoaded", () => {
   window.tipoProdutoController = new TipoProdutoController();
 

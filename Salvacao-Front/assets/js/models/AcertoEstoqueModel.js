@@ -1,4 +1,3 @@
-// AcertoEstoqueModel.js
 class AcertoEstoqueModel {
   constructor(data = {}) {
     this.usuario_pessoa_id = data.usuario_pessoa_id || 1; // Default para testes
@@ -10,16 +9,13 @@ class AcertoEstoqueModel {
   validar() {
     const erros = {};
 
-    // Validar campos obrigatórios do acerto
     if (!this.motivo) {
       erros.motivo = "O motivo do acerto é obrigatório";
     }
 
-    // Validar itens
     if (!this.itens || this.itens.length === 0) {
       erros.itens = "É necessário adicionar pelo menos um item ao acerto";
     } else {
-      // Verificar se há produtos repetidos
       const produtosIds = this.itens.map((item) => item.produto_id);
       const produtosUnicos = new Set(produtosIds);
 
@@ -28,7 +24,6 @@ class AcertoEstoqueModel {
           "Existem produtos duplicados. Cada produto deve aparecer apenas uma vez.";
       }
 
-      // Verificar se as quantidades são válidas
       for (let i = 0; i < this.itens.length; i++) {
         const item = this.itens[i];
 

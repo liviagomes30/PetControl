@@ -3,18 +3,14 @@ package salvacao.petcontrol.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import salvacao.petcontrol.config.SingletonDB;
 import salvacao.petcontrol.dto.AcertoEstoqueCompletoDTO;
 import salvacao.petcontrol.dto.AcertoEstoqueRequestDTO;
 import salvacao.petcontrol.dto.ItemAcertoEstoqueDTO;
-import salvacao.petcontrol.model.AcertoEstoqueModel;
-import salvacao.petcontrol.model.ItemAcertoEstoqueModel;
-import salvacao.petcontrol.model.EstoqueModel;
-import salvacao.petcontrol.model.ProdutoModel;
-import salvacao.petcontrol.model.UsuarioModel;
-import salvacao.petcontrol.model.TipoProdutoModel;
-import salvacao.petcontrol.model.UnidadeMedidaModel;
+import salvacao.petcontrol.model.*;
 import salvacao.petcontrol.util.ResultadoOperacao;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -25,22 +21,24 @@ import java.math.BigDecimal;
 public class AcertoEstoqueService {
 
     @Autowired
-    private AcertoEstoqueModel acertoEstoqueModel = new AcertoEstoqueModel();
+    private AcertoEstoqueModel acertoEstoqueModel = new AcertoEstoqueModel(); 
 
     @Autowired
-    private EstoqueModel estoqueModel = new EstoqueModel();
+    private EstoqueModel estoqueModel = new EstoqueModel(); 
 
     @Autowired
-    private ProdutoModel produtoModel = new ProdutoModel();
+    private ProdutoModel produtoModel = new ProdutoModel(); 
 
     @Autowired
-    private UsuarioModel usuarioModel = new UsuarioModel();
+    private UsuarioModel usuarioModel = new UsuarioModel(); 
 
     @Autowired
-    private TipoProdutoModel tipoProdutoModel = new TipoProdutoModel();
+    private TipoProdutoModel tipoProdutoModel = new TipoProdutoModel(); 
 
     @Autowired
-    private UnidadeMedidaModel unidadeMedidaModel = new UnidadeMedidaModel();
+    private UnidadeMedidaModel unidadeMedidaModel = new UnidadeMedidaModel(); 
+    @Autowired
+    private PessoaModel pessoaModel;
 
 
     public AcertoEstoqueCompletoDTO getId(Integer id) throws Exception {
@@ -49,7 +47,7 @@ public class AcertoEstoqueService {
             throw new Exception("Acerto de estoque não encontrado");
         }
 
-        UsuarioModel usuario = usuarioModel.getUsuDAO().getId(acerto.getUsuario_pessoa_id());
+        UsuarioModel usuario = usuarioModel.getUsuDAO().getId(acerto.getUsuario_pessoa_id(), pessoaModel);
 
         List<ItemAcertoEstoqueModel> itensModel = acertoEstoqueModel.getAcDAO().getItensAcerto(id);
         List<ItemAcertoEstoqueDTO> itensDTO = new ArrayList<>();
@@ -101,18 +99,18 @@ public class AcertoEstoqueService {
             throw new Exception("É necessário ao menos um item para acerto de estoque");
         }
 
-        UsuarioModel usuario = usuarioModel.getUsuDAO().getId(request.getUsuario_pessoa_id());
+        UsuarioModel usuario = usuarioModel.getUsuDAO().getId(request.getUsuario_pessoa_id(), pessoaModel);
         if (usuario == null) {
             throw new Exception("Usuário não encontrado");
         }
 
+        AcertoEstoqueModel acertoEstoque = new AcertoEstoqueModel();
+        acertoEstoque.setData(LocalDate.now());
+        acertoEstoque.setUsuario_pessoa_id(request.getUsuario_pessoa_id());
+        acertoEstoque.setMotivo(request.getMotivo());
+        acertoEstoque.setObservacao(request.getObservacao());
 
-        acertoEstoqueModel.setData(LocalDate.now());
-        acertoEstoqueModel.setUsuario_pessoa_id(request.getUsuario_pessoa_id());
-        acertoEstoqueModel.setMotivo(request.getMotivo());
-        acertoEstoqueModel.setObservacao(request.getObservacao());
-
-        List<ItemAcertoEstoqueModel> itens = new ArrayList<>();
+        List<ItemAcertoEstoqueModel> itensParaGravar = new ArrayList<>();
 
         for (AcertoEstoqueRequestDTO.ItemAcertoRequestDTO itemRequest : request.getItens()) {
             EstoqueModel estoque = estoqueModel.getEstDAO().getByProdutoId(itemRequest.getProduto_id());
@@ -126,23 +124,76 @@ public class AcertoEstoqueService {
 
             ItemAcertoEstoqueModel item = new ItemAcertoEstoqueModel();
             item.setProduto_id(itemRequest.getProduto_id());
-
             item.setQuantidade_depois(itemRequest.getQuantidade_nova());
+            item.setQuantidade_antes(estoque.getQuantidade());
 
-            itens.add(item);
+            if (item.getQuantidade_depois().compareTo(item.getQuantidade_antes()) > 0) {
+                item.setTipoajuste("ENTRADA");
+            } else {
+                item.setTipoajuste("SAIDA");
+            }
+
+            itensParaGravar.add(item);
         }
 
+        Connection conn = null;
+        boolean autoCommitOriginal = true;
         try {
-            AcertoEstoqueModel acertoRealizado = acertoEstoqueModel.getAcDAO().efetuarAcertoEstoque(acertoEstoqueModel, itens);
+            conn = SingletonDB.getConexao().getConnection();
+            autoCommitOriginal = conn.getAutoCommit();
+            conn.setAutoCommit(false);
 
+            AcertoEstoqueModel acertoInserido = acertoEstoqueModel.getAcDAO().gravarAcerto(acertoEstoque, conn);
+
+            for (ItemAcertoEstoqueModel item : itensParaGravar) {
+                item.setAcerto_id(acertoInserido.getIdacerto());
+
+                EstoqueModel estoqueAtualizado = new EstoqueModel(
+                        null,
+                        item.getProduto_id(),
+                        item.getQuantidade_depois()
+                );
+
+                EstoqueModel currentEstoque = estoqueModel.getEstDAO().getByProdutoId(item.getProduto_id());
+                if (currentEstoque == null) {
+                    throw new SQLException("Estoque não encontrado para o produto " + item.getProduto_id() + " durante a atualização.");
+                }
+                estoqueAtualizado.setIdestoque(currentEstoque.getIdestoque());
+
+
+                boolean estoqueUpdated = estoqueModel.getEstDAO().alterar(estoqueAtualizado);
+                if (!estoqueUpdated) {
+                    throw new SQLException("Falha ao atualizar estoque para o produto: " + item.getProduto_id());
+                }
+
+                acertoEstoqueModel.getAcDAO().gravarItemAcerto(item, conn);
+            }
+
+            conn.commit();
             ResultadoOperacao resultado = new ResultadoOperacao();
             resultado.setOperacao("acertoEstoque");
             resultado.setSucesso(true);
-            resultado.setMensagem("Acerto de estoque realizado com sucesso. ID: " + acertoRealizado.getIdacerto());
+            resultado.setMensagem("Acerto de estoque realizado com sucesso. ID: " + acertoInserido.getIdacerto());
 
             return resultado;
+
         } catch (SQLException e) {
-            throw new Exception("Erro ao efetuar acerto de estoque: " + e.getMessage());
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            throw new Exception("Erro ao efetuar acerto de estoque: " + e.getMessage(), e);
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(autoCommitOriginal);
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
         }
     }
 }

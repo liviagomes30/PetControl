@@ -1,5 +1,3 @@
-// uiLoading.js
-
 const UILoading = {
   mostrar: function (mensagem = "Carregando...") {
     this.esconder();
@@ -58,8 +56,10 @@ const UILoading = {
 
   esconder: function () {
     const loadingEl = document.getElementById("loading-overlay");
-    if (loadingEl) {
-      document.body.removeChild(loadingEl);
+    // Add a check to see if the element exists before trying to remove it
+    if (loadingEl && loadingEl.parentNode) {
+      // Check if it exists and has a parent
+      loadingEl.parentNode.removeChild(loadingEl);
     }
   },
 };

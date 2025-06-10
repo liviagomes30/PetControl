@@ -16,6 +16,7 @@ public class ProdutoModel {
     private BigDecimal preco;
     private Integer estoqueMinimo;
     private Date dataCadastro;
+    private boolean ativo;
     private ProdutoDAO prodDAO;
 
     public ProdutoModel(Integer idproduto, String nome, Integer idtipoproduto, Integer idunidademedida,
@@ -47,7 +48,17 @@ public class ProdutoModel {
         this.preco = preco;
         this.estoqueMinimo = estoqueMinimo;
         this.dataCadastro = new Date();
+        this.ativo = true;
     }
+
+    public boolean isAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(boolean ativo) {
+        this.ativo = ativo;
+    }
+
 
     public ProdutoModel() {
         prodDAO = new ProdutoDAO();

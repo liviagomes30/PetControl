@@ -1,38 +1,35 @@
 package salvacao.petcontrol.control;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import salvacao.petcontrol.dto.PosologiaDTO;
 import salvacao.petcontrol.dto.ReceitaMedicamentoDTO;
 import salvacao.petcontrol.dto.ReceitaMedicamentoRequestDTO;
-import salvacao.petcontrol.dto.PosologiaDTO;
-import salvacao.petcontrol.service.ReceitaMedicamentoService;
 import salvacao.petcontrol.service.AnimalService;
 import salvacao.petcontrol.service.MedicamentoService;
+import salvacao.petcontrol.service.ReceitaMedicamentoService;
 import salvacao.petcontrol.util.ResultadoOperacao;
 
+import java.util.List;
+
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/receituario")
-@CrossOrigin(origins = "*")
 public class ReceitaMedicamentoController {
 
-    @Autowired
-    private ReceitaMedicamentoService receitaService;
+    private final ReceitaMedicamentoService receitaService;
+    private final AnimalService animalService;
+    private final MedicamentoService medicamentoService;
 
-    @Autowired
-    private AnimalService animalService;
-
-    @Autowired
-    private MedicamentoService medicamentoService;
-
-    public ReceitaMedicamentoController() {
-        if (receitaService == null) {
-            receitaService = new ReceitaMedicamentoService();
-        }
+    public ReceitaMedicamentoController(
+            ReceitaMedicamentoService receitaService,
+            AnimalService animalService,
+            MedicamentoService medicamentoService) {
+        this.receitaService = receitaService;
+        this.animalService = animalService;
+        this.medicamentoService = medicamentoService;
     }
 
     @PostMapping
@@ -42,16 +39,6 @@ public class ReceitaMedicamentoController {
             return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
-
-    @GetMapping
-    public ResponseEntity<Object> listarTodas() {
-        try {
-            List<ReceitaMedicamentoDTO> receitas = receitaService.listarTodas();
-            return ResponseEntity.ok(receitas);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Erro ao listar receitas: " + e.getMessage());
         }
     }
 
@@ -65,6 +52,19 @@ public class ReceitaMedicamentoController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Receita não encontrada");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping
+    public ResponseEntity<Object> listarTodas() {
+        try {
+            List<ReceitaMedicamentoDTO> receitas = receitaService.listarTodas();
+            if (!receitas.isEmpty()) {
+                return ResponseEntity.ok(receitas);
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Nenhuma receita de medicamento encontrada.");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Erro ao listar receitas: " + e.getMessage());
         }
     }
 

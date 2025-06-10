@@ -6,7 +6,6 @@ import salvacao.petcontrol.model.ItemAcertoEstoqueModel;
 import salvacao.petcontrol.model.ProdutoModel;
 import salvacao.petcontrol.model.UsuarioModel;
 
-// Esta classe é usada para retornar dados completos sobre um acerto de estoque já realizado.
 public class AcertoEstoqueCompletoDTO {
     private AcertoEstoqueModel acertoEstoque;
     private UsuarioModel usuario;

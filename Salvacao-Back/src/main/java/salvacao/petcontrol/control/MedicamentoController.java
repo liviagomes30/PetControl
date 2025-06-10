@@ -97,4 +97,23 @@ public class MedicamentoController {
         else
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Nenhum Medicamento encontrado");
     }
+
+    @GetMapping("/disponiveis")
+    public ResponseEntity<Object> buscarMedicamentosDisponiveis() {
+        try {
+            List<MedicamentoCompletoDTO> medicamentos = medicamentoService.listarTodosDisponiveis();
+            return ResponseEntity.ok(medicamentos);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Erro ao buscar medicamentos disponíveis: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/inativos")
+    public ResponseEntity<Object> getAllInactive() {
+        List<MedicamentoCompletoDTO> medicamentos = medicamentoService.getAllInactive();
+        if (!medicamentos.isEmpty()) {
+            return ResponseEntity.ok(medicamentos);
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Nenhum medicamento inativo encontrado");
+    }
 }

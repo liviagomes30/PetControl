@@ -14,7 +14,6 @@ class AnimalController {
             const animais = await this.service.listarTodos();
             this.renderizarTabela(animais);
 
-            // Verificar mensagem na URL
             const urlParams = new URLSearchParams(window.location.search);
             const message = urlParams.get("message");
             if (message) {
@@ -53,7 +52,6 @@ class AnimalController {
 
             this.renderizarTabela(animais);
 
-            // Verificar mensagem na URL
             const urlParams = new URLSearchParams(window.location.search);
             const message = urlParams.get("message");
             if (message) {
@@ -74,7 +72,7 @@ class AnimalController {
     if (partes.length !== 3) return "-";
 
     const [ano, mes, dia] = partes;
-    return `${dia}/${mes}/${ano}`; // formato pt-BR
+    return `${dia}/${mes}/${ano}`; 
     }
 
     renderizarTabela(animais) {
@@ -155,7 +153,6 @@ class AnimalController {
 
         
 
-        // Verificação de campos obrigatórios
         if (!nomeElement || !especieElement || !sexoElement || !statusElement) {
             throw new Error("Campos obrigatórios não preenchidos.");
         }
@@ -189,7 +186,6 @@ class AnimalController {
 
                 UIComponents.Toast.sucesso(MensagensPadroes.SUCESSO.CADASTRO);
 
-                // Redirecionar após 2 segundos
                 setTimeout(() => {
                     window.location.href =
                     "gerenciarAnimal.html?" +
@@ -254,7 +250,6 @@ class AnimalController {
 
         
 
-        // Verificação de campos obrigatórios
         if (!nomeElement || !especieElement || !sexoElement || !statusElement) {
             throw new Error("Campos obrigatórios não preenchidos.");
         }
@@ -295,7 +290,6 @@ class AnimalController {
 
                 UIComponents.Toast.sucesso(MensagensPadroes.SUCESSO.ATUALIZACAO);
 
-                // Redirecionar após 2 segundos
                 setTimeout(() => {
                     window.location.href =
                     "gerenciarAnimal.html?message=" +
@@ -315,7 +309,6 @@ class AnimalController {
     UIComponents.ModalConfirmacao.mostrar(
       "Confirmar exclusão",
       MensagensPadroes.CONFIRMACAO.EXCLUSAO,
-      // Callback de confirmação
       () => {
         this.excluir(id).catch((error) => {
           console.error("Erro ao excluir:", error);

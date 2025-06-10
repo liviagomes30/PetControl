@@ -10,6 +10,7 @@ public class MedicamentoCompletoDTO {
     private MedicamentoModel medicamento;
     private TipoProdutoModel tipoProduto;
     private UnidadeMedidaModel unidadeMedida;
+    private Integer quantidade; // Adicione este campo para a quantidade em estoque
 
     public MedicamentoCompletoDTO() {
     }
@@ -52,5 +53,14 @@ public class MedicamentoCompletoDTO {
 
     public void setUnidadeMedida(UnidadeMedidaModel unidadeMedida) {
         this.unidadeMedida = unidadeMedida;
+    }
+
+    // Adicione os métodos getter e setter para o novo campo
+    public Integer getQuantidade() {
+        return quantidade;
+    }
+
+    public void setQuantidade(Integer quantidade) {
+        this.quantidade = quantidade;
     }
 }
