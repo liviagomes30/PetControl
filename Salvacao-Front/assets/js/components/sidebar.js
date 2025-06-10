@@ -62,6 +62,7 @@ document.addEventListener("DOMContentLoaded", function () {
       </div>
       <ul id="animaisSubmenu" class="sidebar-submenu">
         <a href="${getBasePath()}pages/animal/gerenciarAnimal.html" class="sidebar-submenu-item" id="submenu-animais-gerenciar">Gerenciar Animais</a>
+        <a href="${getBasePath()}pages/eventos/listarEventos.html" class="sidebar-submenu-item" id="submenu-animais-evento">Gerenciar Evento</a>
       </ul>
       
       <div class="sidebar-item" id="menu-medicacao" onclick="toggleSubmenu('medicacaoSubmenu')">
@@ -97,13 +98,17 @@ document.addEventListener("DOMContentLoaded", function () {
         <i class="bi bi-chevron-right sidebar-item-arrow"></i>
       </a>
       
-      <a href="${getBasePath()}pages/pessoas/index.html" class="sidebar-item" id="menu-pessoas">
+      <div class="sidebar-item" id="menu-pessoas" onclick="toggleSubmenu('pessoasSubmenu')">
         <div class="sidebar-item-content">
           <i class="bi bi-people sidebar-item-icon"></i>
           <span class="sidebar-item-text">Pessoas</span>
         </div>
-        <i class="bi bi-chevron-right sidebar-item-arrow"></i>
-      </a>
+        <i class="bi bi-chevron-down sidebar-item-arrow"></i>
+      </div>
+      <ul id="pessoasSubmenu" class="sidebar-submenu">
+        <a href="${getBasePath()}pages/pessoas/listarPessoa.html" class="sidebar-submenu-item" id="submenu-pessoas-adotante">Gerenciar Adotante</a>
+        <a href="${getBasePath()}pages/doacao/listarDoacao.html" class="sidebar-submenu-item" id="submenu-pessoas-doacao">Gerenciar Doação</a>
+      </ul>
       
       <a href="${getBasePath()}pages/usuarios/index.html" class="sidebar-item" id="menu-usuarios">
         <div class="sidebar-item-content">
