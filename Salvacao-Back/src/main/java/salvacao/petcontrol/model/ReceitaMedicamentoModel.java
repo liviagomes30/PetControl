@@ -2,7 +2,7 @@ package salvacao.petcontrol.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.stereotype.Repository;
-import salvacao.petcontrol.dao.ReceitaMedicamentoDAO; // Import ReceitaMedicamentoDAO
+import salvacao.petcontrol.dao.ReceitaMedicamentoDAO;
 
 import java.time.LocalDate;
 
@@ -12,6 +12,14 @@ public class ReceitaMedicamentoModel {
     private LocalDate data;
     private String medico;
     private String clinica;
+    private Integer animal_idanimal;
+    private String status;
+
+    private ReceitaMedicamentoDAO receitaMedicamentoDAO;
+
+    public ReceitaMedicamentoModel() {
+        this.receitaMedicamentoDAO = new ReceitaMedicamentoDAO();
+    }
 
     public ReceitaMedicamentoModel(Integer idreceita, LocalDate data, String medico, String clinica, Integer animal_idanimal, String status, ReceitaMedicamentoDAO receitaMedicamentoDAO) {
         this.idreceita = idreceita;
@@ -22,17 +30,6 @@ public class ReceitaMedicamentoModel {
         this.status = status;
         this.receitaMedicamentoDAO = receitaMedicamentoDAO;
     }
-
-    private Integer animal_idanimal;
-    private String status;
-
-    private ReceitaMedicamentoDAO receitaMedicamentoDAO;
-
-    public ReceitaMedicamentoModel() {
-        this.receitaMedicamentoDAO = new ReceitaMedicamentoDAO();
-    }
-
-
 
     public ReceitaMedicamentoModel(int idreceita, LocalDate data, String medico, String clinica, int animalIdanimal, String status) {
         this.idreceita = idreceita;

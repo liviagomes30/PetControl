@@ -8,7 +8,7 @@ public class PosologiaModel {
     private String dose;
     private Integer quantidadedias;
     private Integer intervalohoras;
-    private Integer frequencia_diaria; // NOVO CAMPO
+    private Integer frequencia_diaria; 
     private Integer medicamento_idproduto;
     private Integer receitamedicamento_idreceita;
 
@@ -18,7 +18,7 @@ public class PosologiaModel {
         this.posologiaDAO = new PosologiaDAO();
     }
 
-    // Construtor atualizado para incluir o novo campo
+  
     public PosologiaModel(String dose, Integer quantidadedias, Integer intervalohoras, Integer frequencia_diaria, Integer medicamento_idproduto, Integer receitamedicamento_idreceita) {
         this.dose = dose;
         this.quantidadedias = quantidadedias;
@@ -27,7 +27,6 @@ public class PosologiaModel {
         this.medicamento_idproduto = medicamento_idproduto;
         this.receitamedicamento_idreceita = receitamedicamento_idreceita;
     }
-
 
     public String getDose() {
         return dose;
@@ -69,7 +68,7 @@ public class PosologiaModel {
         this.receitamedicamento_idreceita = receitamedicamento_idreceita;
     }
 
-    // Getter e Setter para o novo campo
+ 
     public Integer getFrequencia_diaria() {
         return frequencia_diaria;
     }

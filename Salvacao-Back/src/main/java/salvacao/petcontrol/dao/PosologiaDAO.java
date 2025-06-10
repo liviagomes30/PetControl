@@ -42,7 +42,6 @@ public class PosologiaDAO {
         return posologia;
     }
 
-
     public PosologiaModel gravar(PosologiaModel posologia, Connection conn) throws SQLException {
         String sql = "INSERT INTO posologia (dose, quantidadedias, intervalohoras, frequencia_diaria, medicamento_idproduto, receitamedicamento_idreceita) " +
                 "VALUES (?, ?, ?, ?, ?, ?)";
@@ -50,7 +49,7 @@ public class PosologiaDAO {
             stmt.setString(1, posologia.getDose());
             stmt.setInt(2, posologia.getQuantidadedias());
             stmt.setInt(3, posologia.getIntervalohoras());
-            stmt.setObject(4, posologia.getFrequencia_diaria()); // Adicionado novo campo
+            stmt.setObject(4, posologia.getFrequencia_diaria());
             stmt.setInt(5, posologia.getMedicamento_idproduto());
             stmt.setInt(6, posologia.getReceitamedicamento_idreceita());
 
@@ -64,7 +63,6 @@ public class PosologiaDAO {
         return posologia;
     }
 
-
     public boolean alterar(PosologiaModel posologia, Connection conn) throws SQLException {
         String sql = "UPDATE posologia SET dose = ?, quantidadedias = ?, intervalohoras = ?, frequencia_diaria = ? " +
                 "WHERE medicamento_idproduto = ? AND receitamedicamento_idreceita = ?";
@@ -72,7 +70,7 @@ public class PosologiaDAO {
             stmt.setString(1, posologia.getDose());
             stmt.setInt(2, posologia.getQuantidadedias());
             stmt.setInt(3, posologia.getIntervalohoras());
-            stmt.setObject(4, posologia.getFrequencia_diaria()); // Adicionado novo campo
+            stmt.setObject(4, posologia.getFrequencia_diaria());
             stmt.setInt(5, posologia.getMedicamento_idproduto());
             stmt.setInt(6, posologia.getReceitamedicamento_idreceita());
 
@@ -82,7 +80,6 @@ public class PosologiaDAO {
             throw e;
         }
     }
-
 
     public boolean apagar(Integer medicamentoId, Integer receitaId, Connection conn) throws SQLException {
         String sqlCheckMedicacao = "SELECT COUNT(*) FROM medicacao WHERE posologia_medicamento_idproduto = ? AND posologia_receitamedicamento_idreceita = ?";
@@ -119,7 +116,6 @@ public class PosologiaDAO {
         return posologias;
     }
 
-
     public List<PosologiaModel> getByMedicamento(Integer medicamentoId) {
         List<PosologiaModel> posologias = new ArrayList<>();
         String sql = "SELECT * FROM posologia WHERE medicamento_idproduto = ?";
@@ -134,7 +130,6 @@ public class PosologiaDAO {
         }
         return posologias;
     }
-
 
     public List<PosologiaModel> getByReceita(Integer receitaId) {
         List<PosologiaModel> posologias = new ArrayList<>();
@@ -151,11 +146,9 @@ public class PosologiaDAO {
         return posologias;
     }
 
-
     public List<PosologiaDTO> listarPorReceita(Integer receitaId) {
         List<PosologiaDTO> lista = new ArrayList<>();
 
-        // SQL ATUALIZADO para incluir "AND pr.ativo = true"
         String sql = "SELECT p.dose, p.quantidadedias, p.intervalohoras, p.frequencia_diaria, " +
                 "p.medicamento_idproduto, p.receitamedicamento_idreceita, " +
                 "pr.nome AS medicamento_nome, m.composicao " +

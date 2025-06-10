@@ -41,7 +41,6 @@ public class ReceitaMedicamentoDAO {
         return receita;
     }
 
-
     public ReceitaMedicamentoModel gravar(ReceitaMedicamentoModel receita, Connection conn) throws SQLException {
         String sql = "INSERT INTO receitamedicamento (data, medico, clinica, animal_idanimal) " +
                 "VALUES (?, ?, ?, ?)";
@@ -90,7 +89,6 @@ public class ReceitaMedicamentoDAO {
             throw e;
         }
     }
-
 
     public boolean apagar(Integer id, Connection conn) throws SQLException {
         String sqlCheckPosologia = "SELECT COUNT(*) FROM posologia WHERE receitamedicamento_idreceita = ?";
@@ -142,7 +140,6 @@ public class ReceitaMedicamentoDAO {
         }
         return receitas;
     }
-
 
     public List<ReceitaMedicamentoModel> searchReceitas(String searchTerm) {
         List<ReceitaMedicamentoModel> receitas = new ArrayList<>();

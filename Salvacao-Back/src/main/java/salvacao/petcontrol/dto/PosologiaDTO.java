@@ -34,7 +34,6 @@ public class PosologiaDTO {
         this.receitamedicamento_idreceita = receitamedicamento_idreceita;
     }
 
-
     public String getDose() {
         return dose;
     }

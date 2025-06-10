@@ -2,190 +2,211 @@ package salvacao.petcontrol.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import salvacao.petcontrol.config.SingletonDB;
-import salvacao.petcontrol.model.PessoaModel;
 import salvacao.petcontrol.model.UsuarioModel;
+import salvacao.petcontrol.util.ResultadoOperacao;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.ArrayList;
+import salvacao.petcontrol.dto.UsuarioDTO;
+import salvacao.petcontrol.dto.UsuarioCompletoDTO;
+import salvacao.petcontrol.model.PessoaModel;
 
 @Service
 public class UsuarioService {
-    @Autowired
-    private UsuarioModel usuarioModel;
 
     @Autowired
-    private PessoaModel pessoaModel;
+    private UsuarioModel usuarioModel = new UsuarioModel();
 
-    public UsuarioModel getId(Integer pessoaId){
-        return usuarioModel.getUsuDAO().getId(pessoaId, pessoaModel);
+    public UsuarioCompletoDTO getId(Integer id) {
+        return usuarioModel.getUsuDAO().findUsuarioCompleto(id);
     }
 
-    public List<UsuarioModel> getAll(){
-        return usuarioModel.getUsuDAO().getAll();
-    }
-    public List<UsuarioModel> getByLogin(String filtro){
-        return usuarioModel.getUsuDAO().getByLogin(filtro);
-    }
-
-    public UsuarioModel gravar(UsuarioModel usuario, PessoaModel pessoa) throws Exception{
-        if (pessoa.getNome() == null || pessoa.getNome().trim().isEmpty()) {
-            throw new Exception("Nome da pessoa é obrigatório.");
+    public UsuarioDTO gravar(UsuarioDTO dto) throws Exception {
+        if (dto.getUsuario() == null) {
+            throw new Exception("Dados do usuario incompletos");
         }
 
-        if (usuario.getLogin() == null || usuario.getLogin().trim().isEmpty()) {
-            throw new Exception("Login do usuário é obrigatório.");
-        }
-        if (usuario.getSenha() == null || usuario.getSenha().trim().isEmpty()) {
-            throw new Exception("Senha do usuário é obrigatória.");
+        if (dto.getUsuario().getPessoa().getNome() == null || dto.getUsuario().getPessoa().getNome().trim().isEmpty()) {
+            throw new Exception("Nome do usuario é obrigatório");
         }
 
-        Connection conn = null;
-        boolean autoCommitOriginal = true;
         try {
-            conn = SingletonDB.getConexao().getConnection();
-            autoCommitOriginal = conn.getAutoCommit();
-            conn.setAutoCommit(false);
-
-
-            PessoaModel novaPessoa = pessoaModel.getPessoaDAO().gravar(pessoa, conn);
-            if (novaPessoa == null || novaPessoa.getIdpessoa() == null) {
-                throw new SQLException("Falha ao gravar pessoa.");
-            }
-
-            usuario.setPessoa_idpessoa(novaPessoa.getIdpessoa());
-            UsuarioModel novoUsuario = usuarioModel.getUsuDAO().gravar(usuario, conn);
-            if (novoUsuario == null) {
-                throw new SQLException("Falha ao gravar usuário.");
-            }
-
-            conn.commit();
-            return novoUsuario;
-        } catch (SQLException e) {
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
-            throw new Exception("Erro ao gravar usuário e pessoa: " + e.getMessage(), e);
-        } finally {
-            if (conn != null) {
-                try {
-                    conn.setAutoCommit(autoCommitOriginal);
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
+            return new UsuarioDTO(usuarioModel.getUsuDAO().gravar(dto.getUsuario()));
+        } catch (RuntimeException e) {
+            throw new Exception("Erro ao adicionar usuario: " + e.getMessage(), e);
         }
     }
 
-    public boolean alterar(UsuarioModel usuario, PessoaModel pessoa) throws Exception{
-        if (usuario.getPessoa_idpessoa() == null) {
-            throw new Exception("ID da pessoa do usuário é obrigatório para alteração.");
-        }
-        if (usuario.getLogin() == null || usuario.getLogin().trim().isEmpty()) {
-            throw new Exception("Login do usuário é obrigatório.");
-        }
-        if (usuario.getSenha() == null || usuario.getSenha().trim().isEmpty()) {
-            throw new Exception("Senha do usuário é obrigatória.");
-        }
-        if (pessoa.getNome() == null || pessoa.getNome().trim().isEmpty()) {
-            throw new Exception("Nome da pessoa é obrigatório para alteração.");
-        }
-
-        UsuarioModel existente = usuarioModel.getUsuDAO().getId(usuario.getPessoa_idpessoa(), pessoaModel);
+    public ResultadoOperacao apagarUsuario(Integer id) throws Exception {
+        UsuarioCompletoDTO existente = usuarioModel.getUsuDAO().findUsuarioCompleto(id);
         if (existente == null) {
-            throw new Exception("Usuário não encontrado para atualização.");
+            throw new Exception("Usuario não encontrado");
         }
-        pessoa.setIdpessoa(usuario.getPessoa_idpessoa());
 
-        Connection conn = null;
-        boolean autoCommitOriginal = true;
+        ResultadoOperacao resultado = new ResultadoOperacao();
+
         try {
-            conn = SingletonDB.getConexao().getConnection();
-            autoCommitOriginal = conn.getAutoCommit();
-            conn.setAutoCommit(false); // Start transaction
+            boolean podeExcluir = usuarioModel.getUsuDAO().usuarioPodeSerExcluido(id);
 
-            boolean pessoaAtualizada = pessoaModel.getPessoaDAO().alterar(pessoa, conn);
-            if (!pessoaAtualizada) {
-                throw new SQLException("Falha ao atualizar pessoa.");
+            if (podeExcluir) {
+                boolean sucesso = usuarioModel.getUsuDAO().apagar(id);
+                resultado.setOperacao("excluido");
+                resultado.setSucesso(sucesso);
+
+                if (sucesso) {
+                    resultado.setMensagem("Usuario excluído com sucesso");
+                } else {
+                    resultado.setMensagem("Falha ao excluir o usuario");
+                }
+            } else {
+                boolean sucesso = usuarioModel.getUsuDAO().desativarUsuario(id);
+                resultado.setOperacao("desativado");
+                resultado.setSucesso(sucesso);
+
+                if (sucesso) {
+                    resultado.setMensagem(
+                            "Usuario desativado com sucesso. Este item está sendo utilizado no sistema e não pode ser excluído completamente.");
+                } else {
+                    resultado.setMensagem("Falha ao desativar o usuario");
+                }
             }
 
-            boolean usuarioAtualizado = usuarioModel.getUsuDAO().alterar(usuario, conn);
-            if (!usuarioAtualizado) {
-                throw new SQLException("Falha ao atualizar usuário.");
-            }
+            return resultado;
 
-            conn.commit();
-            return true;
         } catch (SQLException e) {
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
-            throw new Exception("Erro ao alterar usuário e pessoa: " + e.getMessage(), e);
-        } finally {
-            if (conn != null) {
-                try {
-                    conn.setAutoCommit(autoCommitOriginal);
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
+            e.printStackTrace();
+            throw new Exception("Erro ao processar a exclusão: " + e.getMessage());
         }
     }
 
-    public boolean apagar(Integer pessoaId) throws Exception{
-        UsuarioModel existente = usuarioModel.getUsuDAO().getId(pessoaId, pessoaModel);
+    public boolean reativarUsuario(Integer id) throws Exception {
+        UsuarioCompletoDTO existente = usuarioModel.getUsuDAO().findUsuarioCompleto(id);
         if (existente == null) {
-            throw new Exception("Usuário não encontrado para exclusão.");
+            throw new Exception("Usuario não encontrado");
         }
 
-        Connection conn = null;
-        boolean autoCommitOriginal = true;
+        return usuarioModel.getUsuDAO().reativarUsuario(id);
+    }
+
+    public List<UsuarioCompletoDTO> listarUsuariosFiltrados(String filtro) throws Exception {
         try {
-            conn = SingletonDB.getConexao().getConnection();
-            autoCommitOriginal = conn.getAutoCommit();
-            conn.setAutoCommit(false);
-
-
-            boolean usuarioDeletado = usuarioModel.getUsuDAO().apagar(pessoaId, conn);
-            if (!usuarioDeletado) {
-
-                throw new SQLException("Falha ao excluir usuário.");
-            }
-
-
-            boolean pessoaDeletada = pessoaModel.getPessoaDAO().apagar(pessoaId, conn);
-            if (!pessoaDeletada) {
-                throw new SQLException("Falha ao excluir pessoa associada.");
-            }
-
-            conn.commit();
-            return true;
+            return usuarioModel.getUsuDAO().listarUsuariosFiltrados(filtro);
         } catch (SQLException e) {
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
-            throw new Exception("Erro ao excluir usuário e pessoa: " + e.getMessage(), e);
-        } finally {
-            if (conn != null) {
-                try {
-                    conn.setAutoCommit(autoCommitOriginal);
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
+            e.printStackTrace();
+            throw new Exception("Erro ao buscar usuários com filtro: " + e.getMessage(), e);
         }
+    }
+
+    public List<UsuarioCompletoDTO> getByFabricante(String filtro) {
+        return usuarioModel.getUsuDAO().getByFabricante(filtro);
+    }
+
+    public List<UsuarioCompletoDTO> getByTipoDescricao(String filtro) {
+        return usuarioModel.getUsuDAO().getByTipoDescricao(filtro);
+    }
+
+    public List<UsuarioCompletoDTO> getAll() {
+        return usuarioModel.getUsuDAO().getByNome("");
+    }
+
+    public List<UsuarioCompletoDTO> getByName(String filtro) {
+        return usuarioModel.getUsuDAO().getByNome(filtro);
+    }
+
+    public List<UsuarioCompletoDTO> getUsuariosByTipo(Integer idTipo) {
+        return usuarioModel.getUsuDAO().getByTipoDescricao("");
+    }
+
+    public boolean alterar(Integer id, UsuarioCompletoDTO dto) throws Exception {
+        if (dto.getUsuario() == null) {
+            throw new Exception("Dados do usuario incompletos");
+        }
+        if (dto.getUsuario().getLogin() == null || dto.getUsuario().getLogin().trim().isEmpty()) {
+            throw new Exception("Login do usuario é obrigatório");
+        }
+
+        UsuarioCompletoDTO existente = usuarioModel.getUsuDAO().findUsuarioCompleto(id);
+        if (existente == null) {
+            throw new Exception("Usuario não encontrado");
+        }
+
+        dto.getUsuario().setPessoa_idpessoa(id);
+
+        return usuarioModel.getUsuDAO().alterar(dto.getUsuario());
+    }
+
+    public UsuarioModel gravar(UsuarioCompletoDTO dto) throws Exception {
+        if (dto.getUsuario() == null) {
+            throw new Exception("Dados do usuario incompletos");
+        }
+
+        if (dto.getUsuario().getLogin() == null || dto.getUsuario().getLogin().trim().isEmpty()) {
+            throw new Exception("Login do usuario é obrigatório");
+        }
+
+        if (dto.getPessoa() == null) {
+            throw new Exception("Dados da pessoa são obrigatórios");
+        }
+
+        try {
+            Integer pessoaId;
+            
+            if (dto.getUsuario().getPessoa_idpessoa() == null) {
+                PessoaModel pessoaModel = new PessoaModel();
+                PessoaModel novaPessoa = pessoaModel.getPessoaDAO().gravar(dto.getPessoa());
+                pessoaId = novaPessoa.getIdpessoa();
+            } else {
+                pessoaId = dto.getUsuario().getPessoa_idpessoa();
+            }
+            
+            dto.getUsuario().setPessoa_idpessoa(pessoaId);
+            
+            return usuarioModel.getUsuDAO().gravar(dto.getUsuario());
+        } catch (RuntimeException e) {
+            throw new Exception("Erro ao adicionar usuario: " + e.getMessage(), e);
+        }
+    }
+
+    public UsuarioCompletoDTO authenticate(String login, String senha) throws Exception {
+        if (login == null || login.trim().isEmpty()) {
+            throw new Exception("Login é obrigatório");
+        }
+        if (senha == null || senha.trim().isEmpty()) {
+            throw new Exception("Senha é obrigatória");
+        }
+
+        boolean isValid = usuarioModel.getUsuDAO().validateCredentials(login, senha);
+        if (isValid) {
+            return usuarioModel.getUsuDAO().findByLogin(login);
+        }
+        return null;
+    }
+
+    public UsuarioCompletoDTO findByLogin(String login) throws Exception {
+        if (login == null || login.trim().isEmpty()) {
+            throw new Exception("Login é obrigatório");
+        }
+        return usuarioModel.getUsuDAO().findByLogin(login);
+    }
+
+    public boolean updatePassword(Integer id, String novaSenha) throws Exception {
+        if (novaSenha == null || novaSenha.trim().isEmpty()) {
+            throw new Exception("Nova senha é obrigatória");
+        }
+
+        UsuarioCompletoDTO existente = usuarioModel.getUsuDAO().findUsuarioCompleto(id);
+        if (existente == null) {
+            throw new Exception("Usuario não encontrado");
+        }
+
+        return usuarioModel.getUsuDAO().updatePassword(id, novaSenha);
+    }
+
+    public boolean loginExists(String login) {
+        if (login == null || login.trim().isEmpty()) {
+            return false;
+        }
+        return usuarioModel.getUsuDAO().loginExists(login);
     }
 }
