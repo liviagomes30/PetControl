@@ -460,4 +460,63 @@ public class MedicamentoDAO {
 
         return list;
     }
+
+    public List<MedicamentoCompletoDTO> buscarTodosDisponiveis() {
+        List<MedicamentoCompletoDTO> lista = new ArrayList<>();
+
+        // Consulta SQL corrigida para refletir a estrutura real do banco de dados
+        String sql = "SELECT p.idproduto, p.nome, p.fabricante, p.preco, p.estoque_minimo, p.data_cadastro, " +
+                "m.composicao, " +
+                "e.quantidade, " +
+                "t.idtipoproduto, t.descricao AS tipo_descricao, " +
+                "u.idunidademedida, u.descricao AS unidade_descricao, u.sigla AS unidade_sigla " +
+                "FROM produto p " +
+                "JOIN medicamento m ON p.idproduto = m.idproduto " +
+                "JOIN estoque e ON p.idproduto = e.idproduto " + // Junta com a tabela de estoque
+                "JOIN tipoproduto t ON p.idtipoproduto = t.idtipoproduto " +
+                "JOIN unidadedemedida u ON p.idunidademedida = u.idunidademedida " +
+                "WHERE e.quantidade > 0 " + // Filtra por quantidade em estoque
+                "ORDER BY p.nome";
+
+        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                ProdutoModel produto = new ProdutoModel(
+                        rs.getInt("idproduto"),
+                        rs.getString("nome"),
+                        rs.getInt("idtipoproduto"),
+                        rs.getInt("idunidademedida"),
+                        rs.getString("fabricante"),
+                        rs.getBigDecimal("preco"),
+                        rs.getInt("estoque_minimo"),
+                        rs.getDate("data_cadastro")
+                );
+
+                MedicamentoModel medicamento = new MedicamentoModel(
+                        rs.getInt("idproduto"),
+                        rs.getString("composicao")
+                );
+
+                TipoProdutoModel tipoProduto = new TipoProdutoModel(
+                        rs.getInt("idtipoproduto"),
+                        rs.getString("tipo_descricao")
+                );
+
+                UnidadeMedidaModel unidadeMedida = new UnidadeMedidaModel(
+                        rs.getInt("idunidademedida"),
+                        rs.getString("unidade_descricao"),
+                        rs.getString("unidade_sigla")
+                );
+
+                // Cria o DTO e define a quantidade vinda da tabela de estoque
+                MedicamentoCompletoDTO dto = new MedicamentoCompletoDTO(produto, medicamento, tipoProduto, unidadeMedida);
+                dto.setQuantidade(rs.getInt("quantidade"));
+                lista.add(dto);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return lista;
+    }
 }

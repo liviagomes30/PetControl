@@ -242,6 +242,10 @@ public class MedicamentoService {
         return medicamentoModel.getMedDAO().getComposicao(filtro);
     }
 
+    public List<MedicamentoCompletoDTO> listarTodosDisponiveis() {
+        return medicamentoModel.getMedDAO().buscarTodosDisponiveis();
+    }
+
     public List<MedicamentoCompletoDTO> getTipo(String filtro){
         return medicamentoModel.getMedDAO().getTipo(filtro);
     }

@@ -3,6 +3,8 @@ package salvacao.petcontrol.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import salvacao.petcontrol.config.SingletonDB; // Import SingletonDB
+import salvacao.petcontrol.dto.PosologiaDTO;
+import salvacao.petcontrol.model.PosologiaModel;
 import salvacao.petcontrol.model.ReceitaMedicamentoModel;
 import salvacao.petcontrol.model.AnimalModel; // For validation
 
@@ -19,6 +21,9 @@ public class ReceitaMedicamentoService {
 
     @Autowired
     private AnimalModel animalModel = new AnimalModel();
+
+    @Autowired
+    private PosologiaModel posologiaModel = new PosologiaModel();
 
     public ReceitaMedicamentoModel getId(Integer id) {
         return receitaMedicamentoModel.getRmDAO().getId(id);
@@ -187,5 +192,8 @@ public class ReceitaMedicamentoService {
                 }
             }
         }
+    }
+    public List<PosologiaDTO> buscarPosologiasPorReceita(Integer receitaId) {
+        return posologiaModel.getPosDAO().listarPorReceita(receitaId);
     }
 }

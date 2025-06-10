@@ -7,6 +7,7 @@ import salvacao.petcontrol.dao.MedicamentoDAO;
 public class MedicamentoModel {
     private Integer idproduto;
     private String composicao;
+
     private MedicamentoDAO medDAO;
 
     public MedicamentoModel(Integer idproduto, String composicao) {

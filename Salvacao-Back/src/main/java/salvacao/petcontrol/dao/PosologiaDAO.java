@@ -1,7 +1,7 @@
 package salvacao.petcontrol.dao;
 
-import org.springframework.stereotype.Repository;
 import salvacao.petcontrol.config.SingletonDB;
+import salvacao.petcontrol.dto.PosologiaDTO;
 import salvacao.petcontrol.model.PosologiaModel;
 
 import java.sql.Connection;
@@ -10,6 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public class PosologiaDAO {
@@ -162,5 +163,60 @@ public class PosologiaDAO {
             e.printStackTrace();
         }
         return posologias;
+    }
+
+    public boolean verificarMedicamentoNaReceita(Integer medicamentoId, Integer receitaId) {
+        String sql = "SELECT COUNT(*) FROM posologia " +
+                "WHERE medicamento_idproduto = ? " +
+                "AND receitamedicamento_idreceita = ?";
+
+        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+            stmt.setInt(1, medicamentoId);
+            stmt.setInt(2, receitaId);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public List<PosologiaDTO> listarPorReceita(Integer receitaId) {
+        List<PosologiaDTO> lista = new ArrayList<>();
+
+        String sql = "SELECT p.dose, p.quantidadedias, p.intervalohoras, " +
+                "p.medicamento_idproduto, p.receitamedicamento_idreceita, " +
+                "pr.nome AS medicamento_nome, m.composicao " +
+                "FROM posologia p " +
+                "JOIN produto pr ON p.medicamento_idproduto = pr.idproduto " +
+                "JOIN medicamento m ON pr.idproduto = m.idproduto " +
+                "WHERE p.receitamedicamento_idreceita = ? " +
+                "ORDER BY pr.nome";
+
+        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+            stmt.setInt(1, receitaId);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                PosologiaDTO posologia = new PosologiaDTO();
+                posologia.setDose(rs.getString("dose"));
+                posologia.setQuantidadedias(rs.getInt("quantidadedias"));
+                posologia.setIntervalohoras(rs.getInt("intervalohoras"));
+                posologia.setMedicamento_idproduto(rs.getInt("medicamento_idproduto"));
+                posologia.setReceitamedicamento_idreceita(receitaId);
+
+                posologia.setMedicamentoNome(rs.getString("medicamento_nome"));
+                posologia.setMedicamentoComposicao(rs.getString("composicao"));
+
+                lista.add(posologia);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return lista;
     }
 }

@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import salvacao.petcontrol.dto.PosologiaDTO;
 import salvacao.petcontrol.model.ReceitaMedicamentoModel;
 import salvacao.petcontrol.service.ReceitaMedicamentoService;
 import salvacao.petcontrol.util.ResultadoOperacao;
@@ -64,6 +65,16 @@ public class ReceitaMedicamentoController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Erro ao buscar receitas de medicamento: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/{receitaId}/medicamentos")
+    public ResponseEntity<Object> buscarMedicamentosDaReceita(@PathVariable Integer receitaId) {
+        try {
+            List<PosologiaDTO> medicamentosComPosologia = receitaMedicamentoService.buscarPosologiasPorReceita(receitaId);
+            return ResponseEntity.ok(medicamentosComPosologia);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Erro ao buscar medicamentos da receita: " + e.getMessage());
         }
     }
 }
