@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gerenciar Usuários - PetControl</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+    />
+    <link rel="stylesheet" href="../../assets/css/style.css" />
+
+    <script
+      crossorigin
+      src="https://unpkg.com/react@18/umd/react.production.min.js"
+    ></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
+    ></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script src="../../assets/js/components/sidebar.js" defer></script>
+  </head>
+  <body>
+    <div class="main-content">
+      <div class="content-header">
+        <h1><i class="bi bi-person-gear"></i> Gerenciar Usuários</h1>
+        <p class="text-muted">Gerencie os usuários do sistema PetControl</p>
+      </div>
+
+      <div id="usuarios-app"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      window.API_BASE_URL = "http://localhost:8080";
+    </script>
+
+    <script src="../../assets/js/services/usuarioService.js"></script>
+    <script src="../../assets/js/utils/toast.js"></script>
+    <script src="../../assets/js/utils/loading.js"></script>
+
+    <script type="text/babel">
+      const { useState, useEffect, useRef } = React;
+
+      function UsuarioManager() {
+        const [usuarios, setUsuarios] = useState([]);
+        const [filtro, setFiltro] = useState("");
+        const [usuarioEdicao, setUsuarioEdicao] = useState(null);
+        const [mostrarModal, setMostrarModal] = useState(false);
+        const [mostrarModalSenha, setMostrarModalSenha] = useState(false);
+        const [loading, setLoading] = useState(false);
+        const modalRef = useRef(null);
+        const modalSenhaRef = useRef(null);
+
+        useEffect(() => {
+          carregarUsuarios();
+        }, []);
+
+        useEffect(() => {
+          if (mostrarModal && modalRef.current) {
+            const modal = new bootstrap.Modal(modalRef.current);
+            modal.show();
+            modalRef.current.addEventListener("hidden.bs.modal", () => {
+              setMostrarModal(false);
+              setUsuarioEdicao(null);
+            });
+          }
+        }, [mostrarModal]);
+
+        useEffect(() => {
+          if (mostrarModalSenha && modalSenhaRef.current) {
+            const modal = new bootstrap.Modal(modalSenhaRef.current);
+            modal.show();
+            modalSenhaRef.current.addEventListener("hidden.bs.modal", () => {
+              setMostrarModalSenha(false);
+            });
+          }
+        }, [mostrarModalSenha]);
+
+        const carregarUsuarios = async () => {
+          try {
+            setLoading(true);
+            const dados = await UsuarioService.listarUsuarios();
+            setUsuarios(Array.isArray(dados) ? dados : []);
+          } catch (error) {
+            console.error("Erro ao carregar usuários:", error);
+            Toast.error("Erro ao carregar usuários: " + error.message);
+            setUsuarios([]);
+          } finally {
+            setLoading(false);
+          }
+        };
+
+        const usuariosFiltrados = usuarios.filter((usuario) => {
+          const termo = filtro.toLowerCase();
+          return (
+            usuario.usuario?.login?.toLowerCase().includes(termo) ||
+            usuario.pessoa?.nome?.toLowerCase().includes(termo) ||
+            usuario.pessoa?.cpf?.includes(termo) ||
+            usuario.pessoa?.email?.toLowerCase().includes(termo)
+          );
+        });
+
+        const novoUsuario = () => {
+          setUsuarioEdicao({
+            usuario: {
+              login: "",
+              senha: "",
+              pessoa_idpessoa: "",
+            },
+            pessoa: {
+              nome: "",
+              cpf: "",
+              endereco: "",
+              telefone: "",
+              email: "",
+            },
+          });
+          setMostrarModal(true);
+        };
+
+        const editarUsuario = (usuario) => {
+          setUsuarioEdicao({
+            usuario: {
+              login: usuario.usuario?.login || "",
+              senha: "",
+              pessoa_idpessoa: usuario.usuario?.pessoa_idpessoa || "",
+            },
+            pessoa: {
+              idpessoa: usuario.pessoa?.idpessoa || "",
+              nome: usuario.pessoa?.nome || "",
+              cpf: usuario.pessoa?.cpf || "",
+              endereco: usuario.pessoa?.endereco || "",
+              telefone: usuario.pessoa?.telefone || "",
+              email: usuario.pessoa?.email || "",
+            },
+          });
+          setMostrarModal(true);
+        };
+
+        const salvarUsuario = async (dadosFormulario) => {
+          try {
+            setLoading(true);
+
+            if (usuarioEdicao.pessoa.idpessoa) {
+              await UsuarioService.atualizarUsuario(
+                usuarioEdicao.pessoa.idpessoa,
+                dadosFormulario
+              );
+              Toast.success("Usuário atualizado com sucesso!");
+            } else {
+              await UsuarioService.criarUsuario(dadosFormulario);
+              Toast.success("Usuário criado com sucesso!");
+            }
+
+            await carregarUsuarios();
+            setMostrarModal(false);
+
+            if (modalRef.current) {
+              const modal = bootstrap.Modal.getInstance(modalRef.current);
+              if (modal) modal.hide();
+            }
+          } catch (error) {
+            console.error("Erro ao salvar usuário:", error);
+            Toast.error("Erro ao salvar usuário: " + error.message);
+          } finally {
+            setLoading(false);
+          }
+        };
+
+        const deletarUsuario = async (usuario) => {
+          if (
+            !confirm(
+              `Tem certeza que deseja deletar o usuário "${usuario.usuario?.login}"?`
+            )
+          ) {
+            return;
+          }
+
+          try {
+            setLoading(true);
+            const resultado = await UsuarioService.deletarUsuario(
+              usuario.pessoa?.idpessoa
+            );
+
+            if (resultado.operacao === "excluido") {
+              Toast.success("Usuário excluído com sucesso!");
+            } else if (resultado.operacao === "desativado") {
+              Toast.warning("Usuário desativado. " + resultado.mensagem);
+            }
+
+            await carregarUsuarios();
+          } catch (error) {
+            console.error("Erro ao deletar usuário:", error);
+            Toast.error("Erro ao deletar usuário: " + error.message);
+          } finally {
+            setLoading(false);
+          }
+        };
+
+        const reativarUsuario = async (usuario) => {
+          try {
+            setLoading(true);
+            await UsuarioService.reativarUsuario(usuario.pessoa?.idpessoa);
+            Toast.success("Usuário reativado com sucesso!");
+            await carregarUsuarios();
+          } catch (error) {
+            console.error("Erro ao reativar usuário:", error);
+            Toast.error("Erro ao reativar usuário: " + error.message);
+          } finally {
+            setLoading(false);
+          }
+        };
+
+        const alterarSenha = (usuario) => {
+          setUsuarioEdicao(usuario);
+          setMostrarModalSenha(true);
+        };
+
+        const atualizarSenha = async (senhaData) => {
+          try {
+            setLoading(true);
+            await UsuarioService.atualizarSenha(
+              usuarioEdicao.pessoa?.idpessoa,
+              senhaData
+            );
+            Toast.success("Senha atualizada com sucesso!");
+            setMostrarModalSenha(false);
+
+            if (modalSenhaRef.current) {
+              const modal = bootstrap.Modal.getInstance(modalSenhaRef.current);
+              if (modal) modal.hide();
+            }
+          } catch (error) {
+            console.error("Erro ao atualizar senha:", error);
+            Toast.error("Erro ao atualizar senha: " + error.message);
+          } finally {
+            setLoading(false);
+          }
+        };
+
+        return (
+          <div className="container-fluid">
+            <div className="row mb-4">
+              <div className="col-md-8">
+                <div className="search-container">
+                  <div className="input-group">
+                    <input
+                      type="text"
+                      className="form-control search-input"
+                      placeholder="Buscar por login, nome, CPF ou email..."
+                      value={filtro}
+                      onChange={(e) => setFiltro(e.target.value)}
+                    />
+                    <button
+                      className="btn btn-outline-secondary search-button"
+                      type="button"
+                    >
+                      <i className="bi bi-search"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="col-md-4 text-end">
+                <button
+                  className="btn btn-primary"
+                  onClick={novoUsuario}
+                  disabled={loading}
+                >
+                  <i className="bi bi-plus-circle me-2"></i>
+                  Novo Usuário
+                </button>
+              </div>
+            </div>
+
+            {loading && (
+              <div className="text-center py-4">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Carregando...</span>
+                </div>
+              </div>
+            )}
+
+            {!loading && (
+              <div className="table-container">
+                <table className="table table-striped table-hover">
+                  <thead>
+                    <tr>
+                      <th>Login</th>
+                      <th>Nome</th>
+                      <th>CPF</th>
+                      <th>Email</th>
+                      <th>Telefone</th>
+                      <th>Status</th>
+                      <th width="200">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {usuariosFiltrados.length === 0 ? (
+                      <tr>
+                        <td colSpan="7" className="text-center py-4">
+                          <div className="no-data">
+                            <i className="bi bi-inbox text-muted"></i>
+                            <p className="text-muted mt-2">
+                              {filtro
+                                ? "Nenhum usuário encontrado com os critérios de busca."
+                                : "Nenhum usuário cadastrado."}
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      usuariosFiltrados.map((usuario) => (
+                        <UsuarioRow
+                          key={usuario.pessoa?.idpessoa || Math.random()}
+                          usuario={usuario}
+                          onEditar={editarUsuario}
+                          onDeletar={deletarUsuario}
+                          onReativar={reativarUsuario}
+                          onAlterarSenha={alterarSenha}
+                        />
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {mostrarModal && (
+              <UsuarioModal
+                ref={modalRef}
+                usuario={usuarioEdicao}
+                onSalvar={salvarUsuario}
+                loading={loading}
+              />
+            )}
+
+            {mostrarModalSenha && (
+              <SenhaModal
+                ref={modalSenhaRef}
+                usuario={usuarioEdicao}
+                onSalvar={atualizarSenha}
+                loading={loading}
+              />
+            )}
+          </div>
+        );
+      }
+
+      function UsuarioRow({
+        usuario,
+        onEditar,
+        onDeletar,
+        onReativar,
+        onAlterarSenha,
+      }) {
+        const isInativo = usuario.usuario?.login?.includes("_INATIVO_");
+
+        return (
+          <tr className={isInativo ? "table-warning" : ""}>
+            <td>
+              <strong>{usuario.usuario?.login || "N/A"}</strong>
+              {isInativo && (
+                <span className="badge bg-warning text-dark ms-2">Inativo</span>
+              )}
+            </td>
+            <td>{usuario.pessoa?.nome || "N/A"}</td>
+            <td>{usuario.pessoa?.cpf || "N/A"}</td>
+            <td>{usuario.pessoa?.email || "N/A"}</td>
+            <td>{usuario.pessoa?.telefone || "N/A"}</td>
+            <td>
+              <span
+                className={`badge ${
+                  isInativo ? "bg-warning text-dark" : "bg-success"
+                }`}
+              >
+                {isInativo ? "Inativo" : "Ativo"}
+              </span>
+            </td>
+            <td>
+              <div className="actions">
+                {!isInativo ? (
+                  <>
+                    <button
+                      className="btn btn-sm btn-outline-primary me-2"
+                      onClick={() => onEditar(usuario)}
+                      title="Editar usuário"
+                    >
+                      <i className="bi bi-pencil"></i>
+                    </button>
+                    <button
+                      className="btn btn-sm btn-outline-warning me-2"
+                      onClick={() => onAlterarSenha(usuario)}
+                      title="Alterar senha"
+                    >
+                      <i className="bi bi-key"></i>
+                    </button>
+                    <button
+                      className="btn btn-sm btn-outline-danger"
+                      onClick={() => onDeletar(usuario)}
+                      title="Deletar usuário"
+                    >
+                      <i className="bi bi-trash"></i>
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    className="btn btn-sm btn-outline-success"
+                    onClick={() => onReativar(usuario)}
+                    title="Reativar usuário"
+                  >
+                    <i className="bi bi-arrow-clockwise me-1"></i>
+                    Reativar
+                  </button>
+                )}
+              </div>
+            </td>
+          </tr>
+        );
+      }
+
+      const UsuarioModal = React.forwardRef(
+        ({ usuario, onSalvar, loading }, ref) => {
+          const [formData, setFormData] = useState({
+            usuario: {
+              login: "",
+              senha: "",
+              pessoa_idpessoa: "",
+            },
+            pessoa: {
+              nome: "",
+              cpf: "",
+              endereco: "",
+              telefone: "",
+              email: "",
+            },
+          });
+          const [errors, setErrors] = useState({});
+
+          useEffect(() => {
+            if (usuario) {
+              setFormData(usuario);
+            }
+          }, [usuario]);
+
+          const handleInputChange = (section, field, value) => {
+            setFormData((prev) => ({
+              ...prev,
+              [section]: {
+                ...prev[section],
+                [field]: value,
+              },
+            }));
+
+            if (errors[`${section}.${field}`]) {
+              setErrors((prev) => ({
+                ...prev,
+                [`${section}.${field}`]: null,
+              }));
+            }
+          };
+
+          const validateForm = () => {
+            const newErrors = {};
+
+            if (!formData.usuario.login.trim()) {
+              newErrors["usuario.login"] = "Login é obrigatório";
+            }
+
+            if (!formData.pessoa.idpessoa && !formData.usuario.senha.trim()) {
+              newErrors["usuario.senha"] = "Senha é obrigatória";
+            }
+
+            if (!formData.pessoa.nome.trim()) {
+              newErrors["pessoa.nome"] = "Nome é obrigatório";
+            }
+
+            if (!formData.pessoa.cpf.trim()) {
+              newErrors["pessoa.cpf"] = "CPF é obrigatório";
+            }
+
+            if (
+              formData.pessoa.email &&
+              !/\S+@\S+\.\S+/.test(formData.pessoa.email)
+            ) {
+              newErrors["pessoa.email"] = "Email inválido";
+            }
+
+            setErrors(newErrors);
+            return Object.keys(newErrors).length === 0;
+          };
+
+          const handleSubmit = (e) => {
+            e.preventDefault();
+            if (validateForm()) {
+              onSalvar(formData);
+            }
+          };
+
+          const isEdicao = !!formData.pessoa.idpessoa;
+
+          return (
+            <div className="modal fade" ref={ref} tabIndex="-1">
+              <div className="modal-dialog modal-lg">
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h5 className="modal-title">
+                      <i className="bi bi-person-gear me-2"></i>
+                      {isEdicao ? "Editar Usuário" : "Novo Usuário"}
+                    </h5>
+                    <button
+                      type="button"
+                      className="btn-close"
+                      data-bs-dismiss="modal"
+                    ></button>
+                  </div>
+
+                  <form onSubmit={handleSubmit}>
+                    <div className="modal-body">
+                      <div className="row">
+                        <div className="col-md-6">
+                          <h6 className="border-bottom pb-2 mb-3">
+                            Dados de Acesso
+                          </h6>
+
+                          <div className="mb-3">
+                            <label className="form-label required">Login</label>
+                            <input
+                              type="text"
+                              className={`form-control ${
+                                errors["usuario.login"] ? "is-invalid" : ""
+                              }`}
+                              value={formData.usuario.login}
+                              onChange={(e) =>
+                                handleInputChange(
+                                  "usuario",
+                                  "login",
+                                  e.target.value
+                                )
+                              }
+                              placeholder="Digite o login"
+                            />
+                            {errors["usuario.login"] && (
+                              <div className="invalid-feedback">
+                                {errors["usuario.login"]}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="mb-3">
+                            <label className="form-label required">
+                              {isEdicao
+                                ? "Nova Senha (deixe em branco para manter)"
+                                : "Senha"}
+                            </label>
+                            <input
+                              type="password"
+                              className={`form-control ${
+                                errors["usuario.senha"] ? "is-invalid" : ""
+                              }`}
+                              value={formData.usuario.senha}
+                              onChange={(e) =>
+                                handleInputChange(
+                                  "usuario",
+                                  "senha",
+                                  e.target.value
+                                )
+                              }
+                              placeholder={
+                                isEdicao
+                                  ? "Digite a nova senha"
+                                  : "Digite a senha"
+                              }
+                            />
+                            {errors["usuario.senha"] && (
+                              <div className="invalid-feedback">
+                                {errors["usuario.senha"]}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="col-md-6">
+                          <h6 className="border-bottom pb-2 mb-3">
+                            Dados Pessoais
+                          </h6>
+
+                          <div className="mb-3">
+                            <label className="form-label required">Nome</label>
+                            <input
+                              type="text"
+                              className={`form-control ${
+                                errors["pessoa.nome"] ? "is-invalid" : ""
+                              }`}
+                              value={formData.pessoa.nome}
+                              onChange={(e) =>
+                                handleInputChange(
+                                  "pessoa",
+                                  "nome",
+                                  e.target.value
+                                )
+                              }
+                              placeholder="Digite o nome completo"
+                            />
+                            {errors["pessoa.nome"] && (
+                              <div className="invalid-feedback">
+                                {errors["pessoa.nome"]}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="mb-3">
+                            <label className="form-label required">CPF</label>
+                            <input
+                              type="text"
+                              className={`form-control ${
+                                errors["pessoa.cpf"] ? "is-invalid" : ""
+                              }`}
+                              value={formData.pessoa.cpf}
+                              onChange={(e) =>
+                                handleInputChange(
+                                  "pessoa",
+                                  "cpf",
+                                  e.target.value
+                                )
+                              }
+                              placeholder="000.000.000-00"
+                            />
+                            {errors["pessoa.cpf"] && (
+                              <div className="invalid-feedback">
+                                {errors["pessoa.cpf"]}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="mb-3">
+                            <label className="form-label">Email</label>
+                            <input
+                              type="email"
+                              className={`form-control ${
+                                errors["pessoa.email"] ? "is-invalid" : ""
+                              }`}
+                              value={formData.pessoa.email}
+                              onChange={(e) =>
+                                handleInputChange(
+                                  "pessoa",
+                                  "email",
+                                  e.target.value
+                                )
+                              }
+                              placeholder="email@exemplo.com"
+                            />
+                            {errors["pessoa.email"] && (
+                              <div className="invalid-feedback">
+                                {errors["pessoa.email"]}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="mb-3">
+                            <label className="form-label">Telefone</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              value={formData.pessoa.telefone}
+                              onChange={(e) =>
+                                handleInputChange(
+                                  "pessoa",
+                                  "telefone",
+                                  e.target.value
+                                )
+                              }
+                              placeholder="(11) 99999-9999"
+                            />
+                          </div>
+
+                          <div className="mb-3">
+                            <label className="form-label">Endereço</label>
+                            <textarea
+                              className="form-control"
+                              rows="3"
+                              value={formData.pessoa.endereco}
+                              onChange={(e) =>
+                                handleInputChange(
+                                  "pessoa",
+                                  "endereco",
+                                  e.target.value
+                                )
+                              }
+                              placeholder="Digite o endereço completo"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="modal-footer">
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        data-bs-dismiss="modal"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="submit"
+                        className="btn btn-primary"
+                        disabled={loading}
+                      >
+                        {loading ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-2"></span>
+                            Salvando...
+                          </>
+                        ) : (
+                          <>
+                            <i className="bi bi-check-lg me-2"></i>
+                            {isEdicao ? "Atualizar" : "Criar Usuário"}
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          );
+        }
+      );
+
+      const SenhaModal = React.forwardRef(
+        ({ usuario, onSalvar, loading }, ref) => {
+          const [senhaData, setSenhaData] = useState({
+            senhaAtual: "",
+            novaSenha: "",
+          });
+          const [errors, setErrors] = useState({});
+
+          const handleInputChange = (field, value) => {
+            setSenhaData((prev) => ({
+              ...prev,
+              [field]: value,
+            }));
+
+            if (errors[field]) {
+              setErrors((prev) => ({
+                ...prev,
+                [field]: null,
+              }));
+            }
+          };
+
+          const validateForm = () => {
+            const newErrors = {};
+
+            if (!senhaData.novaSenha.trim()) {
+              newErrors.novaSenha = "Nova senha é obrigatória";
+            } else if (senhaData.novaSenha.length < 6) {
+              newErrors.novaSenha = "Senha deve ter pelo menos 6 caracteres";
+            }
+
+            setErrors(newErrors);
+            return Object.keys(newErrors).length === 0;
+          };
+
+          const handleSubmit = (e) => {
+            e.preventDefault();
+            if (validateForm()) {
+              onSalvar(senhaData);
+            }
+          };
+
+          return (
+            <div className="modal fade" ref={ref} tabIndex="-1">
+              <div className="modal-dialog">
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h5 className="modal-title">
+                      <i className="bi bi-key me-2"></i>
+                      Alterar Senha - {usuario?.pessoa?.nome}
+                    </h5>
+                    <button
+                      type="button"
+                      className="btn-close"
+                      data-bs-dismiss="modal"
+                    ></button>
+                  </div>
+
+                  <form onSubmit={handleSubmit}>
+                    <div className="modal-body">
+                      <div className="mb-3">
+                        <label className="form-label">Senha Atual</label>
+                        <input
+                          type="password"
+                          className="form-control"
+                          value={senhaData.senhaAtual}
+                          onChange={(e) =>
+                            handleInputChange("senhaAtual", e.target.value)
+                          }
+                          placeholder="Digite a senha atual"
+                        />
+                        <div className="form-text">
+                          Deixe em branco se não souber a senha atual
+                        </div>
+                      </div>
+
+                      <div className="mb-3">
+                        <label className="form-label required">
+                          Nova Senha
+                        </label>
+                        <input
+                          type="password"
+                          className={`form-control ${
+                            errors.novaSenha ? "is-invalid" : ""
+                          }`}
+                          value={senhaData.novaSenha}
+                          onChange={(e) =>
+                            handleInputChange("novaSenha", e.target.value)
+                          }
+                          placeholder="Digite a nova senha"
+                        />
+                        {errors.novaSenha && (
+                          <div className="invalid-feedback">
+                            {errors.novaSenha}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="modal-footer">
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        data-bs-dismiss="modal"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="submit"
+                        className="btn btn-primary"
+                        disabled={loading}
+                      >
+                        {loading ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-2"></span>
+                            Alterando...
+                          </>
+                        ) : (
+                          <>
+                            <i className="bi bi-check-lg me-2"></i>
+                            Alterar Senha
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          );
+        }
+      );
+
+      ReactDOM.render(
+        <UsuarioManager />,
+        document.getElementById("usuarios-app")
+      );
+    </script>
+  </body>
+</html>

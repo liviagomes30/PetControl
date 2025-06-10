@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Gerenciamento de Unidades de Medida - PetControl"
+    />
+    <title>PetControl - Unidades de Medida</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css"
+    />
+    <link rel="stylesheet" href="../../../assets/css/style.css" />
+    <script src="../../../assets/js/components/sidebar.js" defer></script>
+  </head>
+  <body>
+    <main class="main-content">
+      <header class="content-header">
+        <h1>Unidades de Medida</h1>
+        <button
+          class="btn btn-primary"
+          onclick="window.location.href='cadastrarUnidade.html'"
+          aria-label="Adicionar nova unidade de medida"
+        >
+          <i class="bi bi-plus-circle"></i> Nova Unidade
+        </button>
+      </header>
+
+      <div class="search-container">
+        <label for="searchInput" class="visually-hidden"
+          >Buscar unidade de medida</label
+        >
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Buscar unidade de medida..."
+          class="search-input"
+          aria-label="Buscar unidade de medida"
+        />
+        <button class="search-button" aria-label="Executar busca">
+          <i class="bi bi-search"></i>
+        </button>
+      </div>
+
+      <div class="table-container">
+        <div class="table-responsive">
+          <table
+            id="unidadeMedidaTable"
+            aria-label="Lista de unidades de medida"
+          >
+            <thead>
+              <tr>
+                <th scope="col" class="sortable" data-sort="id">ID</th>
+                <th scope="col" class="sortable" data-sort="descricao">
+                  Descrição
+                </th>
+                <th scope="col" class="sortable" data-sort="sigla">Sigla</th>
+                <th scope="col">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="unidadeMedidaTableBody">
+              <!-- Dados serão carregados dinamicamente -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Mensagem para quando não há dados -->
+        <div id="noDataMessage" class="no-data" style="display: none">
+          <i
+            class="bi bi-inbox"
+            style="
+              font-size: 2rem;
+              opacity: 0.4;
+              display: block;
+              margin-bottom: 8px;
+            "
+          ></i>
+          <p>Nenhuma unidade de medida encontrada</p>
+          <p class="mt-2">
+            <a href="cadastrarUnidade.html" class="btn btn-outline-primary">
+              <i class="bi bi-plus-circle"></i> Adicionar Nova
+            </a>
+          </p>
+        </div>
+      </div>
+
+      <!-- Paginação para facilitar navegação em grandes listas -->
+      <div class="pagination" id="pagination" aria-label="Paginação da tabela">
+        <!-- Páginas serão inseridas dinamicamente pelo JavaScript -->
+      </div>
+
+      <!-- Modal de Confirmação de Exclusão -->
+      <div
+        id="deleteModal"
+        class="modal"
+        role="dialog"
+        aria-labelledby="deleteModalTitle"
+        aria-hidden="true"
+      >
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 id="deleteModalTitle">Confirmar Exclusão</h3>
+          </div>
+          <div class="modal-body">
+            <p>Tem certeza que deseja excluir esta unidade de medida?</p>
+            <p
+              class="mt-2 mb-2"
+              style="
+                color: #664d03;
+                background-color: #fff3cd;
+                padding: 8px;
+                border-radius: 4px;
+              "
+            >
+              <i class="bi bi-exclamation-triangle"></i>
+              Esta ação não poderá ser desfeita e pode afetar produtos que
+              utilizam esta unidade.
+            </p>
+          </div>
+          <div class="modal-buttons">
+            <button id="confirmDelete" class="btn btn-danger">
+              <i class="bi bi-trash"></i> Excluir
+            </button>
+            <button id="cancelDelete" class="btn btn-secondary">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toast para feedback -->
+      <div
+        id="toast"
+        class="toast"
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true"
+      >
+        <div class="toast-icon success">
+          <i class="bi bi-check-circle"></i>
+        </div>
+        <div class="toast-content">
+          <div class="toast-title" id="toastTitle">Sucesso!</div>
+          <div class="toast-message" id="toastMessage">
+            Operação realizada com sucesso
+          </div>
+        </div>
+        <button class="toast-close" aria-label="Fechar notificação">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+
+      <!-- Loading overlay para operações assíncronas -->
+      <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner" role="status">
+          <span class="visually-hidden">Carregando...</span>
+        </div>
+      </div>
+    </main>
+
+    <!-- Importações de Scripts -->
+    <script src="../../../assets/js/models/UnidadeMedidaModel.js"></script>
+    <script src="../../../assets/js/services/UnidadeMedidaService.js"></script>
+    <script src="../../../assets/js/controllers/UnidadeMedidaController.js"></script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // Iniciar o controlador quando a página carregar
+        window.unidadeMedidaController = new UnidadeMedidaController();
+
+        // Exibir loading enquanto carrega dados iniciais
+        document.getElementById("loadingOverlay").classList.add("show");
+
+        // Carregar unidades de medida
+        window.unidadeMedidaController
+          .listarUnidades()
+          .then((unidades) => {
+            // Exibir ou ocultar a mensagem de "nenhum dado" conforme necessário
+            if (unidades.length === 0) {
+              document.getElementById("unidadeMedidaTable").style.display =
+                "none";
+              document.getElementById("noDataMessage").style.display = "block";
+            } else {
+              document.getElementById("unidadeMedidaTable").style.display =
+                "table";
+              document.getElementById("noDataMessage").style.display = "none";
+
+              // Renderizar dados na tabela
+              renderizarTabela(unidades);
+            }
+
+            // Esconder loading
+            document.getElementById("loadingOverlay").classList.remove("show");
+          })
+          .catch((erro) => {
+            // Mostrar erro
+            mostrarToast(
+              "Erro!",
+              "Não foi possível carregar os dados. Tente novamente.",
+              "error"
+            );
+            console.error("Erro ao carregar unidades de medida:", erro);
+
+            // Esconder loading
+            document.getElementById("loadingOverlay").classList.remove("show");
+          });
+
+        // Implementação da busca em tempo real
+        const searchInput = document.getElementById("searchInput");
+        searchInput.addEventListener("input", function () {
+          const termo = this.value.trim().toLowerCase();
+
+          if (termo === "") {
+            // Se a busca for limpa, recarregar todos os dados
+            window.unidadeMedidaController
+              .listarUnidades()
+              .then((unidades) => renderizarTabela(unidades));
+          } else {
+            // Filtrar unidades pelo termo de busca
+            window.unidadeMedidaController
+              .buscarUnidades(termo)
+              .then((unidades) => {
+                // Exibir ou ocultar a mensagem de "nenhum dado" conforme necessário
+                if (unidades.length === 0) {
+                  document.getElementById("unidadeMedidaTable").style.display =
+                    "none";
+                  document.getElementById("noDataMessage").style.display =
+                    "block";
+                  document
+                    .getElementById("noDataMessage")
+                    .querySelector(
+                      "p"
+                    ).textContent = `Nenhuma unidade de medida encontrada para "${termo}"`;
+                } else {
+                  document.getElementById("unidadeMedidaTable").style.display =
+                    "table";
+                  document.getElementById("noDataMessage").style.display =
+                    "none";
+
+                  // Renderizar dados filtrados na tabela
+                  renderizarTabela(unidades);
+                }
+              });
+          }
+        });
+
+        // Implementação de ordenação nas colunas
+        const thSortable = document.querySelectorAll("th.sortable");
+        thSortable.forEach((th) => {
+          th.addEventListener("click", function () {
+            const sortBy = this.getAttribute("data-sort");
+
+            // Remover classes de ordenação anteriores
+            thSortable.forEach((el) => el.classList.remove("asc", "desc"));
+
+            // Alternar ordem (asc/desc)
+            if (this.getAttribute("data-order") === "asc") {
+              this.setAttribute("data-order", "desc");
+              this.classList.add("desc");
+              window.unidadeMedidaController
+                .ordenarPor(sortBy, "desc")
+                .then((unidades) => renderizarTabela(unidades));
+            } else {
+              this.setAttribute("data-order", "asc");
+              this.classList.add("asc");
+              window.unidadeMedidaController
+                .ordenarPor(sortBy, "asc")
+                .then((unidades) => renderizarTabela(unidades));
+            }
+          });
+        });
+
+        // Função para renderizar dados na tabela
+        function renderizarTabela(unidades) {
+          const tbody = document.getElementById("unidadeMedidaTableBody");
+          tbody.innerHTML = "";
+
+          unidades.forEach((unidade) => {
+            const tr = document.createElement("tr");
+
+            // Célula ID
+            const tdId = document.createElement("td");
+            tdId.textContent = unidade.id;
+            tr.appendChild(tdId);
+
+            // Célula Descrição
+            const tdDescricao = document.createElement("td");
+            tdDescricao.textContent = unidade.descricao;
+            tr.appendChild(tdDescricao);
+
+            // Célula Sigla
+            const tdSigla = document.createElement("td");
+            tdSigla.textContent = unidade.sigla;
+            tr.appendChild(tdSigla);
+
+            // Célula Ações
+            const tdAcoes = document.createElement("td");
+            tdAcoes.className = "actions";
+
+            // Botão Editar
+            const btnEditar = document.createElement("button");
+            btnEditar.className = "btn-icon btn-edit";
+            btnEditar.innerHTML = '<i class="bi bi-pencil-square"></i>';
+            btnEditar.setAttribute("aria-label", "Editar unidade");
+            btnEditar.addEventListener("click", () => {
+              window.location.href = `editarUnidade.html?id=${unidade.id}`;
+            });
+
+            // Botão Excluir
+            const btnExcluir = document.createElement("button");
+            btnExcluir.className = "btn-icon btn-delete";
+            btnExcluir.innerHTML = '<i class="bi bi-trash"></i>';
+            btnExcluir.setAttribute("aria-label", "Excluir unidade");
+            btnExcluir.addEventListener("click", () => {
+              // Armazenar ID da unidade a ser excluída
+              document
+                .getElementById("confirmDelete")
+                .setAttribute("data-id", unidade.id);
+
+              // Exibir modal de confirmação
+              document.getElementById("deleteModal").classList.add("show");
+            });
+
+            tdAcoes.appendChild(btnEditar);
+            tdAcoes.appendChild(btnExcluir);
+            tr.appendChild(tdAcoes);
+
+            tbody.appendChild(tr);
+          });
+
+          // Atualizar paginação se necessário
+          atualizarPaginacao(unidades.length);
+        }
+
+        // Função para atualizar a paginação
+        function atualizarPaginacao(total) {
+          const paginationElement = document.getElementById("pagination");
+          const itensPorPagina = 10; // Ou outro valor conforme necessário
+          const totalPaginas = Math.ceil(total / itensPorPagina);
+
+          if (totalPaginas <= 1) {
+            paginationElement.style.display = "none";
+            return;
+          }
+
+          paginationElement.style.display = "flex";
+          paginationElement.innerHTML = "";
+
+          // Botão Anterior
+          const btnAnterior = document.createElement("button");
+          btnAnterior.className = "pagination-item";
+          btnAnterior.innerHTML = '<i class="bi bi-chevron-left"></i>';
+          btnAnterior.setAttribute("aria-label", "Página anterior");
+          btnAnterior.addEventListener("click", () => {
+            const paginaAtual = parseInt(
+              paginationElement.getAttribute("data-page") || 1
+            );
+            if (paginaAtual > 1) {
+              mudarPagina(paginaAtual - 1);
+            }
+          });
+          paginationElement.appendChild(btnAnterior);
+
+          // Páginas
+          for (let i = 1; i <= totalPaginas; i++) {
+            const btnPagina = document.createElement("button");
+            btnPagina.className = "pagination-item";
+            btnPagina.textContent = i;
+            btnPagina.setAttribute("data-page", i);
+
+            if (i === 1) {
+              btnPagina.classList.add("active");
+              paginationElement.setAttribute("data-page", "1");
+            }
+
+            btnPagina.addEventListener("click", () => {
+              mudarPagina(i);
+            });
+
+            paginationElement.appendChild(btnPagina);
+          }
+
+          // Botão Próximo
+          const btnProximo = document.createElement("button");
+          btnProximo.className = "pagination-item";
+          btnProximo.innerHTML = '<i class="bi bi-chevron-right"></i>';
+          btnProximo.setAttribute("aria-label", "Próxima página");
+          btnProximo.addEventListener("click", () => {
+            const paginaAtual = parseInt(
+              paginationElement.getAttribute("data-page") || 1
+            );
+            if (paginaAtual < totalPaginas) {
+              mudarPagina(paginaAtual + 1);
+            }
+          });
+          paginationElement.appendChild(btnProximo);
+        }
+
+        // Função para mudar de página
+        function mudarPagina(pagina) {
+          const paginationElement = document.getElementById("pagination");
+          paginationElement.setAttribute("data-page", pagina);
+
+          // Atualizar classes ativas
+          const botoesPagina = paginationElement.querySelectorAll(
+            ".pagination-item[data-page]"
+          );
+          botoesPagina.forEach((btn) => {
+            btn.classList.toggle(
+              "active",
+              parseInt(btn.getAttribute("data-page")) === pagina
+            );
+          });
+
+          // Carregar dados da página selecionada
+          window.unidadeMedidaController
+            .listarUnidadesPorPagina(pagina)
+            .then((unidades) => renderizarTabela(unidades));
+        }
+
+        // Configuração do modal de exclusão
+        const modalDelete = document.getElementById("deleteModal");
+        const btnConfirmDelete = document.getElementById("confirmDelete");
+        const btnCancelDelete = document.getElementById("cancelDelete");
+
+        btnConfirmDelete.addEventListener("click", function () {
+          const id = this.getAttribute("data-id");
+          if (!id) return;
+
+          // Exibir loading
+          document.getElementById("loadingOverlay").classList.add("show");
+          modalDelete.classList.remove("show");
+
+          // Executar exclusão
+          window.unidadeMedidaController
+            .excluir(id)
+            .then(() => {
+              // Mostrar mensagem de sucesso
+              mostrarToast(
+                "Sucesso!",
+                "Unidade de medida excluída com sucesso!",
+                "success"
+              );
+
+              // Recarregar dados
+              return window.unidadeMedidaController
+                .listarUnidades()
+                .then((unidades) => renderizarTabela(unidades));
+            })
+            .catch((erro) => {
+              // Mostrar erro
+              mostrarToast(
+                "Erro!",
+                "Não foi possível excluir a unidade. Tente novamente.",
+                "error"
+              );
+              console.error("Erro ao excluir unidade de medida:", erro);
+            })
+            .finally(() => {
+              // Esconder loading
+              document
+                .getElementById("loadingOverlay")
+                .classList.remove("show");
+            });
+        });
+
+        btnCancelDelete.addEventListener("click", function () {
+          modalDelete.classList.remove("show");
+        });
+
+        // Função para mostrar toast
+        function mostrarToast(titulo, mensagem, tipo = "success") {
+          const toast = document.getElementById("toast");
+          const toastTitle = document.getElementById("toastTitle");
+          const toastMessage = document.getElementById("toastMessage");
+          const toastIcon = document.querySelector(".toast-icon");
+
+          // Definir conteúdo
+          toastTitle.textContent = titulo;
+          toastMessage.textContent = mensagem;
+
+          // Ajustar aparência conforme tipo
+          toastIcon.className = "toast-icon " + tipo;
+          toastIcon.innerHTML =
+            tipo === "success"
+              ? '<i class="bi bi-check-circle"></i>'
+              : '<i class="bi bi-exclamation-triangle"></i>';
+
+          // Mostrar toast
+          toast.classList.add("show");
+
+          // Ocultar automaticamente após 5 segundos
+          setTimeout(() => {
+            toast.classList.remove("show");
+          }, 5000);
+        }
+
+        // Implementação do botão fechar do toast
+        const toastClose = document.querySelector(".toast-close");
+        toastClose.addEventListener("click", function () {
+          document.getElementById("toast").classList.remove("show");
+        });
+      });
+    </script>
+  </body>
+</html>

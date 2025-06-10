@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PetControl - Cadastrar Medicamento</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css"
+    />
+    <link rel="stylesheet" href="../../assets/css/style.css" />
+    <link rel="stylesheet" href="../../assets/css/estiloComplementar.css" />
+    <script src="../../assets/js/components/sidebar.js" defer></script>
+  </head>
+  <body>
+    <div class="container py-4">
+      <div class="header d-flex align-items-center">
+        <a
+          href="listarMedicamentos.html"
+          class="btn btn-outline-secondary me-3"
+        >
+          <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+        <h1 class="h3 mb-0" style="color: var(--vermelho-escuro)">
+          Cadastrar Medicamento
+        </h1>
+      </div>
+
+      <div class="bg-white shadow rounded p-4">
+        <form id="formMedicamento" class="needs-validation" novalidate>
+          <input type="hidden" id="idproduto" name="idproduto" />
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label for="nome" class="form-label required"
+                >Nome do Medicamento</label
+              >
+              <div class="form-group">
+                <input
+                  type="text"
+                  class="form-control"
+                  id="nome"
+                  required
+                  maxlength="100"
+                  data-max-length="100"
+                  data-show-counter="true"
+                  aria-describedby="validationNomeFeedback"
+                />
+                <div id="validationNomeFeedback" class="invalid-feedback">
+                  Por favor, informe o nome do medicamento.
+                </div>
+                <div class="valid-feedback">Looks good!</div>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <label for="composicao" class="form-label required"
+                >Composição</label
+              >
+              <div class="form-group">
+                <input
+                  type="text"
+                  class="form-control"
+                  id="composicao"
+                  required
+                  maxlength="200"
+                  data-max-length="200"
+                  data-show-counter="true"
+                  aria-describedby="validationComposicaoFeedback"
+                />
+                <div id="validationComposicaoFeedback" class="invalid-feedback">
+                  Por favor, informe a composição do medicamento.
+                </div>
+                <div class="valid-feedback">Looks good!</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label for="tipoProduto" class="form-label required"
+                >Tipo de Produto</label
+              >
+              <select
+                class="form-select"
+                id="tipoProduto"
+                required
+                aria-describedby="validationTipoProdutoFeedback"
+              >
+                <option value="">Selecione</option>
+              </select>
+              <div id="validationTipoProdutoFeedback" class="invalid-feedback">
+                Por favor, selecione o tipo de produto.
+              </div>
+              <div class="valid-feedback">Looks good!</div>
+            </div>
+
+            <div class="col-md-6">
+              <label for="unidadeMedida" class="form-label required"
+                >Unidade de Medida</label
+              >
+              <select
+                class="form-select"
+                id="unidadeMedida"
+                required
+                aria-describedby="validationUnidadeMedidaFeedback"
+              >
+                <option value="">Selecione</option>
+              </select>
+              <div
+                id="validationUnidadeMedidaFeedback"
+                class="invalid-feedback"
+              >
+                Por favor, selecione a unidade de medida.
+              </div>
+              <div class="valid-feedback">Looks good!</div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="fabricante" class="form-label">Fabricante</label>
+            <input
+              type="text"
+              class="form-control"
+              id="fabricante"
+              maxlength="100"
+              data-max-length="100"
+            />
+            <div class="form-text">
+              Opcional - Informe o fabricante do medicamento.
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label for="preco" class="form-label">Preço (R$)</label>
+              <div class="input-group">
+                <span class="input-group-text"
+                  ><i class="bi bi-currency-dollar"></i
+                ></span>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="preco"
+                  data-mask="money"
+                  placeholder="0,00"
+                />
+              </div>
+              <div class="form-text">
+                Opcional - Informe o preço de referência.
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <label for="estoqueMinimo" class="form-label"
+                >Estoque Mínimo</label
+              >
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-box"></i></span>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="estoqueMinimo"
+                  data-mask="number"
+                  placeholder="0"
+                />
+              </div>
+              <div class="form-text">
+                Opcional - Quantidade mínima recomendada em estoque.
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="alert alert-warning d-flex align-items-center mt-4"
+            id="alertaEstoque"
+            style="display: none"
+          >
+            <i
+              class="bi bi-exclamation-triangle-fill me-2"
+              style="font-size: 1.2rem"
+            ></i>
+            <div>
+              Atenção: Este medicamento ainda não possui estoque cadastrado.
+              Após o cadastro, adicione itens ao estoque.
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2 mt-4">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="window.location.href='listarMedicamentos.html'"
+            >
+              <i class="bi bi-x-circle me-1"></i> Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-check-circle me-1"></i> Confirmar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+      import { medicamentoController } from "../../assets/js/controllers/MedicamentoController.js";
+      import UIComponents from "../../assets/js/components/uiComponents.js";
+
+      document.addEventListener("DOMContentLoaded", () => {
+        medicamentoController.inicializarFormulario();
+
+        (() => {
+          "use strict";
+
+          const forms = document.querySelectorAll(".needs-validation");
+
+          Array.from(forms).forEach((form) => {
+            form.addEventListener(
+              "submit",
+              (event) => {
+                if (!form.checkValidity()) {
+                  event.preventDefault();
+                  event.stopPropagation();
+                }
+
+                form.classList.add("was-validated");
+              },
+              false
+            );
+          });
+        })();
+      });
+    </script>
+  </body>
+</html>

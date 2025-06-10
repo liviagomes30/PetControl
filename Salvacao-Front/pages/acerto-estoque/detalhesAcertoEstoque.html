@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PetControl - Detalhes do Acerto de Estoque</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css"
+    />
+    <link rel="stylesheet" href="../../assets/css/style.css" />
+    <script src="../../assets/js/components/sidebar.js" defer></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header d-flex align-items-center">
+        <a href="listarAcertosEstoque.html" class="btn btn-secondary me-3">
+          <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+        <h1 class="h3 mb-0" style="color: var(--vermelho-escuro)">
+          Detalhes do Acerto de Estoque
+        </h1>
+      </div>
+
+      <div class="bg-white shadow rounded p-4">
+        <div class="row">
+          <div class="col-md-3">
+            <div class="mb-3">
+              <label class="form-label fw-bold">ID do Acerto:</label>
+              <div id="idAcerto">-</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="mb-3">
+              <label class="form-label fw-bold">Data:</label>
+              <div id="dataAcerto">-</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="mb-3">
+              <label class="form-label fw-bold">Usuário:</label>
+              <div id="usuarioAcerto">-</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="mb-3">
+              <label class="form-label fw-bold">Motivo:</label>
+              <div id="motivoAcerto">-</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-12">
+            <div class="mb-3">
+              <label class="form-label fw-bold">Observações:</label>
+              <div id="observacaoAcerto">-</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mb-4">
+          <div class="card-header">Itens do Acerto</div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Produto</th>
+                    <th>Tipo</th>
+                    <th>Un.</th>
+                    <th>Qtd. Anterior</th>
+                    <th>Qtd. Atual</th>
+                    <th>Diferença</th>
+                    <th>Tipo Ajuste</th>
+                  </tr>
+                </thead>
+                <tbody id="itensAcertoDetalhe">
+                  <tr>
+                    <td colspan="7" class="text-center">Carregando itens...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-center">
+          <a href="listarAcertosEstoque.html" class="btn btn-primary">
+            <i class="bi bi-arrow-left"></i> Voltar para a Lista
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay">
+      <div class="spinner" role="status">
+        <span class="visually-hidden">Carregando...</span>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+      import acertoEstoqueController from "../../assets/js/controllers/AcertoEstoqueController.js";
+
+      import UIComponents from "../../assets/js/components/uiComponents.js";
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const id = parseInt(urlParams.get("id"));
+        console.log("Parsed ID:", id);
+
+        if (isNaN(id)) {
+          UIComponents.ModalErro.mostrar(
+            "ID do acerto de estoque não informado ou inválido."
+          );
+          setTimeout(() => {
+            window.location.href = "listarAcertosEstoque.html";
+          }, 2000);
+          return;
+        }
+
+        acertoEstoqueController.carregarDetalhesAcerto(id);
+      });
+    </script>
+  </body>
+</html>

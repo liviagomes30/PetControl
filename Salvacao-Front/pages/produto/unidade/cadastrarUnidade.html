@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Cadastro de Unidades de Medida - PetControl"
+    />
+    <title>PetControl - Nova Unidade de Medida</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css"
+    />
+    <link rel="stylesheet" href="../../../assets/css/style.css" />
+    <script src="../../../assets/js/components/sidebar.js" defer></script>
+  </head>
+  <body>
+    <main class="main-content">
+      <header class="content-header">
+        <button
+          class="btn-back"
+          onclick="window.location.href='listarUnidades.html'"
+          aria-label="Voltar para lista de unidades de medida"
+        >
+          <i class="bi bi-arrow-left"></i> Voltar
+        </button>
+        <h1>Cadastrar Unidade de Medida</h1>
+      </header>
+
+      <div class="form-container">
+        <form id="unidadeMedidaForm" novalidate>
+          <input type="hidden" id="idUnidadeMedida" value="0" />
+
+          <div class="form-group">
+            <label for="descricao" class="required">Descrição</label>
+            <input
+              type="text"
+              id="descricao"
+              name="descricao"
+              required
+              placeholder="Digite a descrição da unidade de medida"
+              aria-required="true"
+              aria-describedby="descricao-error descricao-help"
+            />
+            <div
+              class="error-message"
+              id="descricao-error"
+              aria-live="polite"
+            ></div>
+            <small id="descricao-help" class="form-help-text">
+              Por exemplo: Unidade, Caixa, Kg, ML, Pacote...
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label for="sigla" class="required">Sigla</label>
+            <input
+              type="text"
+              id="sigla"
+              name="sigla"
+              required
+              placeholder="Digite a sigla da unidade de medida"
+              aria-required="true"
+              aria-describedby="sigla-error sigla-help"
+              maxlength="5"
+            />
+            <div
+              class="error-message"
+              id="sigla-error"
+              aria-live="polite"
+            ></div>
+            <small id="sigla-help" class="form-help-text">
+              Abreviação curta (máx. 5 caracteres). Ex: un, cx, kg, ml, pct
+            </small>
+          </div>
+
+          <div class="form-buttons">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-check-circle"></i> Confirmar
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="window.location.href='listarUnidades.html'"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Toast para feedback -->
+      <div
+        id="toast"
+        class="toast"
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true"
+      >
+        <div class="toast-icon success">
+          <i class="bi bi-check-circle"></i>
+        </div>
+        <div class="toast-content">
+          <div class="toast-title" id="toastTitle">Sucesso!</div>
+          <div class="toast-message" id="toastMessage">
+            Unidade de medida cadastrada com sucesso!
+          </div>
+        </div>
+        <button class="toast-close" aria-label="Fechar notificação">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+
+      <!-- Loading overlay para operações assíncronas -->
+      <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner" role="status">
+          <span class="visually-hidden">Carregando...</span>
+        </div>
+      </div>
+    </main>
+
+    <!-- Importações de Scripts -->
+    <script src="../../../assets/js/models/UnidadeMedidaModel.js"></script>
+    <script src="../../../assets/js/services/UnidadeMedidaService.js"></script>
+    <script src="../../../assets/js/controllers/UnidadeMedidaController.js"></script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // Iniciar o controlador quando a página carregar
+        window.unidadeMedidaController = new UnidadeMedidaController();
+
+        // Adicionar validação em tempo real para o formulário
+        const descricaoInput = document.getElementById("descricao");
+        const descricaoError = document.getElementById("descricao-error");
+        const siglaInput = document.getElementById("sigla");
+        const siglaError = document.getElementById("sigla-error");
+
+        descricaoInput.addEventListener("input", function () {
+          validarDescricao(this);
+        });
+
+        descricaoInput.addEventListener("blur", function () {
+          validarDescricao(this);
+        });
+
+        siglaInput.addEventListener("input", function () {
+          validarSigla(this);
+        });
+
+        siglaInput.addEventListener("blur", function () {
+          validarSigla(this);
+        });
+
+        function validarDescricao(campo) {
+          if (campo.value.trim() === "") {
+            descricaoError.textContent = "Este campo é obrigatório";
+            campo.classList.add("invalid");
+            return false;
+          } else if (campo.value.length < 2) {
+            descricaoError.textContent =
+              "A descrição deve ter pelo menos 2 caracteres";
+            campo.classList.add("invalid");
+            return false;
+          } else {
+            descricaoError.textContent = "";
+            campo.classList.remove("invalid");
+            return true;
+          }
+        }
+
+        function validarSigla(campo) {
+          if (campo.value.trim() === "") {
+            siglaError.textContent = "Este campo é obrigatório";
+            campo.classList.add("invalid");
+            return false;
+          } else if (campo.value.length > 5) {
+            siglaError.textContent = "A sigla deve ter no máximo 5 caracteres";
+            campo.classList.add("invalid");
+            return false;
+          } else {
+            siglaError.textContent = "";
+            campo.classList.remove("invalid");
+            return true;
+          }
+        }
+
+        // Validação ao enviar o formulário
+        const form = document.getElementById("unidadeMedidaForm");
+        form.addEventListener("submit", function (event) {
+          event.preventDefault();
+
+          const descricaoValido = validarDescricao(descricaoInput);
+          const siglaValido = validarSigla(siglaInput);
+
+          if (descricaoValido && siglaValido) {
+            // Exibir loading
+            document.getElementById("loadingOverlay").classList.add("show");
+
+            // Processar o formulário via controlador
+            const unidadeMedida = {
+              id: document.getElementById("idUnidadeMedida").value,
+              descricao: descricaoInput.value.trim(),
+              sigla: siglaInput.value.trim(),
+            };
+
+            window.unidadeMedidaController
+              .salvar(unidadeMedida)
+              .then(() => {
+                // Mostrar mensagem de sucesso
+                mostrarToast(
+                  "Sucesso!",
+                  "Unidade de medida cadastrada com sucesso!",
+                  "success"
+                );
+
+                // Redirecionar após 2 segundos
+                setTimeout(() => {
+                  window.location.href = "listarUnidades.html";
+                }, 2000);
+              })
+              .catch((erro) => {
+                // Mostrar erro
+                mostrarToast(
+                  "Erro!",
+                  "Não foi possível cadastrar. Tente novamente.",
+                  "error"
+                );
+                console.error("Erro ao cadastrar unidade de medida:", erro);
+
+                // Esconder loading
+                document
+                  .getElementById("loadingOverlay")
+                  .classList.remove("show");
+              });
+          }
+        });
+
+        // Função para mostrar toast
+        function mostrarToast(titulo, mensagem, tipo = "success") {
+          const toast = document.getElementById("toast");
+          const toastTitle = document.getElementById("toastTitle");
+          const toastMessage = document.getElementById("toastMessage");
+          const toastIcon = document.querySelector(".toast-icon");
+
+          // Definir conteúdo
+          toastTitle.textContent = titulo;
+          toastMessage.textContent = mensagem;
+
+          // Ajustar aparência conforme tipo
+          toastIcon.className = "toast-icon " + tipo;
+          toastIcon.innerHTML =
+            tipo === "success"
+              ? '<i class="bi bi-check-circle"></i>'
+              : '<i class="bi bi-exclamation-triangle"></i>';
+
+          // Mostrar toast
+          toast.classList.add("show");
+
+          // Ocultar automaticamente após 5 segundos
+          setTimeout(() => {
+            toast.classList.remove("show");
+          }, 5000);
+        }
+
+        // Implementação do botão fechar do toast
+        const toastClose = document.querySelector(".toast-close");
+        toastClose.addEventListener("click", function () {
+          document.getElementById("toast").classList.remove("show");
+        });
+      });
+    </script>
+  </body>
+</html>
