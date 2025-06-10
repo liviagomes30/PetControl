@@ -5,6 +5,11 @@ const Toast = {
       existingToast.remove();
     }
 
+    if (!message || typeof message !== 'string') {
+      console.warn('Toast: Invalid message provided');
+      return;
+    }
+
     let toastContainer = document.querySelector(".toast-container");
     if (!toastContainer) {
       toastContainer = document.createElement("div");
@@ -43,11 +48,18 @@ const Toast = {
 
     toast.classList.add(bgClass, "text-white");
 
+    const escapedMessage = message
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+
     toast.innerHTML = `
             <div class="d-flex">
                 <div class="toast-body d-flex align-items-center">
                     <i class="bi ${iconClass} me-2"></i>
-                    ${message}
+                    ${escapedMessage}
                 </div>
                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
@@ -55,11 +67,27 @@ const Toast = {
 
     toastContainer.appendChild(toast);
 
-    setTimeout(() => {
+    const closeButton = toast.querySelector('.btn-close');
+    if (closeButton) {
+      closeButton.addEventListener('click', () => {
+        if (toast && toast.parentNode) {
+          toast.remove();
+        }
+      });
+    }
+
+    const timeoutId = setTimeout(() => {
       if (toast && toast.parentNode) {
-        toast.remove();
+        toast.classList.add('hide');
+        setTimeout(() => {
+          if (toast && toast.parentNode) {
+            toast.remove();
+          }
+        }, 300);
       }
     }, duration);
+
+    toast.dataset.timeoutId = timeoutId;
 
     return toast;
   },
@@ -79,6 +107,16 @@ const Toast = {
   info(message, duration = 5000) {
     return this.show(message, "info", duration);
   },
+
+  clear() {
+    const toasts = document.querySelectorAll('.toast-custom');
+    toasts.forEach(toast => {
+      if (toast.dataset.timeoutId) {
+        clearTimeout(parseInt(toast.dataset.timeoutId));
+      }
+      toast.remove();
+    });
+  }
 };
 
 window.Toast = Toast;

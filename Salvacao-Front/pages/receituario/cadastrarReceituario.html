@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cadastrar Receituário - PetControl</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+    />
+    <link rel="stylesheet" href="../../assets/css/style.css" />
+
+    <script>
+      window.API_BASE_URL = "http://localhost:8080";
+    </script>
+
+    <script src="../../assets/js/services/authService.js"></script>
+    <script src="../../assets/js/components/sidebar.js" defer></script>
+  </head>
+  <body>
+    <div class="main-content">
+      <div class="content-header">
+        <h1><i class="bi bi-clipboard-plus"></i> Cadastrar Receituário</h1>
+        <p class="text-muted">Cadastre um novo receituário médico para o animal</p>
+      </div>
+
+      <div class="container-fluid">
+        <div class="row mb-4">
+          <div class="col-12">
+            <a href="listarReceituario.html" class="btn btn-outline-secondary">
+              <i class="bi bi-arrow-left me-2"></i>Voltar para Lista
+            </a>
+          </div>
+        </div>
+
+        <form id="formReceituario" novalidate>
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="bi bi-file-medical me-2"></i>Dados da Receita
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="data" class="form-label required">Data da Receita</label>
+                  <input
+                    type="date"
+                    class="form-control"
+                    id="data"
+                    name="data"
+                    required
+                  />
+                  <div class="invalid-feedback" id="data_error"></div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  <label for="animal" class="form-label required">Animal</label>
+                  <select class="form-select" id="animal" name="animal" required>
+                    <option value="">Selecione um animal</option>
+                  </select>
+                  <div class="invalid-feedback" id="animal_idanimal_error"></div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="medico" class="form-label required">Médico Veterinário</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="medico"
+                    name="medico"
+                    placeholder="Nome do médico veterinário"
+                    maxlength="255"
+                    required
+                  />
+                  <div class="invalid-feedback" id="medico_error"></div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  <label for="clinica" class="form-label">Clínica Veterinária</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="clinica"
+                    name="clinica"
+                    placeholder="Nome da clínica (opcional)"
+                    maxlength="255"
+                  />
+                  <div class="invalid-feedback" id="clinica_error"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">
+                <i class="bi bi-capsule me-2"></i>Prescrições Médicas
+              </h5>
+              <button
+                type="button"
+                class="btn btn-success btn-sm"
+                id="btnAdicionarPosologia"
+              >
+                <i class="bi bi-plus-circle me-2"></i>Adicionar Medicamento
+              </button>
+            </div>
+            <div class="card-body">
+              <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i>
+                <strong>Instruções:</strong> Adicione pelo menos um medicamento
+                à prescrição. Defina a dose, duração do tratamento e intervalo
+                entre as aplicações.
+              </div>
+              <div id="posologiasContainer"></div>
+              <div class="invalid-feedback d-block" id="posologias_error"></div>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2">
+            <a href="listarReceituario.html" class="btn btn-secondary">
+              <i class="bi bi-x-circle me-2"></i>Cancelar
+            </a>
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-check-circle me-2"></i>Cadastrar Receituário
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay d-none">
+      <div class="text-center text-white">
+        <div class="spinner-border text-light mb-3" role="status">
+          <span class="visually-hidden">Carregando...</span>
+        </div>
+        <p id="loadingMessage">Carregando...</p>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../assets/js/utils/toast.js"></script>
+
+    <script type="module">
+      import ReceituarioController from "../../assets/js/controllers/ReceituarioController.js";
+
+      document.addEventListener("DOMContentLoaded", function () {
+        receituarioController.inicializarFormulario();
+      });
+    </script>
+
+    <style>
+      .required::after {
+        content: " *";
+        color: var(--danger-color, #dc3545);
+      }
+
+      .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .loading-overlay.d-none {
+        display: none !important;
+      }
+
+      .posologia-item {
+        border-left: 4px solid var(--primary-color, #0d6efd);
+        margin-bottom: 1rem;
+      }
+
+      .posologia-item .card-header {
+        background-color: rgba(var(--bs-success-rgb), 0.1);
+        border-bottom: 1px solid rgba(var(--bs-success-rgb), 0.2);
+      }
+
+      .alert-info {
+        border-left: 4px solid var(--info-color, #0dcaf0);
+      }
+    </style>
+  </body>
+</html>
