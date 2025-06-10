@@ -4,12 +4,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import salvacao.petcontrol.config.SingletonDB; // Import SingletonDB
 import salvacao.petcontrol.dto.PosologiaDTO;
+import salvacao.petcontrol.model.MedicacaoModel;
 import salvacao.petcontrol.model.PosologiaModel;
 import salvacao.petcontrol.model.MedicamentoModel; // For validation
 import salvacao.petcontrol.model.ReceitaMedicamentoModel; // For validation
 
 import java.sql.Connection; // Import Connection
 import java.sql.SQLException; // Import SQLException
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -20,6 +22,9 @@ public class PosologiaService {
 
     @Autowired
     private MedicamentoModel medicamentoModel = new MedicamentoModel();
+
+    @Autowired
+    private MedicacaoModel medicacaoModel = new MedicacaoModel();
 
     @Autowired
     private ReceitaMedicamentoModel receitaMedicamentoModel = new ReceitaMedicamentoModel();
@@ -199,5 +204,38 @@ public class PosologiaService {
 
     public List<PosologiaDTO> listarPorReceita(Integer receitaId) {
         return posologiaModel.getPosDAO().listarPorReceita(receitaId);
+    }
+
+    public List<PosologiaDTO> getPosologiasPendentes(Integer receitaId, Integer animalId) throws Exception {
+        List<PosologiaDTO> planoCompleto = posologiaModel.getPosDAO().listarPorReceita(receitaId);
+        List<PosologiaDTO> pendentes = new ArrayList<>();
+
+        Connection conn = null;
+        try {
+            conn = SingletonDB.getConexao().getConnection();
+
+            for (PosologiaDTO posologiaInfo : planoCompleto) {
+                int frequencia = (posologiaInfo.getFrequencia_diaria() != null && posologiaInfo.getFrequencia_diaria() > 0)
+                        ? posologiaInfo.getFrequencia_diaria()
+                        : 1;
+
+                int totalDosesRequeridas = frequencia * posologiaInfo.getQuantidadedias();
+
+                int dosesAdministradas = medicacaoModel.getMedDAO().countAdministracoes(
+                        animalId,
+                        receitaId,
+                        posologiaInfo.getMedicamento_idproduto(),
+                        conn
+                );
+
+                if (dosesAdministradas < totalDosesRequeridas) {
+                    pendentes.add(posologiaInfo);
+                }
+            }
+        } catch (SQLException e) {
+            throw new Exception("Erro de banco de dados ao verificar posologias pendentes.", e);
+        }
+
+        return pendentes;
     }
 }

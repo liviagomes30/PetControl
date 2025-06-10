@@ -15,6 +15,17 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class PosologiaDAO {
 
+    private PosologiaModel buildPosologiaFromResultSet(ResultSet rs) throws SQLException {
+        return new PosologiaModel(
+                rs.getString("dose"),
+                rs.getInt("quantidadedias"),
+                rs.getInt("intervalohoras"),
+                rs.getObject("frequencia_diaria") != null ? rs.getInt("frequencia_diaria") : null,
+                rs.getInt("medicamento_idproduto"),
+                rs.getInt("receitamedicamento_idreceita")
+        );
+    }
+
     public PosologiaModel getId(Integer medicamentoId, Integer receitaId) {
         PosologiaModel posologia = null;
         String sql = "SELECT * FROM posologia WHERE medicamento_idproduto = ? AND receitamedicamento_idreceita = ?";
@@ -23,13 +34,7 @@ public class PosologiaDAO {
             stmt.setInt(2, receitaId);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                posologia = new PosologiaModel(
-                        rs.getString("dose"),
-                        rs.getInt("quantidadedias"),
-                        rs.getInt("intervalohoras"),
-                        rs.getInt("medicamento_idproduto"),
-                        rs.getInt("receitamedicamento_idreceita")
-                );
+                posologia = buildPosologiaFromResultSet(rs);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -39,14 +44,15 @@ public class PosologiaDAO {
 
 
     public PosologiaModel gravar(PosologiaModel posologia, Connection conn) throws SQLException {
-        String sql = "INSERT INTO posologia (dose, quantidadedias, intervalohoras, medicamento_idproduto, receitamedicamento_idreceita) " +
-                "VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO posologia (dose, quantidadedias, intervalohoras, frequencia_diaria, medicamento_idproduto, receitamedicamento_idreceita) " +
+                "VALUES (?, ?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, posologia.getDose());
             stmt.setInt(2, posologia.getQuantidadedias());
             stmt.setInt(3, posologia.getIntervalohoras());
-            stmt.setInt(4, posologia.getMedicamento_idproduto());
-            stmt.setInt(5, posologia.getReceitamedicamento_idreceita());
+            stmt.setObject(4, posologia.getFrequencia_diaria()); // Adicionado novo campo
+            stmt.setInt(5, posologia.getMedicamento_idproduto());
+            stmt.setInt(6, posologia.getReceitamedicamento_idreceita());
 
             int rowsAffected = stmt.executeUpdate();
             if (rowsAffected == 0) {
@@ -60,14 +66,15 @@ public class PosologiaDAO {
 
 
     public boolean alterar(PosologiaModel posologia, Connection conn) throws SQLException {
-        String sql = "UPDATE posologia SET dose = ?, quantidadedias = ?, intervalohoras = ? " +
+        String sql = "UPDATE posologia SET dose = ?, quantidadedias = ?, intervalohoras = ?, frequencia_diaria = ? " +
                 "WHERE medicamento_idproduto = ? AND receitamedicamento_idreceita = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, posologia.getDose());
             stmt.setInt(2, posologia.getQuantidadedias());
             stmt.setInt(3, posologia.getIntervalohoras());
-            stmt.setInt(4, posologia.getMedicamento_idproduto());
-            stmt.setInt(5, posologia.getReceitamedicamento_idreceita());
+            stmt.setObject(4, posologia.getFrequencia_diaria()); // Adicionado novo campo
+            stmt.setInt(5, posologia.getMedicamento_idproduto());
+            stmt.setInt(6, posologia.getReceitamedicamento_idreceita());
 
             int rowsAffected = stmt.executeUpdate();
             return rowsAffected > 0;
@@ -104,14 +111,7 @@ public class PosologiaDAO {
         String sql = "SELECT * FROM posologia";
         try (ResultSet rs = SingletonDB.getConexao().consultar(sql)) {
             while (rs.next()) {
-                PosologiaModel posologia = new PosologiaModel(
-                        rs.getString("dose"),
-                        rs.getInt("quantidadedias"),
-                        rs.getInt("intervalohoras"),
-                        rs.getInt("medicamento_idproduto"),
-                        rs.getInt("receitamedicamento_idreceita")
-                );
-                posologias.add(posologia);
+                posologias.add(buildPosologiaFromResultSet(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -127,14 +127,7 @@ public class PosologiaDAO {
             stmt.setInt(1, medicamentoId);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                PosologiaModel posologia = new PosologiaModel(
-                        rs.getString("dose"),
-                        rs.getInt("quantidadedias"),
-                        rs.getInt("intervalohoras"),
-                        rs.getInt("medicamento_idproduto"),
-                        rs.getInt("receitamedicamento_idreceita")
-                );
-                posologias.add(posologia);
+                posologias.add(buildPosologiaFromResultSet(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -150,14 +143,7 @@ public class PosologiaDAO {
             stmt.setInt(1, receitaId);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                PosologiaModel posologia = new PosologiaModel(
-                        rs.getString("dose"),
-                        rs.getInt("quantidadedias"),
-                        rs.getInt("intervalohoras"),
-                        rs.getInt("medicamento_idproduto"),
-                        rs.getInt("receitamedicamento_idreceita")
-                );
-                posologias.add(posologia);
+                posologias.add(buildPosologiaFromResultSet(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -165,29 +151,11 @@ public class PosologiaDAO {
         return posologias;
     }
 
-    public boolean verificarMedicamentoNaReceita(Integer medicamentoId, Integer receitaId) {
-        String sql = "SELECT COUNT(*) FROM posologia " +
-                "WHERE medicamento_idproduto = ? " +
-                "AND receitamedicamento_idreceita = ?";
-
-        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
-            stmt.setInt(1, medicamentoId);
-            stmt.setInt(2, receitaId);
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                return rs.getInt(1) > 0;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
 
     public List<PosologiaDTO> listarPorReceita(Integer receitaId) {
         List<PosologiaDTO> lista = new ArrayList<>();
-
-        String sql = "SELECT p.dose, p.quantidadedias, p.intervalohoras, " +
+        // Adicionando a nova coluna 'frequencia_diaria' na consulta
+        String sql = "SELECT p.dose, p.quantidadedias, p.intervalohoras, p.frequencia_diaria, " +
                 "p.medicamento_idproduto, p.receitamedicamento_idreceita, " +
                 "pr.nome AS medicamento_nome, m.composicao " +
                 "FROM posologia p " +
@@ -205,9 +173,10 @@ public class PosologiaDAO {
                 posologia.setDose(rs.getString("dose"));
                 posologia.setQuantidadedias(rs.getInt("quantidadedias"));
                 posologia.setIntervalohoras(rs.getInt("intervalohoras"));
+                // Populando o novo campo no DTO (lembre-se de adicionar o campo no DTO também)
+                posologia.setFrequencia_diaria(rs.getObject("frequencia_diaria") != null ? rs.getInt("frequencia_diaria") : null);
                 posologia.setMedicamento_idproduto(rs.getInt("medicamento_idproduto"));
                 posologia.setReceitamedicamento_idreceita(receitaId);
-
                 posologia.setMedicamentoNome(rs.getString("medicamento_nome"));
                 posologia.setMedicamentoComposicao(rs.getString("composicao"));
 

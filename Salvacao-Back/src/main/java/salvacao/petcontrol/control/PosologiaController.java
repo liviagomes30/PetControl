@@ -59,14 +59,19 @@ public class PosologiaController {
     }
 
     @GetMapping("/receita/{receitaId}")
-    public ResponseEntity<Object> getMedicamentosByReceita(@PathVariable Integer receitaId) {
+    public ResponseEntity<Object> getMedicamentosByReceita(
+            @PathVariable Integer receitaId,
+            @RequestParam Integer animalId) { // Adicionado @RequestParam
         try {
-            // Reutiliza o método de serviço que busca DTOs de posologia
-            List<PosologiaDTO> posologias = posologiaService.listarPorReceita(receitaId);
-            if (posologias.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Nenhum medicamento encontrado para esta receita.");
+            // Chama um novo método no serviço que fará a validação
+            List<PosologiaDTO> posologiasPendentes = posologiaService.getPosologiasPendentes(receitaId, animalId);
+
+            // Se a lista estiver vazia (todos os medicamentos foram aplicados), retorna 204 No Content
+            if (posologiasPendentes.isEmpty()) {
+                return ResponseEntity.noContent().build();
             }
-            return ResponseEntity.ok(posologias);
+
+            return ResponseEntity.ok(posologiasPendentes);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Erro ao buscar medicamentos da receita: " + e.getMessage());

@@ -88,7 +88,7 @@ class MedicacaoController {
 
   async handleReceitaChange() {
     const receitaId = document.getElementById("receita").value;
-    const animalId = document.getElementById("animal").value;
+    const animalId = document.getElementById("animal").value; // Precisamos do ID do animal
 
     if (!animalId) {
       this.renderMedicamentosList([]);
@@ -99,9 +99,15 @@ class MedicacaoController {
     try {
       if (receitaId) {
         const response = await fetch(
-          `http://localhost:8080/posologias/receita/${receitaId}`
+          `http://localhost:8080/posologias/receita/${receitaId}?animalId=${animalId}`
         );
-        if (response.ok) {
+
+        if (response.status === 204) {
+          this.renderMedicamentosList([], true);
+          UIComponents.Toast.sucesso(
+            "Todos os medicamentos desta receita já foram aplicados!"
+          );
+        } else if (response.ok) {
           const posologias = await response.json();
           const medicamentosDaReceita = posologias.map((p) => ({
             idproduto: p.medicamento_idproduto,
@@ -136,7 +142,6 @@ class MedicacaoController {
     }
   }
 
-  // ===== FUNÇÃO COM O LAYOUT CORRIGIDO =====
   renderMedicamentosList(medicamentos, isFromReceita = false) {
     const container = document.getElementById("medicamentoListContainer");
     if (!container) return;
@@ -184,7 +189,7 @@ class MedicacaoController {
           }" style="display: none;">
             <div class="input-group input-group-sm" style="max-width: 400px;">
                 <span class="input-group-text">Qtd.</span>
-                <input type="number" class="form-control" placeholder="0" step="1" min="0" id="qtd-${
+                <input type="number" class="form-control" placeholder="0.0" step="0.1" min="0" id="qtd-${
                   med.idproduto
                 }">
                 <span class="input-group-text">Obs.</span>
@@ -231,14 +236,14 @@ class MedicacaoController {
       const quantidadeInput = document.getElementById(`qtd-${id}`);
       const quantidade = quantidadeInput.value;
 
-      if (!quantidade || parseInt(quantidade) <= 0) {
+      if (!quantidade || parseFloat(quantidade) <= 0) {
         quantidadeInput.classList.add("is-invalid");
         hasInvalidQuantity = true;
       } else {
         quantidadeInput.classList.remove("is-invalid");
         selectedMeds.push({
           idMedicamentoProduto: parseInt(id),
-          quantidadeAdministrada: parseInt(quantidade),
+          quantidadeAdministrada: parseFloat(quantidade),
           descricaoHistorico: document.getElementById(`obs-${id}`).value.trim(),
         });
       }
