@@ -1,65 +1,62 @@
 package salvacao.petcontrol.service;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.stereotype.Service;
-import salvacao.petcontrol.dao.AdocaoDAL;
 import salvacao.petcontrol.model.PessoaModel;
 import salvacao.petcontrol.util.Validation;
 
 import java.util.List;
 
 @Service
-public class PessoaService
-{
-    @Autowired
-    private AdocaoDAL.PessoaDAL pessoaDAL;
+public class PessoaService {
 
-    public PessoaModel addPessoa(PessoaModel pessoa) throws Exception
-    {
+    private PessoaModel pessoaModel;
+
+    public PessoaService() {
+        this.pessoaModel = new PessoaModel();
+    }
+
+    public PessoaModel addPessoa(PessoaModel pessoa) throws Exception {
         if (!Validation.isCpfValido(pessoa.getCpf()))
             throw new Exception("CPF inválido!");
 
-        if (pessoaDAL.findByPessoa(pessoa.getCpf()) != null)
+        if (pessoaModel.getDAL().findByPessoa(pessoa.getCpf()) != null)
             throw new Exception("Usuário já cadastrado!");
 
         System.out.println("Adicionando pessoa: " + pessoa);
-        PessoaModel pessoaFinal = pessoaDAL.addPessoa(pessoa);
+        PessoaModel pessoaFinal = pessoaModel.getDAL().addPessoa(pessoa);
         return pessoaFinal;
     }
 
     public PessoaModel getPessoaCpf(String cpf) {
-        PessoaModel pessoa = pessoaDAL.findByPessoa(cpf);
+        PessoaModel pessoa = pessoaModel.getDAL().findByPessoa(cpf);
         return pessoa;
     }
 
-    public boolean updatePessoa(String cpf, PessoaModel pessoa) throws Exception
-    {
+    public boolean updatePessoa(String cpf, PessoaModel pessoa) throws Exception {
         if(!Validation.isCpfValido(pessoa.getCpf()))
             throw new Exception("CPF inválido!");
 
-        if(pessoaDAL.findByPessoa(pessoa.getCpf()) == null)
+        if(pessoaModel.getDAL().findByPessoa(pessoa.getCpf()) == null)
             throw new Exception("Não existe esse usuário!");
 
-        pessoaDAL.updatePessoa(cpf, pessoa);
+        pessoaModel.getDAL().updatePessoa(cpf, pessoa);
         return true;
     }
 
-    public void deletePessoa(String cpf) throws Exception
-    {
+    public void deletePessoa(String cpf) throws Exception {
         if(!Validation.isCpfValido(cpf))
             throw new Exception("CPF inválido!");
 
-        PessoaModel pessoaDelete = pessoaDAL.findByPessoa(cpf);
+        PessoaModel pessoaDelete = pessoaModel.getDAL().findByPessoa(cpf);
 
         if(pessoaDelete == null)
             throw new Exception("Não existe esse usuário!");
 
-        if(!pessoaDAL.deleteByPessoa(cpf))
+        if(!pessoaModel.getDAL().deleteByPessoa(cpf))
             throw new Exception("Erro ao deletar uma pessoa!");
     }
 
-    public List<PessoaModel> getAllPessoa()
-    {
-        return pessoaDAL.getAll();
+    public List<PessoaModel> getAllPessoa() {
+        return pessoaModel.getDAL().getAll();
     }
 }
-

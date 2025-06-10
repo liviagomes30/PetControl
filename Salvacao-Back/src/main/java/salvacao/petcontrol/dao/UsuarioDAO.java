@@ -1,6 +1,5 @@
 package salvacao.petcontrol.dao;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import salvacao.petcontrol.config.SingletonDB;
 import salvacao.petcontrol.model.PessoaModel;
@@ -17,9 +16,6 @@ import java.util.List;
 @Repository
 public class UsuarioDAO {
 
-    @Autowired
-    private PessoaModel pessoaModel = new PessoaModel();
-
     public UsuarioModel getId(Integer pessoaId) {
         UsuarioModel usuario = null;
         String sql = "SELECT * FROM usuario WHERE pessoa_idpessoa = ?";
@@ -34,8 +30,8 @@ public class UsuarioDAO {
                         rs.getString("senha"),
                         rs.getInt("pessoa_idpessoa"));
 
-                // Carregar dados da pessoa
-                PessoaModel pessoa = pessoaModel.getPessoaDAO().getId(pessoaId);
+                // Carregar dados da pessoa usando consulta direta
+                PessoaModel pessoa = buscarPessoaPorId(pessoaId);
                 if (pessoa != null) {
                     usuario.setPessoa(pessoa);
                 }
@@ -44,6 +40,31 @@ public class UsuarioDAO {
             e.printStackTrace();
         }
         return usuario;
+    }
+
+    // Método auxiliar para buscar pessoa por ID
+    private PessoaModel buscarPessoaPorId(Integer id) {
+        PessoaModel pessoa = null;
+        String sql = "SELECT * FROM pessoa WHERE idpessoa = ?";
+
+        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                pessoa = new PessoaModel(
+                        rs.getInt("idpessoa"),
+                        rs.getString("nome"),
+                        rs.getString("cpf"),
+                        rs.getString("endereco"),
+                        rs.getString("telefone"),
+                        rs.getString("email")
+                );
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return pessoa;
     }
 
     public UsuarioModel gravar(UsuarioModel usuario) { // Added gravar method
@@ -249,7 +270,7 @@ public class UsuarioDAO {
                 stmt.setString(4, searchPattern);
             }
             ResultSet rs = stmt.executeQuery();
-            
+
             while (rs.next()) {
                 UsuarioModel usuario = new UsuarioModel(
                         rs.getString("login"),

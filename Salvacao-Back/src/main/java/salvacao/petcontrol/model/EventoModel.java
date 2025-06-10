@@ -1,7 +1,11 @@
 package salvacao.petcontrol.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.springframework.stereotype.Repository;
+import salvacao.petcontrol.dao.EventoDAO;
 import java.time.LocalDate;
 
+@Repository
 public class EventoModel {
     private int idEvento;
     private String descricao;
@@ -11,9 +15,11 @@ public class EventoModel {
     private String local;
     private String responsavel;
     private String status;
+    private EventoDAO eventoDAO;
 
     // Construtor vazio
     public EventoModel() {
+        eventoDAO = new EventoDAO();
     }
 
     // Construtor com todos os campos
@@ -27,6 +33,16 @@ public class EventoModel {
         this.local = local;
         this.responsavel = responsavel;
         this.status = status;
+        this.eventoDAO = new EventoDAO();
+    }
+
+    // Método para acessar o DAO
+    @JsonIgnore
+    public EventoDAO getDAL() {
+        if (eventoDAO == null) {
+            eventoDAO = new EventoDAO();
+        }
+        return eventoDAO;
     }
 
     // Getters e Setters

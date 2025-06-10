@@ -1,8 +1,6 @@
 package salvacao.petcontrol.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import salvacao.petcontrol.dao.AdocaoDAL;
 import salvacao.petcontrol.model.AdocaoModel;
 import salvacao.petcontrol.util.Validation;
 
@@ -11,8 +9,11 @@ import java.util.List;
 @Service
 public class AdocaoService {
 
-    @Autowired
-    private AdocaoDAL adocaoDAL;
+    private AdocaoModel adocaoModel;
+
+    public AdocaoService() {
+        this.adocaoModel = new AdocaoModel();
+    }
 
     public AdocaoModel addAdocao(AdocaoModel adocao) throws Exception {
         // Validações
@@ -26,48 +27,48 @@ public class AdocaoService {
             throw new Exception("Adotante inválido!");
 
         // Verifica se o animal já foi adotado
-        List<AdocaoModel> adocoesAnimal = adocaoDAL.findByAnimal(adocao.getIdAnimal());
+        List<AdocaoModel> adocoesAnimal = adocaoModel.getDAL().findByAnimal(adocao.getIdAnimal());
         if (!adocoesAnimal.isEmpty()) {
             throw new Exception("Este animal já foi adotado!");
         }
 
-        AdocaoModel adocaoFinal = adocaoDAL.addAdocao(adocao);
+        AdocaoModel adocaoFinal = adocaoModel.getDAL().addAdocao(adocao);
         return adocaoFinal;
     }
 
     public AdocaoModel getAdocaoById(int id) {
-        return adocaoDAL.findById(id);
+        return adocaoModel.getDAL().findById(id);
     }
 
     public List<AdocaoModel> getAdocoesByAnimal(int idAnimal) {
-        return adocaoDAL.findByAnimal(idAnimal);
+        return adocaoModel.getDAL().findByAnimal(idAnimal);
     }
 
     public List<AdocaoModel> getAdocoesByAdotante(int idAdotante) {
-        return adocaoDAL.findByAdotante(idAdotante);
+        return adocaoModel.getDAL().findByAdotante(idAdotante);
     }
 
     public boolean updateAdocao(int id, AdocaoModel adocao) throws Exception {
         if (!Validation.isDataAdocaoValida(adocao.getDataAdocao()))
             throw new Exception("Data de adoção inválida!");
 
-        if (adocaoDAL.findById(id) == null)
+        if (adocaoModel.getDAL().findById(id) == null)
             throw new Exception("Adoção não encontrada!");
 
-        return adocaoDAL.updateAdocao(id, adocao);
+        return adocaoModel.getDAL().updateAdocao(id, adocao);
     }
 
     public void deleteAdocao(int id) throws Exception {
-        AdocaoModel adocaoDelete = adocaoDAL.findById(id);
+        AdocaoModel adocaoDelete = adocaoModel.getDAL().findById(id);
 
         if (adocaoDelete == null)
             throw new Exception("Adoção não encontrada!");
 
-        if (!adocaoDAL.deleteAdocao(id))
+        if (!adocaoModel.getDAL().deleteAdocao(id))
             throw new Exception("Erro ao deletar adoção!");
     }
 
     public List<AdocaoModel> getAllAdocao() {
-        return adocaoDAL.getAll();
+        return adocaoModel.getDAL().getAll();
     }
 }

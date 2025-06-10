@@ -154,7 +154,7 @@ public class UsuarioService {
             
             if (dto.getUsuario().getPessoa_idpessoa() == null) {
                 PessoaModel pessoaModel = new PessoaModel();
-                PessoaModel novaPessoa = pessoaModel.getPessoaDAO().gravar(dto.getPessoa());
+                PessoaModel novaPessoa = pessoaModel.getDAL().addPessoa(dto.getPessoa());
                 pessoaId = novaPessoa.getIdpessoa();
             } else {
                 pessoaId = dto.getUsuario().getPessoa_idpessoa();
