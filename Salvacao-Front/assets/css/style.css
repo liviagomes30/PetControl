@@ -179,6 +179,70 @@ button:focus,
   letter-spacing: 0.5px;
 }
 
+/* ESTILO DO CARD DO USUARIO
+NAO MEXER
+SUJEITO A PAULADA */
+.sidebar-user {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--border-color);
+  background-color: rgba(242, 160, 61, 0.05);
+  margin-bottom: var(--spacing-sm);
+}
+
+.sidebar-user-avatar {
+  margin-right: var(--spacing-md);
+  color: var(--laranja-vibrante);
+}
+
+.sidebar-user-avatar i {
+  font-size: 2rem;
+}
+
+.sidebar-user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar-user-name {
+  display: block;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-user-role {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  margin-top: 2px;
+}
+
+.sidebar-user-actions {
+  margin-left: var(--spacing-sm);
+}
+
+.sidebar-user-actions .btn {
+  padding: var(--spacing-xs);
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  transition: color var(--transition-fast);
+}
+
+.sidebar-user-actions .btn:hover {
+  color: var(--vermelho-intenso);
+  background: none;
+}
+
+.sidebar-user-actions .btn:focus {
+  box-shadow: 0 0 0 2px var(--focus-shadow);
+}
+
 .sidebar-menu {
   padding: 0;
   list-style: none;
@@ -703,6 +767,22 @@ table tbody tr:last-child td {
   .sidebar-logo {
     padding: var(--spacing-md);
     font-size: 1.1rem;
+  }
+
+  .sidebar-user {
+    flex-direction: column;
+    padding: var(--spacing-sm);
+    text-align: center;
+  }
+
+  .sidebar-user-avatar {
+    margin-right: 0;
+    margin-bottom: var(--spacing-xs);
+  }
+
+  .sidebar-user-info,
+  .sidebar-user-actions {
+    display: none;
   }
 
   .sidebar-item-text,
