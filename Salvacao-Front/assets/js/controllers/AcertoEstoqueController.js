@@ -10,15 +10,37 @@ class AcertoEstoqueController {
     this.produtosCarregados = [];
   }
 
+  /**
+   * CORREÇÃO: Função de formatação de data robusta que aceita
+   * tanto timestamps numéricos quanto strings de data.
+   * @param {string | number} valorData - A data vinda do backend.
+   * @returns {string} A data formatada como DD/MM/YYYY.
+   */
+  formatarDataLocal(valorData) {
+    if (!valorData) return "-";
+
+    // new Date() consegue interpretar números (milissegundos) e textos
+    const data = new Date(valorData);
+
+    // Verifica se a data criada é válida
+    if (isNaN(data.getTime())) {
+      return "Data inválida";
+    }
+
+    const dia = String(data.getDate()).padStart(2, "0");
+    const mes = String(data.getMonth() + 1).padStart(2, "0"); // getMonth() é base 0
+    const ano = data.getFullYear();
+
+    return `${dia}/${mes}/${ano}`;
+  }
+
   async inicializarFormulario() {
     try {
       UIComponents.Validacao.limparErros("formAcertoEstoque");
-
       const form = document.getElementById("formAcertoEstoque");
       if (form) {
         form.addEventListener("submit", (e) => this.efetuarAcerto(e));
       }
-
       const motivoSelect = document.getElementById("motivo");
       if (motivoSelect) {
         motivoSelect.addEventListener("change", function () {
@@ -40,7 +62,6 @@ class AcertoEstoqueController {
           }
         });
       }
-
       const motivoOutroInput = document.getElementById("motivoOutro");
       if (motivoOutroInput) {
         motivoOutroInput.addEventListener("input", function () {
@@ -49,7 +70,6 @@ class AcertoEstoqueController {
           }
         });
       }
-
       const btnAdicionarItem = document.getElementById("btnAdicionarItem");
       if (btnAdicionarItem) {
         btnAdicionarItem.addEventListener("click", () => {
@@ -57,12 +77,10 @@ class AcertoEstoqueController {
           UIComponents.ModalHelper.abrirModal("adicionarItemModal");
         });
       }
-
       const btnConfirmarItem = document.getElementById("btnConfirmarItem");
       if (btnConfirmarItem) {
         btnConfirmarItem.addEventListener("click", () => this.adicionarItem());
       }
-
       const selectProdutoModal = document.getElementById("selectProduto");
       if (selectProdutoModal) {
         selectProdutoModal.addEventListener("change", (e) => {
@@ -72,7 +90,6 @@ class AcertoEstoqueController {
           this.buscarEstoqueAtual(e.target.value);
         });
       }
-
       const novaQuantidadeInput = document.getElementById("novaQuantidade");
       if (novaQuantidadeInput) {
         novaQuantidadeInput.setAttribute("data-mask", "decimal");
@@ -82,14 +99,12 @@ class AcertoEstoqueController {
           }
         });
       }
-
       if (
         UIComponents.InputMasks &&
         typeof UIComponents.InputMasks.inicializar === "function"
       ) {
         UIComponents.InputMasks.inicializar();
       }
-
       UIComponents.Loading.mostrar("Carregando produtos...");
       await this.carregarProdutos();
       UIComponents.Loading.esconder();
@@ -107,7 +122,6 @@ class AcertoEstoqueController {
     try {
       const produtos = await this.service.listarProdutos();
       this.produtosCarregados = produtos;
-
       const selectProduto = document.getElementById("selectProduto");
       if (selectProduto) {
         while (selectProduto.options.length > 1) {
@@ -172,7 +186,6 @@ class AcertoEstoqueController {
     const produtoId = document.getElementById("selectProduto")?.value;
     const novaQuantidade = document.getElementById("novaQuantidade")?.value;
     let valido = true;
-
     if (!produtoId) {
       UIComponents.Validacao.mostrarErro(
         "selectProduto",
@@ -180,7 +193,6 @@ class AcertoEstoqueController {
       );
       valido = false;
     }
-
     if (!novaQuantidade) {
       UIComponents.Validacao.mostrarErro(
         "novaQuantidade",
@@ -209,9 +221,7 @@ class AcertoEstoqueController {
         valido = false;
       }
     }
-
     if (!valido) return;
-
     const produtoExistente = this.itensAcerto.find(
       (item) => item.produto_id === parseInt(produtoId)
     );
@@ -247,7 +257,6 @@ class AcertoEstoqueController {
     };
     this.itensAcerto.push(novoItem);
     this.atualizarTabelaItens();
-
     const modalElement = document.getElementById("adicionarItemModal");
     let modalInstance = bootstrap.Modal.getInstance(modalElement);
     if (!modalInstance) {
@@ -297,7 +306,6 @@ class AcertoEstoqueController {
       `;
       tabela.appendChild(tr);
     });
-
     const removerButtons = tabela.querySelectorAll(".btn-remover-item");
     removerButtons.forEach((button) => {
       button.addEventListener("click", (e) => {
@@ -313,7 +321,6 @@ class AcertoEstoqueController {
       UIComponents.Validacao.limparErros("formAcertoEstoque");
       const motivo = document.getElementById("motivo")?.value;
       let motivoFinal = motivo;
-
       if (motivo === "Outro") {
         const motivoOutro = document.getElementById("motivoOutro")?.value;
         if (!motivoOutro || !motivoOutro.trim()) {
@@ -325,10 +332,9 @@ class AcertoEstoqueController {
         }
         motivoFinal = motivoOutro;
       }
-
       const observacao = document.getElementById("observacao")?.value || "";
       const acertoEstoque = new AcertoEstoqueModel({
-        usuario_pessoa_id: 1,
+        usuario_pessoa_id: 1, // Lembre-se de substituir pelo ID do usuário logado
         motivo: motivoFinal,
         observacao: observacao,
         itens: this.itensAcerto,
@@ -349,13 +355,7 @@ class AcertoEstoqueController {
         async () => {
           try {
             UIComponents.Loading.mostrar("Processando acerto de estoque...");
-            const resultado = await this.service.efetuarAcerto(
-              acertoEstoque.toJSON()
-            );
-            console.log("Resultado do acerto:", resultado);
-            UIComponents.Toast.sucesso(
-              "Acerto de estoque realizado com sucesso!"
-            );
+            await this.service.efetuarAcerto(acertoEstoque.toJSON());
             window.location.href =
               "listarAcertosEstoque.html?message=Acerto de estoque realizado com sucesso!";
           } catch (error) {
@@ -394,9 +394,7 @@ class AcertoEstoqueController {
   atualizarTabelaAcertos(acertosRetornados) {
     const tabela = document.getElementById("tabela-acertos");
     if (!tabela) return;
-
     tabela.innerHTML = "";
-
     if (!Array.isArray(acertosRetornados) || acertosRetornados.length === 0) {
       tabela.innerHTML = `
             <tr>
@@ -405,7 +403,6 @@ class AcertoEstoqueController {
         `;
       return;
     }
-
     acertosRetornados.forEach((acertoModel) => {
       if (acertoModel.idacerto === undefined || acertoModel.idacerto === null) {
         console.warn(
@@ -414,11 +411,9 @@ class AcertoEstoqueController {
         );
         return;
       }
-
       const tr = document.createElement("tr");
-      const dataFormatada = new Date(acertoModel.data).toLocaleDateString(
-        "pt-BR"
-      );
+      // MUDANÇA APLICADA AQUI
+      const dataFormatada = this.formatarDataLocal(acertoModel.data);
       tr.innerHTML = `
             <td>${acertoModel.idacerto}</td>
             <td>${dataFormatada}</td>
@@ -442,7 +437,6 @@ class AcertoEstoqueController {
       UIComponents.Loading.mostrar("Aplicando filtro...");
       const dataInicio = document.getElementById("dataInicio").value;
       const dataFim = document.getElementById("dataFim").value;
-
       const acertosFiltrados = await this.service.buscarPorPeriodo(
         dataInicio,
         dataFim
@@ -460,15 +454,13 @@ class AcertoEstoqueController {
     try {
       UIComponents.Loading.mostrar("Carregando detalhes do acerto...");
       const acertoRetornado = await this.service.buscarPorId(id);
-
       if (acertoRetornado && acertoRetornado.acertoEstoque) {
         const acerto = acertoRetornado.acertoEstoque;
         const usuario = acertoRetornado.usuario;
-
         document.getElementById("idAcerto").textContent = acerto.idacerto;
-        document.getElementById("dataAcerto").textContent = new Date(
-          acerto.data
-        ).toLocaleDateString("pt-BR");
+        // MUDANÇA APLICADA AQUI
+        document.getElementById("dataAcerto").textContent =
+          this.formatarDataLocal(acerto.data);
         document.getElementById("usuarioAcerto").textContent =
           usuario?.pessoa?.nome || "N/A";
         document.getElementById("motivoAcerto").textContent = acerto.motivo;
@@ -494,9 +486,7 @@ class AcertoEstoqueController {
   atualizarTabelaItensDetalhe(itensWrapper) {
     const tabelaItens = document.getElementById("itensAcertoDetalhe");
     if (!tabelaItens) return;
-
     tabelaItens.innerHTML = "";
-
     if (!Array.isArray(itensWrapper) || itensWrapper.length === 0) {
       tabelaItens.innerHTML = `
             <tr>
@@ -505,16 +495,12 @@ class AcertoEstoqueController {
         `;
       return;
     }
-
     itensWrapper.forEach((itemWrapper) => {
       const item = itemWrapper.item;
       const produto = itemWrapper.produto;
-
       const tr = document.createElement("tr");
-
       const quantidadeAntes = item.quantidade_antes ?? 0;
       const quantidadeNova = item.quantidade_depois ?? 0;
-
       const diferenca = (quantidadeNova - quantidadeAntes).toFixed(2);
       let diferencaClass = "";
       if (diferenca > 0) {
@@ -522,14 +508,12 @@ class AcertoEstoqueController {
       } else if (diferenca < 0) {
         diferencaClass = "text-danger";
       }
-
       let tipoAjusteClass = "";
       if (item.tipoajuste === "ENTRADA") {
         tipoAjusteClass = "text-success";
       } else if (item.tipoajuste === "SAIDA") {
         tipoAjusteClass = "text-danger";
       }
-
       tr.innerHTML = `
             <td>${produto?.nome || "N/A"}</td>
             <td>${itemWrapper.nomeTipoProduto || "N/A"}</td>
