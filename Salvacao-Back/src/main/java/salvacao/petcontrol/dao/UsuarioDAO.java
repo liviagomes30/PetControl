@@ -96,11 +96,25 @@ public class UsuarioDAO {
     }
 
     public boolean alterar(UsuarioModel usuario) {
-        String sql = "UPDATE usuario SET login = ?, senha = ? WHERE pessoa_idpessoa = ?";
+        String sql;
+        boolean updatePassword = usuario.getSenha() != null && !usuario.getSenha().trim().isEmpty();
+        
+        if (updatePassword) {
+            sql = "UPDATE usuario SET login = ?, senha = ? WHERE pessoa_idpessoa = ?";
+        } else {
+            sql = "UPDATE usuario SET login = ? WHERE pessoa_idpessoa = ?";
+        }
+        
         try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
             stmt.setString(1, usuario.getLogin());
-            stmt.setString(2, usuario.getSenha());
-            stmt.setInt(3, usuario.getPessoa_idpessoa());
+            
+            if (updatePassword) {
+                stmt.setString(2, usuario.getSenha());
+                stmt.setInt(3, usuario.getPessoa_idpessoa());
+            } else {
+                stmt.setInt(2, usuario.getPessoa_idpessoa());
+            }
+            
             int linhasMod = stmt.executeUpdate();
             if (linhasMod == 0) {
                 throw new RuntimeException("Nenhum usuário foi atualizado.");

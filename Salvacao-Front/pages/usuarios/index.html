@@ -799,7 +799,6 @@
               const cleanFormData = {
                 usuario: {
                   login: formData.usuario.login.trim(),
-                  senha: formData.usuario.senha.trim(),
                   ...(isEdicao && { pessoa_idpessoa: formData.usuario.pessoa_idpessoa }),
                 },
                 pessoa: {
@@ -811,6 +810,11 @@
                   email: formData.pessoa.email.trim(),
                 },
               };
+              
+              if (formData.usuario.senha.trim()) {
+                cleanFormData.usuario.senha = formData.usuario.senha.trim();
+              }
+              
               onSalvar(cleanFormData);
             }
           };
