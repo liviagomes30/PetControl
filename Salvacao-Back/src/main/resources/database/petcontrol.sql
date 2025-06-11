@@ -40,9 +40,7 @@ CREATE TABLE animal (
     dataresgate     DATE,
     foto            VARCHAR(500),
     castrado        BOOLEAN DEFAULT FALSE,
-    cor             VARCHAR(50),
-    idade           INTEGER,
-    idhistorico     INTEGER
+    cor             VARCHAR(50)
 );
 
 CREATE TABLE estoque (
@@ -318,6 +316,11 @@ ADD COLUMN quantidade_administrada NUMERIC(10, 2);
 
 COMMENT ON COLUMN medicacao.quantidade_administrada IS 'Quantidade exata do medicamento que foi administrada na aplicação.';
 
+ALTER TABLE receitamedicamento
+ADD COLUMN status VARCHAR(20) DEFAULT 'ATIVA' NOT NULL;
+
+COMMENT ON COLUMN receitamedicamento.status IS 'Status da receita (ATIVA, CONCLUIDA)';
+
 -- =====================================
 -- DADOS DE TESTE ABRANGENTES
 -- =====================================
@@ -381,15 +384,15 @@ INSERT INTO medicamento (idproduto, composicao) VALUES
 (4, 'Meloxicam 0,5mg'),
 (9, 'Amoxilina 500mg');
 
-INSERT INTO animal (nome, especie, datanascimento, raca, porte, sexo, status, dataresgate, foto, castrado, cor, idade, idhistorico) VALUES 
-('Rex', 'Cachorro', '2021-01-15', 'Vira-lata', 'Médio', 'Macho', 'Disponível', '2023-12-01', NULL, TRUE, 'Marrom', 3, NULL),
-('Mimi', 'Gato', '2022-02-20', 'Persa', 'Pequeno', 'Fêmea', 'Disponível', '2024-01-10', NULL, TRUE, 'Branco', 2, NULL),
-('Bolt', 'Cachorro', '2019-03-10', 'Pastor Alemão', 'Grande', 'Macho', 'Disponível', '2023-11-15', NULL, FALSE, 'Preto e Marrom', 5, NULL),
-('Luna', 'Gato', '2023-04-05', 'Siamês', 'Pequeno', 'Fêmea', 'Disponível', '2024-02-01', NULL, FALSE, 'Creme', 1, NULL),
-('Thor', 'Cachorro', '2020-05-12', 'Golden Retriever', 'Grande', 'Macho', 'Disponível', '2023-10-20', NULL, TRUE, 'Dourado', 4, NULL),
-('Nala', 'Gato', '2021-06-01', 'Vira-lata', 'Pequeno', 'Fêmea', 'Disponível', '2024-01-25', NULL, TRUE, 'Cinza', 3, NULL),
-('Max', 'Cachorro', '2018-07-15', 'Bulldog', 'Médio', 'Macho', 'Disponível', '2023-09-30', NULL, TRUE, 'Branco e Marrom', 6, NULL),
-('Bella', 'Cachorro', '2022-08-01', 'Poodle', 'Pequeno', 'Fêmea', 'Disponível', '2024-03-05', NULL, FALSE, 'Branco', 2, NULL);
+INSERT INTO animal (nome, especie, datanascimento, raca, porte, sexo, status, dataresgate, foto, castrado, cor) VALUES 
+('Rex', 'Cachorro', '2021-01-15', 'Vira-lata', 'Médio', 'Macho', 'Disponível', '2023-12-01', NULL, TRUE, 'Marrom'),
+('Mimi', 'Gato', '2022-02-20', 'Persa', 'Pequeno', 'Fêmea', 'Disponível', '2024-01-10', NULL, TRUE, 'Branco'),
+('Bolt', 'Cachorro', '2019-03-10', 'Pastor Alemão', 'Grande', 'Macho', 'Disponível', '2023-11-15', NULL, FALSE, 'Preto e Marrom'),
+('Luna', 'Gato', '2023-04-05', 'Siamês', 'Pequeno', 'Fêmea', 'Disponível', '2024-02-01', NULL, FALSE, 'Creme'),
+('Thor', 'Cachorro', '2020-05-12', 'Golden Retriever', 'Grande', 'Macho', 'Disponível', '2023-10-20', NULL, TRUE, 'Dourado'),
+('Nala', 'Gato', '2021-06-01', 'Vira-lata', 'Pequeno', 'Fêmea', 'Disponível', '2024-01-25', NULL, TRUE, 'Cinza'),
+('Max', 'Cachorro', '2018-07-15', 'Bulldog', 'Médio', 'Macho', 'Disponível', '2023-09-30', NULL, TRUE, 'Branco e Marrom'),
+('Bella', 'Cachorro', '2022-08-01', 'Poodle', 'Pequeno', 'Fêmea', 'Disponível', '2024-03-05', NULL, FALSE, 'Branco');
 
 INSERT INTO historico (descricao, data, animal_idanimal, vacinacao_idvacinacao, medicacao_idmedicacao) VALUES 
 ('Vacinação antirrábica e vermifugação', '2024-01-15', 1, NULL, NULL),
@@ -401,14 +404,7 @@ INSERT INTO historico (descricao, data, animal_idanimal, vacinacao_idvacinacao, 
 ('Check-up geral', '2024-06-15', 7, NULL, NULL),
 ('Consulta dermatológica', '2024-07-01', 8, NULL, NULL);
 
-UPDATE animal SET idhistorico = 1 WHERE idanimal = 1;
-UPDATE animal SET idhistorico = 2 WHERE idanimal = 2;
-UPDATE animal SET idhistorico = 3 WHERE idanimal = 3;
-UPDATE animal SET idhistorico = 4 WHERE idanimal = 4;
-UPDATE animal SET idhistorico = 5 WHERE idanimal = 5;
-UPDATE animal SET idhistorico = 6 WHERE idanimal = 6;
-UPDATE animal SET idhistorico = 7 WHERE idanimal = 7;
-UPDATE animal SET idhistorico = 8 WHERE idanimal = 8;
+
 
 -- Receitas médicas
 INSERT INTO receitamedicamento (data, medico, clinica, animal_idanimal) VALUES 
