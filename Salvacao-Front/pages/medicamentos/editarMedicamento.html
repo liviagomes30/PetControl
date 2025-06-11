@@ -13,16 +13,19 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css"
     />
     <link rel="stylesheet" href="../../assets/css/style.css" />
-    
-    <!-- Services -->
+    <link rel="stylesheet" href="../../assets/css/estiloComplementar.css" />
+
     <script src="../../assets/js/services/authService.js"></script>
-    
+
     <script src="../../assets/js/components/sidebar.js" defer></script>
   </head>
   <body>
-    <div class="container">
+    <div class="container py-4">
       <div class="header d-flex align-items-center">
-        <a href="listarMedicamentos.html" class="btn btn-secondary me-3">
+        <a
+          href="listarMedicamentos.html"
+          class="btn btn-outline-secondary me-3"
+        >
           <i class="bi bi-arrow-left"></i> Voltar
         </a>
         <h1 class="h3 mb-0" style="color: var(--vermelho-escuro)">
@@ -31,12 +34,14 @@
       </div>
 
       <div class="bg-white shadow rounded p-4">
-        <form id="formMedicamento">
+        <form id="formMedicamento" class="needs-validation" novalidate>
           <input type="hidden" id="idproduto" />
 
           <div class="row mb-3">
             <div class="col-md-6">
-              <label for="nome" class="form-label">Nome do Medicamento</label>
+              <label for="nome" class="form-label required"
+                >Nome do Medicamento</label
+              >
               <input
                 type="text"
                 class="form-control"
@@ -45,11 +50,13 @@
                 data-max-length="100"
                 data-show-counter="true"
               />
-              <div id="nomeError" class="input-error"></div>
+              <div class="invalid-feedback">Por favor, informe o nome.</div>
             </div>
 
             <div class="col-md-6">
-              <label for="composicao" class="form-label">Composição</label>
+              <label for="composicao" class="form-label required"
+                >Composição</label
+              >
               <input
                 type="text"
                 class="form-control"
@@ -58,29 +65,33 @@
                 data-max-length="200"
                 data-show-counter="true"
               />
-              <div id="composicaoError" class="input-error"></div>
+              <div class="invalid-feedback">
+                Por favor, informe a composição.
+              </div>
             </div>
           </div>
 
           <div class="row mb-3">
             <div class="col-md-6">
-              <label for="tipoProduto" class="form-label"
+              <label for="tipoProduto" class="form-label required"
                 >Tipo de Produto</label
               >
               <select class="form-select" id="tipoProduto" required>
-                <option value="">Selecione</option>
+                <option value="">Selecione...</option>
               </select>
-              <div id="tipoError" class="input-error"></div>
+              <div class="invalid-feedback">Por favor, selecione o tipo.</div>
             </div>
 
             <div class="col-md-6">
-              <label for="unidadeMedida" class="form-label"
+              <label for="unidadeMedida" class="form-label required"
                 >Unidade de Medida</label
               >
               <select class="form-select" id="unidadeMedida" required>
-                <option value="">Selecione</option>
+                <option value="">Selecione...</option>
               </select>
-              <div id="unidadeError" class="input-error"></div>
+              <div class="invalid-feedback">
+                Por favor, selecione a unidade.
+              </div>
             </div>
           </div>
 
@@ -104,7 +115,7 @@
                 data-mask="money"
                 placeholder="0,00"
               />
-              <div id="precoError" class="input-error"></div>
+              <div class="invalid-feedback">Formato de preço inválido.</div>
             </div>
 
             <div class="col-md-6">
@@ -118,19 +129,21 @@
                 data-mask="number"
                 placeholder="0"
               />
-              <div id="estoqueError" class="input-error"></div>
+              <div class="invalid-feedback">Apenas números são permitidos.</div>
             </div>
           </div>
 
-          <div class="d-flex justify-content-end gap-2">
+          <div class="d-flex justify-content-end gap-2 mt-4">
             <button
               type="button"
               class="btn btn-secondary"
               onclick="window.location.href='listarMedicamentos.html'"
             >
-              Cancelar
+              <i class="bi bi-x-circle me-1"></i> Cancelar
             </button>
-            <button type="submit" class="btn btn-primary">Salvar</button>
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-check-circle me-1"></i> Salvar Alterações
+            </button>
           </div>
         </form>
       </div>
@@ -148,23 +161,7 @@
       import UIComponents from "../../assets/js/components/uiComponents.js";
 
       document.addEventListener("DOMContentLoaded", () => {
-        UIComponents.InputMasks.inicializar();
-
-        medicamentoController.inicializarFormulario();
-
-        window.mostrarToast = function (titulo, mensagem, tipo = "success") {
-          if (tipo === "success") {
-            UIComponents.Toast.sucesso(mensagem);
-          } else if (tipo === "error") {
-            UIComponents.Toast.erro(mensagem);
-          } else if (tipo === "warning") {
-            UIComponents.Toast.alerta(mensagem);
-          } else {
-            UIComponents.Toast.info(mensagem);
-          }
-        };
-
-        console.log("Página de edição de medicamento inicializada");
+        new medicamentoController.constructor();
       });
     </script>
   </body>

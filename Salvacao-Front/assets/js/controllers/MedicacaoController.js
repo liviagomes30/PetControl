@@ -28,8 +28,13 @@ class MedicacaoController {
       .getElementById("receita")
       .addEventListener("change", () => this.handleReceitaChange());
 
-    const today = new Date().toISOString().split("T")[0];
-    document.getElementById("dataMedicao").value = today;
+    const hoje = new Date();
+    const ano = hoje.getFullYear();
+    const mes = String(hoje.getMonth() + 1).padStart(2, "0");
+    const dia = String(hoje.getDate()).padStart(2, "0");
+    const dataLocalFormatada = `${ano}-${mes}-${dia}`;
+
+    document.getElementById("dataMedicao").value = dataLocalFormatada;
   }
 
   async carregarDadosIniciais() {
