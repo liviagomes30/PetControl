@@ -1,4 +1,3 @@
-// TipoProdutoModel.js
 class TipoProdutoModel {
   constructor(idtipoproduto = null, descricao = "") {
     this.idtipoproduto = idtipoproduto;
@@ -20,7 +19,6 @@ class TipoProdutoModel {
     const errors = {};
     let isValid = true;
 
-    // Validar descrição
     if (!this.descricao || this.descricao.trim() === "") {
       errors.descricao = "A descrição é obrigatória.";
       isValid = false;

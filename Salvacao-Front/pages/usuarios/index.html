@@ -24,6 +24,9 @@
     ></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
+    <!-- Services -->
+    <script src="../../assets/js/services/authService.js"></script>
+    
     <script src="../../assets/js/components/sidebar.js" defer></script>
   </head>
   <body>
@@ -49,6 +52,171 @@
     <script type="text/babel">
       const { useState, useEffect, useRef } = React;
 
+      const formatCPF = (value) => {
+        const digits = value.replace(/\D/g, '');
+        
+        if (digits.length <= 3) {
+          return digits;
+        } else if (digits.length <= 6) {
+          return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+        } else if (digits.length <= 9) {
+          return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+        } else {
+          return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9, 11)}`;
+        }
+      };
+
+      const formatPhone = (value) => {
+        const digits = value.replace(/\D/g, '');
+        
+        if (digits.length <= 2) {
+          return digits;
+        } else if (digits.length <= 6) {
+          return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+        } else if (digits.length <= 10) {
+          return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+        } else {
+          return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
+        }
+      };
+
+      const validateCPF = (cpf) => {
+        const digits = cpf.replace(/\D/g, '');
+        
+        if (digits.length !== 11) {
+          return false;
+        }
+        
+        if (/^(\d)\1{10}$/.test(digits)) {
+          return false;
+        }
+        
+        let sum = 0;
+        let remainder;
+        
+        for (let i = 1; i <= 9; i++) {
+          sum += parseInt(digits.substring(i - 1, i)) * (11 - i);
+        }
+        
+        remainder = (sum * 10) % 11;
+        if (remainder === 10 || remainder === 11) remainder = 0;
+        if (remainder !== parseInt(digits.substring(9, 10))) return false;
+        
+        sum = 0;
+        for (let i = 1; i <= 10; i++) {
+          sum += parseInt(digits.substring(i - 1, i)) * (12 - i);
+        }
+        
+        remainder = (sum * 10) % 11;
+        if (remainder === 10 || remainder === 11) remainder = 0;
+        if (remainder !== parseInt(digits.substring(10, 11))) return false;
+        
+        return true;
+      };
+
+      const safeToast = {
+        success: (message) => {
+          if (window.Toast) {
+            window.Toast.success(message);
+          } else {
+            console.log('Success:', message);
+            alert('Success: ' + message);
+          }
+        },
+        error: (message) => {
+          if (window.Toast) {
+            window.Toast.error(message);
+          } else {
+            console.error('Error:', message);
+            alert('Error: ' + message);
+          }
+        },
+        warning: (message) => {
+          if (window.Toast) {
+            window.Toast.warning(message);
+          } else {
+            console.warn('Warning:', message);
+            alert('Warning: ' + message);
+          }
+        }
+      };
+
+      const cleanupModalBackdrops = () => {
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        backdrops.forEach(backdrop => {
+          backdrop.classList.remove('show', 'fade');
+          backdrop.style.opacity = '0';
+          
+          setTimeout(() => {
+            if (backdrop.parentNode) {
+              backdrop.parentNode.removeChild(backdrop);
+            }
+          }, 50);
+        });
+        
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+        
+        const loadingOverlays = document.querySelectorAll('.loading-overlay, #loadingOverlay');
+        loadingOverlays.forEach(overlay => {
+          if (overlay.classList.contains('show')) {
+            overlay.classList.remove('show');
+          }
+          if (overlay.id === 'loadingOverlay' || overlay.id === 'loading-overlay') {
+            overlay.style.display = 'none';
+            overlay.style.opacity = '0';
+            overlay.style.visibility = 'hidden';
+          }
+        });
+      };
+
+      const forceCleanupBackdrops = () => {
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+        document.body.style.marginRight = '';
+        
+        const allBackdrops = document.querySelectorAll('[class*="modal-backdrop"], .modal-backdrop');
+        allBackdrops.forEach(backdrop => {
+          backdrop.remove();
+        });
+        
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+          modal.style.display = 'none';
+          modal.classList.remove('show');
+          modal.setAttribute('aria-hidden', 'true');
+          modal.removeAttribute('aria-modal');
+        });
+      };
+
+      const closeModal = (modalRef) => {
+        return new Promise((resolve) => {
+          if (modalRef.current) {
+            const modal = bootstrap.Modal.getInstance(modalRef.current);
+            if (modal) {
+              const handleHidden = () => {
+                modalRef.current?.removeEventListener('hidden.bs.modal', handleHidden);
+                setTimeout(() => {
+                  forceCleanupBackdrops();
+                  resolve();
+                }, 100);
+              };
+              
+              modalRef.current.addEventListener('hidden.bs.modal', handleHidden);
+              modal.hide();
+            } else {
+              forceCleanupBackdrops();
+              resolve();
+            }
+          } else {
+            forceCleanupBackdrops();
+            resolve();
+          }
+        });
+      };
+
       function UsuarioManager() {
         const [usuarios, setUsuarios] = useState([]);
         const [filtro, setFiltro] = useState("");
@@ -64,23 +232,53 @@
         }, []);
 
         useEffect(() => {
+          const timeoutId = setTimeout(() => {
+            if (filtro.trim()) {
+              buscarUsuariosFiltrados(filtro);
+            } else {
+              carregarUsuarios();
+            }
+          }, 500);
+
+          return () => clearTimeout(timeoutId);
+        }, [filtro]);
+
+        useEffect(() => {
           if (mostrarModal && modalRef.current) {
+            forceCleanupBackdrops();
+            
             const modal = new bootstrap.Modal(modalRef.current);
             modal.show();
-            modalRef.current.addEventListener("hidden.bs.modal", () => {
+            
+            const handleHidden = () => {
               setMostrarModal(false);
               setUsuarioEdicao(null);
-            });
+              modalRef.current?.removeEventListener("hidden.bs.modal", handleHidden);
+              setTimeout(() => {
+                forceCleanupBackdrops();
+              }, 100);
+            };
+            
+            modalRef.current.addEventListener("hidden.bs.modal", handleHidden);
           }
         }, [mostrarModal]);
 
         useEffect(() => {
           if (mostrarModalSenha && modalSenhaRef.current) {
+            forceCleanupBackdrops();
+            
             const modal = new bootstrap.Modal(modalSenhaRef.current);
             modal.show();
-            modalSenhaRef.current.addEventListener("hidden.bs.modal", () => {
+            
+            const handleHidden = () => {
               setMostrarModalSenha(false);
-            });
+              modalSenhaRef.current?.removeEventListener("hidden.bs.modal", handleHidden);
+              setTimeout(() => {
+                forceCleanupBackdrops();
+              }, 100);
+            };
+            
+            modalSenhaRef.current.addEventListener("hidden.bs.modal", handleHidden);
           }
         }, [mostrarModalSenha]);
 
@@ -91,22 +289,28 @@
             setUsuarios(Array.isArray(dados) ? dados : []);
           } catch (error) {
             console.error("Erro ao carregar usuários:", error);
-            Toast.error("Erro ao carregar usuários: " + error.message);
+            safeToast.error("Erro ao carregar usuários: " + error.message);
             setUsuarios([]);
           } finally {
             setLoading(false);
           }
         };
 
-        const usuariosFiltrados = usuarios.filter((usuario) => {
-          const termo = filtro.toLowerCase();
-          return (
-            usuario.usuario?.login?.toLowerCase().includes(termo) ||
-            usuario.pessoa?.nome?.toLowerCase().includes(termo) ||
-            usuario.pessoa?.cpf?.includes(termo) ||
-            usuario.pessoa?.email?.toLowerCase().includes(termo)
-          );
-        });
+        const buscarUsuariosFiltrados = async (filtro) => {
+          try {
+            setLoading(true);
+            const dados = await UsuarioService.listarUsuariosFiltrados(filtro);
+            setUsuarios(Array.isArray(dados) ? dados : []);
+          } catch (error) {
+            console.error("Erro ao carregar usuários:", error);
+            safeToast.error("Erro ao carregar usuários: " + error.message);
+            setUsuarios([]);
+          } finally {
+            setLoading(false);
+          }
+        };
+
+        const usuariosFiltrados = usuarios;
 
         const novoUsuario = () => {
           setUsuarioEdicao({
@@ -154,22 +358,23 @@
                 usuarioEdicao.pessoa.idpessoa,
                 dadosFormulario
               );
-              Toast.success("Usuário atualizado com sucesso!");
+              safeToast.success("Usuário atualizado com sucesso!");
             } else {
               await UsuarioService.criarUsuario(dadosFormulario);
-              Toast.success("Usuário criado com sucesso!");
+              safeToast.success("Usuário criado com sucesso!");
             }
 
             await carregarUsuarios();
+            
             setMostrarModal(false);
-
-            if (modalRef.current) {
-              const modal = bootstrap.Modal.getInstance(modalRef.current);
-              if (modal) modal.hide();
-            }
+            setUsuarioEdicao(null);
+            
+            // Close modal and wait for cleanup
+            await closeModal(modalRef);
+            
           } catch (error) {
             console.error("Erro ao salvar usuário:", error);
-            Toast.error("Erro ao salvar usuário: " + error.message);
+            safeToast.error("Erro ao salvar usuário: " + error.message);
           } finally {
             setLoading(false);
           }
@@ -191,15 +396,15 @@
             );
 
             if (resultado.operacao === "excluido") {
-              Toast.success("Usuário excluído com sucesso!");
+              safeToast.success("Usuário excluído com sucesso!");
             } else if (resultado.operacao === "desativado") {
-              Toast.warning("Usuário desativado. " + resultado.mensagem);
+              safeToast.warning("Usuário desativado. " + resultado.mensagem);
             }
 
             await carregarUsuarios();
           } catch (error) {
             console.error("Erro ao deletar usuário:", error);
-            Toast.error("Erro ao deletar usuário: " + error.message);
+            safeToast.error("Erro ao deletar usuário: " + error.message);
           } finally {
             setLoading(false);
           }
@@ -209,11 +414,11 @@
           try {
             setLoading(true);
             await UsuarioService.reativarUsuario(usuario.pessoa?.idpessoa);
-            Toast.success("Usuário reativado com sucesso!");
+            safeToast.success("Usuário reativado com sucesso!");
             await carregarUsuarios();
           } catch (error) {
             console.error("Erro ao reativar usuário:", error);
-            Toast.error("Erro ao reativar usuário: " + error.message);
+            safeToast.error("Erro ao reativar usuário: " + error.message);
           } finally {
             setLoading(false);
           }
@@ -231,16 +436,18 @@
               usuarioEdicao.pessoa?.idpessoa,
               senhaData
             );
-            Toast.success("Senha atualizada com sucesso!");
+            safeToast.success("Senha atualizada com sucesso!");
+            
             setMostrarModalSenha(false);
+            setUsuarioEdicao(null);
 
             if (modalSenhaRef.current) {
-              const modal = bootstrap.Modal.getInstance(modalSenhaRef.current);
-              if (modal) modal.hide();
+              closeModal(modalSenhaRef);
             }
+            
           } catch (error) {
             console.error("Erro ao atualizar senha:", error);
-            Toast.error("Erro ao atualizar senha: " + error.message);
+            safeToast.error("Erro ao atualizar senha: " + error.message);
           } finally {
             setLoading(false);
           }
@@ -396,13 +603,6 @@
                       <i className="bi bi-pencil"></i>
                     </button>
                     <button
-                      className="btn btn-sm btn-outline-warning me-2"
-                      onClick={() => onAlterarSenha(usuario)}
-                      title="Alterar senha"
-                    >
-                      <i className="bi bi-key"></i>
-                    </button>
-                    <button
                       className="btn btn-sm btn-outline-danger"
                       onClick={() => onDeletar(usuario)}
                       title="Deletar usuário"
@@ -447,24 +647,100 @@
           useEffect(() => {
             if (usuario) {
               setFormData(usuario);
+              setErrors({});
+            } else {
+              setFormData({
+                usuario: {
+                  login: "",
+                  senha: "",
+                  pessoa_idpessoa: "",
+                },
+                pessoa: {
+                  nome: "",
+                  cpf: "",
+                  endereco: "",
+                  telefone: "",
+                  email: "",
+                },
+              });
+              setErrors({});
             }
           }, [usuario]);
 
           const handleInputChange = (section, field, value) => {
+            let formattedValue = value;
+            
+            if (section === 'pessoa') {
+              if (field === 'cpf') {
+                formattedValue = formatCPF(value);
+              } else if (field === 'telefone') {
+                formattedValue = formatPhone(value);
+              }
+            }
+
             setFormData((prev) => ({
               ...prev,
               [section]: {
                 ...prev[section],
-                [field]: value,
+                [field]: formattedValue,
               },
             }));
 
-            if (errors[`${section}.${field}`]) {
-              setErrors((prev) => ({
-                ...prev,
-                [`${section}.${field}`]: null,
-              }));
+            validateField(section, field, formattedValue);
+          };
+
+          const validateField = (section, field, value) => {
+            const newErrors = { ...errors };
+            const fieldKey = `${section}.${field}`;
+
+            delete newErrors[fieldKey];
+
+            if (section === 'usuario') {
+              if (field === 'login') {
+                if (!value.trim()) {
+                  newErrors[fieldKey] = "Login é obrigatório";
+                } else if (value.trim().length < 3) {
+                  newErrors[fieldKey] = "Login deve ter pelo menos 3 caracteres";
+                }
+              } else if (field === 'senha') {
+                if (!formData.pessoa.idpessoa && !value.trim()) {
+                  newErrors[fieldKey] = "Senha é obrigatória";
+                } else if (value && value.length < 6) {
+                  newErrors[fieldKey] = "Senha deve ter pelo menos 6 caracteres";
+                }
+              }
+            } else if (section === 'pessoa' && !formData.pessoa.idpessoa) {
+              if (field === 'nome') {
+                if (!value.trim()) {
+                  newErrors[fieldKey] = "Nome é obrigatório";
+                } else if (value.trim().length < 2) {
+                  newErrors[fieldKey] = "Nome deve ter pelo menos 2 caracteres";
+                }
+              } else if (field === 'cpf') {
+                if (!value.trim()) {
+                  newErrors[fieldKey] = "CPF é obrigatório";
+                } else if (!validateCPF(value)) {
+                  newErrors[fieldKey] = "CPF inválido";
+                }
+              } else if (field === 'email') {
+                if (
+                  value &&
+                  value.trim() &&
+                  !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
+                ) {
+                  newErrors[fieldKey] = "Email inválido";
+                }
+              } else if (field === 'telefone') {
+                if (value && value.trim()) {
+                  const digits = value.replace(/\D/g, '');
+                  if (digits.length < 10 || digits.length > 11) {
+                    newErrors[fieldKey] = "Telefone deve ter 10 ou 11 dígitos";
+                  }
+                }
+              }
             }
+
+            setErrors(newErrors);
           };
 
           const validateForm = () => {
@@ -472,25 +748,43 @@
 
             if (!formData.usuario.login.trim()) {
               newErrors["usuario.login"] = "Login é obrigatório";
+            } else if (formData.usuario.login.trim().length < 3) {
+              newErrors["usuario.login"] = "Login deve ter pelo menos 3 caracteres";
             }
 
             if (!formData.pessoa.idpessoa && !formData.usuario.senha.trim()) {
               newErrors["usuario.senha"] = "Senha é obrigatória";
+            } else if (formData.usuario.senha && formData.usuario.senha.length < 6) {
+              newErrors["usuario.senha"] = "Senha deve ter pelo menos 6 caracteres";
             }
 
-            if (!formData.pessoa.nome.trim()) {
-              newErrors["pessoa.nome"] = "Nome é obrigatório";
-            }
+            if (!formData.pessoa.idpessoa) {
+              if (!formData.pessoa.nome.trim()) {
+                newErrors["pessoa.nome"] = "Nome é obrigatório";
+              } else if (formData.pessoa.nome.trim().length < 2) {
+                newErrors["pessoa.nome"] = "Nome deve ter pelo menos 2 caracteres";
+              }
 
-            if (!formData.pessoa.cpf.trim()) {
-              newErrors["pessoa.cpf"] = "CPF é obrigatório";
-            }
+              if (!formData.pessoa.cpf.trim()) {
+                newErrors["pessoa.cpf"] = "CPF é obrigatório";
+              } else if (!validateCPF(formData.pessoa.cpf)) {
+                newErrors["pessoa.cpf"] = "CPF inválido";
+              }
 
-            if (
-              formData.pessoa.email &&
-              !/\S+@\S+\.\S+/.test(formData.pessoa.email)
-            ) {
-              newErrors["pessoa.email"] = "Email inválido";
+              if (
+                formData.pessoa.email &&
+                formData.pessoa.email.trim() &&
+                !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.pessoa.email.trim())
+              ) {
+                newErrors["pessoa.email"] = "Email inválido";
+              }
+
+              if (formData.pessoa.telefone && formData.pessoa.telefone.trim()) {
+                const digits = formData.pessoa.telefone.replace(/\D/g, '');
+                if (digits.length < 10 || digits.length > 11) {
+                  newErrors["pessoa.telefone"] = "Telefone deve ter 10 ou 11 dígitos";
+                }
+              }
             }
 
             setErrors(newErrors);
@@ -500,7 +794,28 @@
           const handleSubmit = (e) => {
             e.preventDefault();
             if (validateForm()) {
-              onSalvar(formData);
+              const isEdicao = !!formData.pessoa.idpessoa;
+              
+              const cleanFormData = {
+                usuario: {
+                  login: formData.usuario.login.trim(),
+                  ...(isEdicao && { pessoa_idpessoa: formData.usuario.pessoa_idpessoa }),
+                },
+                pessoa: {
+                  ...(isEdicao && { idpessoa: formData.pessoa.idpessoa }),
+                  nome: formData.pessoa.nome.trim(),
+                  cpf: formData.pessoa.cpf.trim(),
+                  endereco: formData.pessoa.endereco.trim(),
+                  telefone: formData.pessoa.telefone.trim(),
+                  email: formData.pessoa.email.trim(),
+                },
+              };
+              
+              if (formData.usuario.senha.trim()) {
+                cleanFormData.usuario.senha = formData.usuario.senha.trim();
+              }
+              
+              onSalvar(cleanFormData);
             }
           };
 
@@ -525,7 +840,7 @@
                   <form onSubmit={handleSubmit}>
                     <div className="modal-body">
                       <div className="row">
-                        <div className="col-md-6">
+                        <div className={isEdicao ? "col-12" : "col-md-6"}>
                           <h6 className="border-bottom pb-2 mb-3">
                             Dados de Acesso
                           </h6>
@@ -587,117 +902,128 @@
                           </div>
                         </div>
 
-                        <div className="col-md-6">
-                          <h6 className="border-bottom pb-2 mb-3">
-                            Dados Pessoais
-                          </h6>
+                        {!isEdicao && (
+                          <div className="col-md-6">
+                            <h6 className="border-bottom pb-2 mb-3">
+                              Dados Pessoais
+                            </h6>
 
-                          <div className="mb-3">
-                            <label className="form-label required">Nome</label>
-                            <input
-                              type="text"
-                              className={`form-control ${
-                                errors["pessoa.nome"] ? "is-invalid" : ""
-                              }`}
-                              value={formData.pessoa.nome}
-                              onChange={(e) =>
-                                handleInputChange(
-                                  "pessoa",
-                                  "nome",
-                                  e.target.value
-                                )
-                              }
-                              placeholder="Digite o nome completo"
-                            />
-                            {errors["pessoa.nome"] && (
-                              <div className="invalid-feedback">
-                                {errors["pessoa.nome"]}
-                              </div>
-                            )}
-                          </div>
+                            <div className="mb-3">
+                              <label className="form-label required">Nome</label>
+                              <input
+                                type="text"
+                                className={`form-control ${
+                                  errors["pessoa.nome"] ? "is-invalid" : ""
+                                }`}
+                                value={formData.pessoa.nome}
+                                onChange={(e) =>
+                                  handleInputChange(
+                                    "pessoa",
+                                    "nome",
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="Digite o nome completo"
+                              />
+                              {errors["pessoa.nome"] && (
+                                <div className="invalid-feedback">
+                                  {errors["pessoa.nome"]}
+                                </div>
+                              )}
+                            </div>
 
-                          <div className="mb-3">
-                            <label className="form-label required">CPF</label>
-                            <input
-                              type="text"
-                              className={`form-control ${
-                                errors["pessoa.cpf"] ? "is-invalid" : ""
-                              }`}
-                              value={formData.pessoa.cpf}
-                              onChange={(e) =>
-                                handleInputChange(
-                                  "pessoa",
-                                  "cpf",
-                                  e.target.value
-                                )
-                              }
-                              placeholder="000.000.000-00"
-                            />
-                            {errors["pessoa.cpf"] && (
-                              <div className="invalid-feedback">
-                                {errors["pessoa.cpf"]}
-                              </div>
-                            )}
-                          </div>
+                            <div className="mb-3">
+                              <label className="form-label required">CPF</label>
+                              <input
+                                type="text"
+                                className={`form-control ${
+                                  errors["pessoa.cpf"] ? "is-invalid" : ""
+                                }`}
+                                value={formData.pessoa.cpf}
+                                onChange={(e) =>
+                                  handleInputChange(
+                                    "pessoa",
+                                    "cpf",
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="000.000.000-00"
+                                maxLength="14"
+                              />
+                              {errors["pessoa.cpf"] && (
+                                <div className="invalid-feedback">
+                                  {errors["pessoa.cpf"]}
+                                </div>
+                              )}
+                            </div>
 
-                          <div className="mb-3">
-                            <label className="form-label">Email</label>
-                            <input
-                              type="email"
-                              className={`form-control ${
-                                errors["pessoa.email"] ? "is-invalid" : ""
-                              }`}
-                              value={formData.pessoa.email}
-                              onChange={(e) =>
-                                handleInputChange(
-                                  "pessoa",
-                                  "email",
-                                  e.target.value
-                                )
-                              }
-                              placeholder="email@exemplo.com"
-                            />
-                            {errors["pessoa.email"] && (
-                              <div className="invalid-feedback">
-                                {errors["pessoa.email"]}
-                              </div>
-                            )}
-                          </div>
+                            <div className="mb-3">
+                              <label className="form-label">Email</label>
+                              <input
+                                type="email"
+                                className={`form-control ${
+                                  errors["pessoa.email"] ? "is-invalid" : ""
+                                }`}
+                                value={formData.pessoa.email}
+                                onChange={(e) =>
+                                  handleInputChange(
+                                    "pessoa",
+                                    "email",
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="email@exemplo.com"
+                              />
+                              {errors["pessoa.email"] && (
+                                <div className="invalid-feedback">
+                                  {errors["pessoa.email"]}
+                                </div>
+                              )}
+                            </div>
 
-                          <div className="mb-3">
-                            <label className="form-label">Telefone</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              value={formData.pessoa.telefone}
-                              onChange={(e) =>
-                                handleInputChange(
-                                  "pessoa",
-                                  "telefone",
-                                  e.target.value
-                                )
-                              }
-                              placeholder="(11) 99999-9999"
-                            />
-                          </div>
+                            <div className="mb-3">
+                              <label className="form-label">Telefone</label>
+                              <input
+                                type="text"
+                                className={`form-control ${
+                                  errors["pessoa.telefone"] ? "is-invalid" : ""
+                                }`}
+                                value={formData.pessoa.telefone}
+                                onChange={(e) =>
+                                  handleInputChange(
+                                    "pessoa",
+                                    "telefone",
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="(11) 99999-9999"
+                                maxLength="15"
+                              />
+                              {errors["pessoa.telefone"] && (
+                                <div className="invalid-feedback">
+                                  {errors["pessoa.telefone"]}
+                                </div>
+                              )}
+                            </div>
 
-                          <div className="mb-3">
-                            <label className="form-label">Endereço</label>
-                            <textarea
-                              className="form-control"
-                              rows="3"
-                              value={formData.pessoa.endereco}
-                              onChange={(e) =>
-                                handleInputChange(
-                                  "pessoa",
-                                  "endereco",
-                                  e.target.value
-                                )
-                              }
-                              placeholder="Digite o endereço completo"
-                            />
+                            <div className="mb-3">
+                              <label className="form-label">Endereço</label>
+                              <textarea
+                                className="form-control"
+                                rows="3"
+                                value={formData.pessoa.endereco}
+                                onChange={(e) =>
+                                  handleInputChange(
+                                    "pessoa",
+                                    "endereco",
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="Digite o endereço completo"
+                              />
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                     </div>
 
@@ -743,18 +1069,40 @@
           });
           const [errors, setErrors] = useState({});
 
+          useEffect(() => {
+            if (usuario) {
+              setSenhaData({
+                senhaAtual: "",
+                novaSenha: "",
+              });
+              setErrors({});
+            }
+          }, [usuario]);
+
           const handleInputChange = (field, value) => {
             setSenhaData((prev) => ({
               ...prev,
               [field]: value,
             }));
 
-            if (errors[field]) {
-              setErrors((prev) => ({
-                ...prev,
-                [field]: null,
-              }));
+            // Real-time validation
+            validateField(field, value);
+          };
+
+          const validateField = (field, value) => {
+            const newErrors = { ...errors };
+
+            delete newErrors[field];
+
+            if (field === 'novaSenha') {
+              if (!value.trim()) {
+                newErrors[field] = "Nova senha é obrigatória";
+              } else if (value.length < 6) {
+                newErrors[field] = "Senha deve ter pelo menos 6 caracteres";
+              }
             }
+
+            setErrors(newErrors);
           };
 
           const validateForm = () => {
@@ -773,7 +1121,11 @@
           const handleSubmit = (e) => {
             e.preventDefault();
             if (validateForm()) {
-              onSalvar(senhaData);
+              const cleanData = {
+                senhaAtual: senhaData.senhaAtual.trim(),
+                novaSenha: senhaData.novaSenha.trim(),
+              };
+              onSalvar(cleanData);
             }
           };
 
@@ -872,6 +1224,32 @@
         <UsuarioManager />,
         document.getElementById("usuarios-app")
       );
+
+      window.cleanupModalBackdrops = cleanupModalBackdrops;
+      window.forceCleanupBackdrops = forceCleanupBackdrops;
+      
+      window.emergencyCleanup = () => {
+        console.log('Running emergency cleanup...');
+        forceCleanupBackdrops();
+        
+        const allModals = document.querySelectorAll('.modal');
+        allModals.forEach(modal => {
+          const modalInstance = bootstrap.Modal.getInstance(modal);
+          if (modalInstance) {
+            modalInstance.dispose();
+          }
+        });
+        
+        console.log('Emergency cleanup completed');
+      };
+      
+      window.addEventListener('beforeunload', forceCleanupBackdrops);
+      
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          setTimeout(forceCleanupBackdrops, 100);
+        }
+      });
     </script>
   </body>
 </html>

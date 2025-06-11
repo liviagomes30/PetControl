@@ -6,220 +6,245 @@ import UIComponents from "../components/uiComponents.js";
 class MedicamentoController {
   constructor() {
     this.service = new MedicamentoService();
-    this.tipoProdutoValue = null;
-    this.unidadeMedidaValue = null;
+    this.medicamentosAtivos = [];
+    this.medicamentosInativos = [];
+    this.formSubmetido = false;
+
+    // Roteador simples para inicializar a página correta
+    if (window.location.pathname.includes("listarMedicamentos")) {
+      this.inicializarListagem();
+    } else if (
+      window.location.pathname.includes("cadastrarMedicamento") ||
+      window.location.pathname.includes("editarMedicamento")
+    ) {
+      this.inicializarFormulario();
+    }
   }
 
-  async inicializarListagem() {
-    try {
-      UIComponents.Loading.mostrar("Carregando medicamentos...");
-      const medicamentos = await this.service.listarTodos();
-      this.renderizarTabela(medicamentos);
+  // --- MÉTODOS DA PÁGINA DE LISTAGEM ---
 
-      // Verificar mensagem na URL
-      const urlParams = new URLSearchParams(window.location.search);
-      const message = urlParams.get("message");
-      if (message) {
-        UIComponents.Toast.sucesso(message);
-      }
+  inicializarListagem() {
+    this.carregarMedicamentosAtivos();
+    this.carregarMedicamentosInativos();
+    this.vincularEventosFiltro();
+
+    // Esta parte está correta e será a única a exibir o toast de sucesso
+    const urlParams = new URLSearchParams(window.location.search);
+    const message = urlParams.get("message");
+    if (message) {
+      UIComponents.Toast.sucesso(message);
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete("message");
+      window.history.replaceState({}, document.title, newUrl.toString());
+    }
+  }
+
+  vincularEventosFiltro() {
+    const searchInput = document.getElementById("searchInput");
+    const filterSelect = document.getElementById("filterSelect");
+    const clearSearchButton = document.getElementById("clearSearchButton");
+
+    if (searchInput) {
+      searchInput.addEventListener("input", () =>
+        this.filtrarMedicamentosAtivos()
+      );
+    }
+    if (filterSelect) {
+      filterSelect.addEventListener("change", () =>
+        this.filtrarMedicamentosAtivos()
+      );
+    }
+    if (clearSearchButton) {
+      clearSearchButton.addEventListener("click", () => {
+        if (searchInput) searchInput.value = "";
+        if (filterSelect) filterSelect.value = "1";
+        this.renderizarTabelaAtivos(this.medicamentosAtivos);
+      });
+    }
+  }
+
+  async carregarMedicamentosAtivos() {
+    try {
+      UIComponents.Loading.mostrar("Carregando medicamentos ativos...");
+      this.medicamentosAtivos = await this.service.listarTodos();
+      this.renderizarTabelaAtivos(this.medicamentosAtivos);
     } catch (error) {
-      console.error("Erro ao carregar medicamentos:", error);
-      UIComponents.ModalErro.mostrar(MensagensPadroes.ERRO.CARREGAMENTO);
+      UIComponents.ModalErro.mostrar(
+        "Erro ao carregar medicamentos ativos: " + error.message
+      );
     } finally {
       UIComponents.Loading.esconder();
     }
   }
 
-  renderizarTabela(medicamentos) {
+  async carregarMedicamentosInativos() {
+    try {
+      UIComponents.Loading.mostrar("Carregando medicamentos inativos...");
+      this.medicamentosInativos = await this.service.listarTodosInativos();
+      this.renderizarTabelaInativos(this.medicamentosInativos);
+    } catch (error) {
+      UIComponents.ModalErro.mostrar(
+        "Erro ao carregar medicamentos inativos: " + error.message
+      );
+    } finally {
+      UIComponents.Loading.esconder();
+    }
+  }
+
+  renderizarTabelaAtivos(medicamentos) {
     const tabela = document.getElementById("tabela-medicamentos");
     if (!tabela) return;
-
     tabela.innerHTML = "";
-
     if (medicamentos.length === 0) {
-      tabela.innerHTML = `
-      <tr>
-        <td colspan="9" class="text-center">Nenhum medicamento encontrado.</td>
-      </tr>
-    `;
+      tabela.innerHTML = `<tr><td colspan="6" class="text-center">Nenhum medicamento ativo encontrado.</td></tr>`;
       return;
     }
-
     medicamentos.forEach((med) => {
-      if (!med.produto) {
-        console.warn("Produto não encontrado no medicamento:", med);
-        med.produto = {};
-      }
-
-      if (!med.medicamento) {
-        console.warn("Dados do medicamento não encontrados:", med);
-        med.medicamento = {};
-      }
-
-      const nome = med.produto.nome || "-";
-
-      const composicao = med.medicamento.composicao || "-";
-
-      const tipoProduto = med.tipoProduto?.descricao || "-";
-
-      const unidadeMedida = med.unidadeMedida?.descricao || "-";
-
-      const fabricante = med.produto.fabricante || "-";
-
-      let precoFormatado = "-";
-      if (med.produto.preco !== null && med.produto.preco !== undefined) {
-        try {
-          const preco = parseFloat(med.produto.preco);
-          if (!isNaN(preco)) {
-            precoFormatado = `R$ ${preco.toFixed(2).replace(".", ",")}`;
-          }
-        } catch (error) {
-          console.warn("Erro ao formatar preço:", error);
-        }
-      }
-
-      let dataCadastro = "-";
-      if (med.produto.dataCadastro) {
-        try {
-          const data = new Date(med.produto.dataCadastro);
-          if (!isNaN(data.getTime())) {
-            dataCadastro = data.toLocaleDateString("pt-BR");
-          }
-        } catch (error) {
-          console.warn("Erro ao formatar data:", error);
-        }
-      }
-
-      let estoqueMinimo = "-";
-      if (
-        med.produto.estoqueMinimo !== null &&
-        med.produto.estoqueMinimo !== undefined
-      ) {
-        try {
-          const estoque = parseInt(med.produto.estoqueMinimo);
-          if (!isNaN(estoque)) {
-            estoqueMinimo = estoque.toString();
-          }
-        } catch (error) {
-          console.warn("Erro ao formatar estoque mínimo:", error);
-        }
-      }
-
-      const idProduto = med.produto.idproduto || 0;
-
       const tr = document.createElement("tr");
       tr.innerHTML = `
-      <td>${nome}</td>
-      <td>${composicao}</td>
-      <td>${tipoProduto}</td>
-      <td>${unidadeMedida}</td>
-      <td>${fabricante}</td>
-      <td>${precoFormatado}</td>
-      <td>${estoqueMinimo}</td>
-      <td>${dataCadastro}</td>
-      <td>
-        <a href="editarMedicamento.html?id=${idProduto}" class="btn btn-sm btn-primary">Editar</a>
-        <button onclick="medicamentoController.confirmarExclusao(${idProduto})" class="btn btn-sm btn-outline-secondary">Excluir</button>
-      </td>
-    `;
+        <td>${med.produto?.nome || "-"}</td>
+        <td>${med.medicamento?.composicao || "-"}</td>
+        <td>${med.tipoProduto?.descricao || "-"}</td>
+        <td>${med.unidadeMedida?.descricao || "-"}</td>
+        <td>${med.produto?.fabricante || "-"}</td>
+        <td>
+          <a href="editarMedicamento.html?id=${med.produto?.idproduto}" 
+             class="btn btn-sm btn-primary" title="Editar"><i class="bi bi-pencil-fill"></i></a>
+          <button onclick="medicamentoController.confirmarExclusao(${
+            med.produto?.idproduto
+          })" 
+                  class="btn btn-sm btn-outline-danger" title="Desativar"><i class="bi bi-trash-fill"></i></button>
+        </td>`;
       tabela.appendChild(tr);
     });
   }
 
+  renderizarTabelaInativos(medicamentos) {
+    const tabela = document.getElementById("tabela-medicamentos-inativos");
+    if (!tabela) return;
+    tabela.innerHTML = "";
+    if (medicamentos.length === 0) {
+      tabela.innerHTML = `<tr><td colspan="4" class="text-center">Nenhum medicamento inativo encontrado.</td></tr>`;
+      return;
+    }
+    medicamentos.forEach((med) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${med.produto?.nome || "-"}</td>
+        <td>${med.medicamento?.composicao || "-"}</td>
+        <td>${med.tipoProduto?.descricao || "-"}</td>
+        <td>
+          <button onclick="medicamentoController.confirmarReativacao(${
+            med.produto?.idproduto
+          })" 
+                  class="btn btn-sm btn-success" title="Reativar"><i class="bi bi-arrow-counterclockwise"></i> Reativar</button>
+        </td>`;
+      tabela.appendChild(tr);
+    });
+  }
+
+  filtrarMedicamentosAtivos() {
+    const searchInput = document.getElementById("searchInput");
+    const filterSelect = document.getElementById("filterSelect");
+    if (!searchInput || !filterSelect) return;
+    const termo = searchInput.value.trim().toLowerCase();
+    const filtro = filterSelect.value;
+    if (!termo) {
+      this.renderizarTabelaAtivos(this.medicamentosAtivos);
+      return;
+    }
+    const filtrados = this.medicamentosAtivos.filter((med) => {
+      switch (filtro) {
+        case "1":
+          return med.produto?.nome?.toLowerCase().includes(termo);
+        case "2":
+          return med.medicamento?.composicao?.toLowerCase().includes(termo);
+        case "3":
+          return med.tipoProduto?.descricao?.toLowerCase().includes(termo);
+        case "4":
+          return med.produto?.fabricante?.toLowerCase().includes(termo);
+        default:
+          return false;
+      }
+    });
+    this.renderizarTabelaAtivos(filtrados);
+  }
+
   confirmarExclusao(id) {
     UIComponents.ModalConfirmacao.mostrar(
-      "Confirmar exclusão",
-      MensagensPadroes.CONFIRMACAO.EXCLUSAO,
-      () => {
-        this.excluir(id).catch((error) => {
-          console.error("Erro ao excluir:", error);
-          UIComponents.Toast.erro(
-            MensagensPadroes.ERRO.EXCLUSAO +
-              (error.message ? `: ${error.message}` : "")
-          );
-        });
-      }
+      "Confirmar Desativação",
+      "Tem certeza que deseja desativar este medicamento? Ele não poderá ser usado em novas operações, mas o histórico será mantido.",
+      () => this.desativar(id)
     );
   }
 
-  async excluir(id) {
+  async desativar(id) {
     try {
-      UIComponents.Loading.mostrar("Excluindo medicamento...");
-
-      try {
-        const resposta = await this.service.excluir(id);
-
-        if (resposta.sucesso) {
-          if (resposta.operacao === "excluido") {
-            UIComponents.Toast.sucesso(MensagensPadroes.SUCESSO.EXCLUSAO);
-          } else if (resposta.operacao === "desativado") {
-            UIComponents.Toast.sucesso(
-              "Medicamento desativado com sucesso. Este item está sendo utilizado no sistema e não pode ser excluído completamente."
-            );
-          }
-
-          await this.inicializarListagem();
-          return resposta;
-        } else {
-          UIComponents.Toast.erro(
-            resposta.mensagem || MensagensPadroes.ERRO.EXCLUSAO
-          );
-          return resposta;
-        }
-      } catch (error) {
-        if (
-          error.message &&
-          error.message.includes("Cannot commit when autoCommit is enabled")
-        ) {
-          UIComponents.Toast.sucesso(MensagensPadroes.SUCESSO.EXCLUSAO);
-          setTimeout(() => this.inicializarListagem(), 500);
-          return { sucesso: true };
-        } else {
-          throw error;
-        }
+      UIComponents.Loading.mostrar("Desativando...");
+      const resposta = await this.service.excluir(id);
+      if (resposta.sucesso) {
+        UIComponents.Toast.sucesso(
+          resposta.mensagem || "Medicamento desativado com sucesso."
+        );
+        this.inicializarListagem();
+      } else {
+        UIComponents.Toast.erro(
+          resposta.mensagem || MensagensPadroes.ERRO.EXCLUSAO
+        );
       }
     } catch (error) {
-      console.error("Erro ao processar:", error);
-      UIComponents.Toast.erro(
+      UIComponents.ModalErro.mostrar(
         MensagensPadroes.ERRO.EXCLUSAO +
           (error.message ? `: ${error.message}` : "")
       );
-      throw error;
     } finally {
       UIComponents.Loading.esconder();
     }
   }
 
+  confirmarReativacao(id) {
+    UIComponents.ModalConfirmacao.mostrar(
+      "Confirmar Reativação",
+      "Deseja reativar este medicamento? Ele voltará a aparecer nas listas de seleção.",
+      () => this.reativar(id)
+    );
+  }
+
+  async reativar(id) {
+    try {
+      UIComponents.Loading.mostrar("Reativando...");
+      await this.service.reativar(id);
+      UIComponents.Toast.sucesso("Medicamento reativado com sucesso!");
+      this.inicializarListagem();
+    } catch (error) {
+      UIComponents.ModalErro.mostrar("Erro ao reativar: " + error.message);
+    } finally {
+      UIComponents.Loading.esconder();
+    }
+  }
+
+  // --- MÉTODOS DA PÁGINA DE FORMULÁRIO ---
+
   async inicializarFormulario() {
     try {
       UIComponents.Validacao.limparErros("formMedicamento");
-
       const urlParams = new URLSearchParams(window.location.search);
       const id = urlParams.get("id");
-
       const form = document.getElementById("formMedicamento");
       if (form) {
         if (id) {
           form.addEventListener("submit", (e) => this.atualizar(e, id));
         } else {
           form.addEventListener("submit", (e) => this.cadastrar(e));
-
           const alertaEstoque = document.getElementById("alertaEstoque");
-          if (alertaEstoque) {
-            alertaEstoque.style.display = "block";
-          }
+          if (alertaEstoque) alertaEstoque.style.display = "block";
         }
       }
-
       this.configurarMascarasCampos();
-
+      this.vincularLimpezaAutomaticaValidacao();
       UIComponents.Loading.mostrar("Carregando dados...");
       await this.carregarSelectsTipoUnidade();
-
-      if (id) {
-        await this.carregarMedicamento(id);
-      }
-
+      if (id) await this.carregarMedicamento(id);
       UIComponents.Loading.esconder();
     } catch (error) {
       console.error("Erro ao inicializar formulário:", error);
@@ -230,176 +255,159 @@ class MedicamentoController {
     }
   }
 
-  configurarMascarasCampos() {
-    const campoPreco = document.getElementById("preco");
-    if (campoPreco) {
-      campoPreco.setAttribute("data-mask", "money");
-      campoPreco.setAttribute("type", "text");
-      campoPreco.setAttribute("placeholder", "0,00");
-    }
-
-    const campoEstoque = document.getElementById("estoqueMinimo");
-    if (campoEstoque) {
-      campoEstoque.setAttribute("data-mask", "number");
-      campoEstoque.setAttribute("placeholder", "0");
-    }
-
-    const campoNome = document.getElementById("nome");
-    if (campoNome) {
-      campoNome.setAttribute("data-max-length", "100");
-      campoNome.setAttribute("data-show-counter", "true");
-    }
-
-    const campoComposicao = document.getElementById("composicao");
-    if (campoComposicao) {
-      campoComposicao.setAttribute("data-max-length", "200");
-      campoComposicao.setAttribute("data-show-counter", "true");
-    }
-
-    const campoFabricante = document.getElementById("fabricante");
-    if (campoFabricante) {
-      campoFabricante.setAttribute("data-max-length", "100");
-    }
-
-    UIComponents.InputMasks.inicializar();
+  vincularLimpezaAutomaticaValidacao() {
+    const campos = [
+      "nome",
+      "composicao",
+      "tipoProduto",
+      "unidadeMedida",
+      "preco",
+      "estoqueMinimo",
+      "fabricante",
+    ];
+    campos.forEach((id) => {
+      const elemento = document.getElementById(id);
+      if (elemento) {
+        const evento = elemento.tagName === "SELECT" ? "change" : "input";
+        elemento.addEventListener(evento, () =>
+          UIComponents.Validacao.limparErroCampo(id)
+        );
+      }
+    });
   }
 
-  limparMensagensErro() {
-    UIComponents.Validacao.limparErros("formMedicamento");
+  configurarMascarasCampos() {
+    const camposComMascara = [
+      { id: "preco", mask: "money", placeholder: "0,00", type: "text" },
+      { id: "estoqueMinimo", mask: "number", placeholder: "0" },
+    ];
+    camposComMascara.forEach((c) => {
+      const elemento = document.getElementById(c.id);
+      if (elemento) {
+        elemento.setAttribute("data-mask", c.mask);
+        elemento.setAttribute("placeholder", c.placeholder);
+        if (c.type) elemento.setAttribute("type", c.type);
+      }
+    });
+    const camposComContador = [
+      { id: "nome", maxLength: 100 },
+      { id: "composicao", maxLength: 200 },
+      { id: "fabricante", maxLength: 100 },
+    ];
+    camposComContador.forEach((c) => {
+      const elemento = document.getElementById(c.id);
+      if (elemento) {
+        elemento.setAttribute("data-max-length", c.maxLength);
+        if (c.id !== "fabricante")
+          elemento.setAttribute("data-show-counter", "true");
+      }
+    });
+    UIComponents.InputMasks.inicializar();
   }
 
   async carregarSelectsTipoUnidade() {
     try {
       const tipos = await this.service.listarTiposProduto();
       const unidades = await this.service.listarUnidadesMedida();
-
       const selectTipo = document.getElementById("tipoProduto");
       const selectUnidade = document.getElementById("unidadeMedida");
-
       if (selectTipo) {
         while (selectTipo.options.length > 1) {
           selectTipo.remove(1);
         }
 
-        tipos.forEach((tipo) => {
-          const option = document.createElement("option");
-          option.value = tipo.idtipoproduto;
-          option.textContent = tipo.descricao;
-          selectTipo.appendChild(option);
-        });
+        if (tipos.length === 0) {
+          console.warn("Nenhum tipo de produto encontrado no sistema");
+        } else {
+          tipos.forEach((tipo) => {
+            const option = document.createElement("option");
+            option.value = tipo.idtipoproduto;
+            option.textContent = tipo.descricao;
+            selectTipo.appendChild(option);
+          });
+        }
       }
-
       if (selectUnidade) {
         while (selectUnidade.options.length > 1) {
           selectUnidade.remove(1);
         }
 
-        unidades.forEach((unidade) => {
-          const id =
-            unidade.idunidademedida !== undefined
-              ? unidade.idunidademedida
-              : unidade.idUnidadeMedida;
+        if (unidades.length === 0) {
+          console.warn("Nenhuma unidade de medida encontrada no sistema");
+        } else {
+          unidades.forEach((unidade) => {
+            const id =
+              unidade.idunidademedida !== undefined
+                ? unidade.idunidademedida
+                : unidade.idUnidadeMedida;
 
-          const option = document.createElement("option");
-          option.value = id;
-          option.textContent = unidade.descricao;
-          selectUnidade.appendChild(option);
-        });
+            const option = document.createElement("option");
+            option.value = id;
+            option.textContent = unidade.descricao;
+            selectUnidade.appendChild(option);
+          });
+        }
       }
 
-      return { tipos, unidades };
+      if (tipos.length === 0 || unidades.length === 0) {
+        const msg = [];
+        if (tipos.length === 0) msg.push("tipos de produtos");
+        if (unidades.length === 0) msg.push("unidades de medida");
+        throw new Error(`Nenhum(a) ${msg.join(" e ")} encontrado(a) no sistema. Verifique se o banco de dados está inicializado corretamente.`);
+      }
     } catch (error) {
-      console.error("Erro ao carregar selects:", error);
-      throw new Error(
-        "Falha ao carregar tipos de produtos e unidades de medida: " +
-          error.message
-      );
+      throw new Error("Falha ao carregar tipos e unidades: " + error.message);
     }
   }
 
   async carregarMedicamento(id) {
     try {
       UIComponents.Loading.mostrar("Carregando medicamento...");
-
       const data = await this.service.buscarPorId(id);
-      console.log("Dados recebidos do backend:", data);
-
       if (!data || !data.produto || !data.medicamento) {
         throw new Error("Dados do medicamento não encontrados ou incompletos");
       }
-
-      const idField = document.getElementById("idproduto");
-      const nomeField = document.getElementById("nome");
-      const composicaoField = document.getElementById("composicao");
-      const fabricanteField = document.getElementById("fabricante");
-      const tipoSelect = document.getElementById("tipoProduto");
-      const unidadeSelect = document.getElementById("unidadeMedida");
-      const precoField = document.getElementById("preco");
-      const estoqueField = document.getElementById("estoqueMinimo");
-
-      if (idField) idField.value = data.produto.idproduto;
-      if (nomeField) nomeField.value = data.produto.nome || "";
-      if (composicaoField)
-        composicaoField.value = data.medicamento.composicao || "";
-      if (fabricanteField)
-        fabricanteField.value = data.produto.fabricante || "";
-
-      if (precoField) {
-        if (data.produto.preco !== null && data.produto.preco !== undefined) {
-          precoField.value = UIComponents.InputMasks.formatarValorMonetario(
-            data.produto.preco
-          );
-          precoField.dataset.valor = data.produto.preco;
-        } else {
-          precoField.value = "";
-          precoField.dataset.valor = "";
-        }
-      }
-
-      if (estoqueField) {
-        if (
-          data.produto.estoqueMinimo !== null &&
-          data.produto.estoqueMinimo !== undefined
-        ) {
-          estoqueField.value = data.produto.estoqueMinimo;
-        } else {
-          estoqueField.value = "";
-        }
-      }
-
-      if (tipoSelect && data.produto.idtipoproduto) {
-        tipoSelect.value = data.produto.idtipoproduto;
-      }
-
-      const idUnidadeMedida =
-        data.produto.idunidademedida !== undefined
-          ? data.produto.idunidademedida
-          : data.produto.idUnidadeMedida;
-
-      if (unidadeSelect && idUnidadeMedida) {
-        unidadeSelect.value = idUnidadeMedida;
-      }
-
-      UIComponents.Loading.esconder();
-      UIComponents.Toast.sucesso("Dados carregados com sucesso");
+      this.preencherCamposFormulario(data);
     } catch (error) {
-      console.error("Erro ao carregar medicamento:", error);
-      UIComponents.Loading.esconder();
       UIComponents.ModalErro.mostrar(
         "Falha ao carregar os dados: " + error.message
       );
-      throw new Error(
-        "Não foi possível carregar os dados do medicamento: " + error.message
-      );
+      throw error;
+    } finally {
+      UIComponents.Loading.esconder();
     }
+  }
+
+  preencherCamposFormulario(data) {
+    const campos = {
+      idproduto: data.produto.idproduto,
+      nome: data.produto.nome,
+      composicao: data.medicamento.composicao,
+      fabricante: data.produto.fabricante,
+      tipoProduto: data.produto.idtipoproduto,
+      unidadeMedida:
+        data.produto.idunidademedida ?? data.produto.idUnidadeMedida,
+      preco: data.produto.preco,
+      estoqueMinimo: data.produto.estoqueMinimo,
+    };
+    Object.entries(campos).forEach(([id, valor]) => {
+      const elemento = document.getElementById(id);
+      if (elemento) {
+        if (id === "preco" && valor != null) {
+          elemento.value =
+            UIComponents.InputMasks.formatarValorMonetario(valor);
+          elemento.dataset.valor = valor;
+        } else {
+          elemento.value = valor ?? "";
+        }
+      }
+    });
   }
 
   validarFormulario() {
     this.limparMensagensErro();
-
     const medicamento = this.obterDadosFormulario();
     const { valido, erros } = medicamento.validar();
-
     if (!valido) {
       for (const campo in erros) {
         const elementId = {
@@ -410,87 +418,47 @@ class MedicamentoController {
           preco: "preco",
           estoqueMinimo: "estoqueMinimo",
         }[campo];
-
-        if (elementId) {
+        if (elementId)
           UIComponents.Validacao.mostrarErro(elementId, erros[campo]);
-        }
       }
     }
-
     return { valido, medicamento };
   }
 
   obterDadosFormulario() {
-    const idprodutoElement = document.getElementById("idproduto");
-    const nomeElement = document.getElementById("nome");
-    const tipoProdutoElement = document.getElementById("tipoProduto");
-    const unidadeMedidaElement = document.getElementById("unidadeMedida");
-    const fabricanteElement = document.getElementById("fabricante");
-    const composicaoElement = document.getElementById("composicao");
-    const precoElement = document.getElementById("preco");
-    const estoqueElement = document.getElementById("estoqueMinimo");
-
-    if (
-      !nomeElement ||
-      !tipoProdutoElement ||
-      !unidadeMedidaElement ||
-      !composicaoElement
-    ) {
-      throw new Error(MensagensPadroes.ALERTA.CAMPOS_OBRIGATORIOS);
-    }
-
-    const idproduto = idprodutoElement ? idprodutoElement.value : null;
-
-    let preco = UIComponents.InputMasks.obterValorNumerico(precoElement);
-    let estoqueMinimo =
-      UIComponents.InputMasks.obterValorNumerico(estoqueElement);
-
+    const getValue = (id) => document.getElementById(id)?.value.trim() || "";
+    const getNumericValue = (id) =>
+      UIComponents.InputMasks.obterValorNumerico(document.getElementById(id));
     return new MedicamentoModel({
       produto: {
-        idproduto: idproduto ? parseInt(idproduto) : null,
-        nome: nomeElement.value.trim(),
-        idtipoproduto: parseInt(tipoProdutoElement.value) || null,
-        idunidademedida: unidadeMedidaElement.value
-          ? parseInt(unidadeMedidaElement.value)
-          : null,
-        fabricante: fabricanteElement ? fabricanteElement.value.trim() : "",
-        preco: preco,
-        estoqueMinimo: estoqueMinimo,
+        idproduto:
+          parseInt(document.getElementById("idproduto")?.value) || null,
+        nome: getValue("nome"),
+        idtipoproduto: parseInt(getValue("tipoProduto")) || null,
+        idunidademedida: parseInt(getValue("unidadeMedida")) || null,
+        fabricante: getValue("fabricante"),
+        preco: getNumericValue("preco"),
+        estoqueMinimo: getNumericValue("estoqueMinimo"),
       },
       medicamento: {
-        idproduto: idproduto ? parseInt(idproduto) : null,
-        composicao: composicaoElement.value.trim(),
+        idproduto:
+          parseInt(document.getElementById("idproduto")?.value) || null,
+        composicao: getValue("composicao"),
       },
     });
   }
 
   async cadastrar(event) {
     event.preventDefault();
-
+    const { valido, medicamento } = this.validarFormulario();
+    if (!valido) return;
     try {
-      const { valido, medicamento } = this.validarFormulario();
-      if (!valido) {
-        return;
-      }
-
       UIComponents.Loading.mostrar("Salvando medicamento...");
-      console.log(
-        "Enviando para o backend:",
-        JSON.stringify(medicamento.toJSON())
-      );
-
-      const resultado = await this.service.cadastrar(medicamento.toJSON());
-      console.log("Resposta do backend:", resultado);
-
-      UIComponents.Toast.sucesso(MensagensPadroes.SUCESSO.CADASTRO);
-
-      setTimeout(() => {
-        window.location.href =
-          "listarMedicamentos.html?message=" +
-          encodeURIComponent(MensagensPadroes.SUCESSO.CADASTRO);
-      }, 2000);
+      await this.service.cadastrar(medicamento.toJSON());
+      window.location.href = `listarMedicamentos.html?message=${encodeURIComponent(
+        MensagensPadroes.SUCESSO.CADASTRO
+      )}`;
     } catch (error) {
-      console.error("Erro ao cadastrar:", error);
       UIComponents.ModalErro.mostrar(
         error.message || MensagensPadroes.ERRO.CADASTRO
       );
@@ -501,31 +469,15 @@ class MedicamentoController {
 
   async atualizar(event, id) {
     event.preventDefault();
-
+    const { valido, medicamento } = this.validarFormulario();
+    if (!valido) return;
     try {
-      const { valido, medicamento } = this.validarFormulario();
-      if (!valido) {
-        return;
-      }
-
       UIComponents.Loading.mostrar("Atualizando medicamento...");
-      console.log(
-        "Enviando para o backend (atualização):",
-        JSON.stringify(medicamento.toJSON())
-      );
-
-      const resultado = await this.service.atualizar(id, medicamento.toJSON());
-      console.log("Resposta do backend (atualização):", resultado);
-
-      UIComponents.Toast.sucesso(MensagensPadroes.SUCESSO.ATUALIZACAO);
-
-      setTimeout(() => {
-        window.location.href =
-          "listarMedicamentos.html?message=" +
-          encodeURIComponent(MensagensPadroes.SUCESSO.ATUALIZACAO);
-      }, 2000);
+      await this.service.atualizar(id, medicamento.toJSON());
+      window.location.href = `listarMedicamentos.html?message=${encodeURIComponent(
+        MensagensPadroes.SUCESSO.ATUALIZACAO
+      )}`;
     } catch (error) {
-      console.error("Erro ao atualizar:", error);
       UIComponents.ModalErro.mostrar(
         error.message || MensagensPadroes.ERRO.ATUALIZACAO
       );
@@ -534,61 +486,11 @@ class MedicamentoController {
     }
   }
 
-  async filtrarMedicamentos(termo, filtro) {
-    console.log("Termo: " + termo);
-    try {
-      UIComponents.Loading.mostrar("Filtrando medicamentos...");
-
-      const todosMedicamentos = await this.service.listarTodos();
-      let medicamentosFiltrados = todosMedicamentos;
-
-      if (termo !== "") {
-        const termoBusca = termo.toLowerCase();
-
-        switch (parseInt(filtro)) {
-          case 1: // Nome
-            medicamentosFiltrados = todosMedicamentos.filter((med) =>
-              med.produto?.nome?.toLowerCase().includes(termoBusca)
-            );
-            break;
-          case 2: // Composição
-            medicamentosFiltrados = todosMedicamentos.filter((med) =>
-              med.medicamento?.composicao?.toLowerCase().includes(termoBusca)
-            );
-            break;
-          case 3: // Tipo
-            medicamentosFiltrados = todosMedicamentos.filter((med) =>
-              med.tipoProduto?.descricao?.toLowerCase().includes(termoBusca)
-            );
-            break;
-          case 4: // Fabricante
-            medicamentosFiltrados = todosMedicamentos.filter((med) =>
-              med.produto?.fabricante?.toLowerCase().includes(termoBusca)
-            );
-            break;
-          default:
-            medicamentosFiltrados = todosMedicamentos;
-        }
-      }
-
-      this.renderizarTabela(medicamentosFiltrados);
-
-      const urlParams = new URLSearchParams(window.location.search);
-      const message = urlParams.get("message");
-      if (message) {
-        UIComponents.Toast.sucesso(message);
-      }
-    } catch (error) {
-      console.error("Erro ao filtrar medicamentos:", error);
-      UIComponents.ModalErro.mostrar(MensagensPadroes.ERRO.CARREGAMENTO);
-    } finally {
-      UIComponents.Loading.esconder();
-    }
+  limparMensagensErro() {
+    UIComponents.Validacao.limparErros("formMedicamento");
   }
 }
 
 const medicamentoController = new MedicamentoController();
 window.medicamentoController = medicamentoController;
-
 export { medicamentoController };
-export default MedicamentoController;

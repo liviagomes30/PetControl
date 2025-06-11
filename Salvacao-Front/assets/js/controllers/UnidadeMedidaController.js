@@ -1,4 +1,3 @@
-// UnidadeMedidaController.js
 import UnidadeMedidaService from "../services/UnidadeMedidaService.js";
 import UIComponents from "../utils/uiComponents.js";
 import MensagensPadroes from "../utils/mensagensPadroes.js";
@@ -15,7 +14,6 @@ class UnidadeMedidaController {
   }
 
   bindEvents() {
-    // Binding de eventos para a página de listagem
     if (this.searchButton) {
       this.searchButton.addEventListener("click", () => this.filterTable());
     }
@@ -28,7 +26,6 @@ class UnidadeMedidaController {
       });
     }
 
-    // Binding de evento para o formulário de criação/edição
     const form = document.getElementById("unidadeMedidaForm");
     if (form) {
       form.addEventListener("submit", (e) => {
@@ -38,7 +35,6 @@ class UnidadeMedidaController {
         }
       });
 
-      // Carregar dados para edição se estiver no modo de edição
       const urlParams = new URLSearchParams(window.location.search);
       const id = urlParams.get("id");
       if (id) {
@@ -153,7 +149,7 @@ class UnidadeMedidaController {
       UIComponents.Loading.mostrar("Excluindo unidade de medida...");
       await this.service.delete(id);
       UIComponents.Toast.sucesso("Unidade de medida excluída com sucesso!");
-      this.loadUnidadesMedida(); // Recarrega a tabela
+      this.loadUnidadesMedida();
     } catch (error) {
       UIComponents.ModalErro.mostrar("Erro ao excluir: " + error.message);
     } finally {
@@ -166,10 +162,8 @@ class UnidadeMedidaController {
     const descricao = document.getElementById("descricao");
     const sigla = document.getElementById("sigla");
 
-    // Limpar erros anteriores
     UIComponents.Validacao.limparErros("unidadeMedidaForm");
 
-    // Validar campo de descrição
     if (!descricao.value.trim()) {
       UIComponents.Validacao.mostrarErro(
         "descricao",
@@ -178,7 +172,6 @@ class UnidadeMedidaController {
       isValid = false;
     }
 
-    // Validar campo de sigla
     if (!sigla.value.trim()) {
       UIComponents.Validacao.mostrarErro(
         "sigla",
@@ -201,7 +194,6 @@ class UnidadeMedidaController {
     const descricao = document.getElementById("descricao").value;
     const sigla = document.getElementById("sigla").value;
 
-    // Criar objeto com os dados do formulário
     const unidadeMedida = {
       idunidademedida: id !== "0" ? parseInt(id) : null,
       descricao: descricao,
@@ -223,7 +215,6 @@ class UnidadeMedidaController {
         UIComponents.Toast.sucesso(MensagensPadroes.SUCESSO.CADASTRO);
       }
 
-      // Após 2 segundos, redirecionar para a lista
       setTimeout(() => {
         window.location.href = "index.html";
       }, 2000);
@@ -235,11 +226,9 @@ class UnidadeMedidaController {
   }
 }
 
-// Inicializar o controlador e carregar dados se estiver na página de listagem
 document.addEventListener("DOMContentLoaded", () => {
   window.unidadeMedidaController = new UnidadeMedidaController();
 
-  // Verificar se estamos na página de listagem
   const tableBody = document.getElementById("unidadeMedidaTableBody");
   if (tableBody) {
     window.unidadeMedidaController.loadUnidadesMedida();

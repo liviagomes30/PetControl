@@ -4,6 +4,7 @@ public class PosologiaDTO {
     private String dose;
     private Integer quantidadedias;
     private Integer intervalohoras;
+    private Integer frequencia_diaria;
     private Integer medicamento_idproduto;
     private String medicamentoNome;
     private String medicamentoComposicao;
@@ -12,12 +13,24 @@ public class PosologiaDTO {
     public PosologiaDTO() {
     }
 
-    public PosologiaDTO(String dose, Integer quantidadedias, Integer intervalohoras, 
-                       Integer medicamento_idproduto, Integer receitamedicamento_idreceita) {
+    public PosologiaDTO(String dose, Integer quantidadedias, Integer intervalohoras,
+                        Integer medicamento_idproduto, Integer receitamedicamento_idreceita) {
         this.dose = dose;
         this.quantidadedias = quantidadedias;
         this.intervalohoras = intervalohoras;
         this.medicamento_idproduto = medicamento_idproduto;
+        this.receitamedicamento_idreceita = receitamedicamento_idreceita;
+    }
+
+    public PosologiaDTO(String dose, Integer quantidadedias, Integer intervalohoras,
+                        Integer medicamento_idproduto, String medicamentoNome, String medicamentoComposicao,
+                        Integer receitamedicamento_idreceita) {
+        this.dose = dose;
+        this.quantidadedias = quantidadedias;
+        this.intervalohoras = intervalohoras;
+        this.medicamento_idproduto = medicamento_idproduto;
+        this.medicamentoNome = medicamentoNome;
+        this.medicamentoComposicao = medicamentoComposicao;
         this.receitamedicamento_idreceita = receitamedicamento_idreceita;
     }
 
@@ -43,6 +56,14 @@ public class PosologiaDTO {
 
     public void setIntervalohoras(Integer intervalohoras) {
         this.intervalohoras = intervalohoras;
+    }
+
+    public Integer getFrequencia_diaria() {
+        return frequencia_diaria;
+    }
+
+    public void setFrequencia_diaria(Integer frequencia_diaria) {
+        this.frequencia_diaria = frequencia_diaria;
     }
 
     public Integer getMedicamento_idproduto() {

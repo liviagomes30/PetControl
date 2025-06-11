@@ -6,7 +6,6 @@ class UnidadeMedidaService {
 
   async getAll() {
     try {
-      // Corrigido para usar o endpoint correto
       const response = await fetch(`${this.baseUrl}${this.endpoint}`);
       if (!response.ok) {
         throw new Error(`Erro ${response.status}: ${await response.text()}`);
@@ -33,7 +32,6 @@ class UnidadeMedidaService {
 
   async create(unidadeMedidaData) {
     try {
-      // Nota: Este endpoint pode precisar ser adaptado conforme backend
       const response = await fetch(`${this.baseUrl}${this.endpoint}`, {
         method: "POST",
         headers: {
@@ -97,9 +95,7 @@ class UnidadeMedidaService {
 
   async search(termo) {
     try {
-      // Nota: Este endpoint pode não existir no backend atual, implementando busca no cliente
       try {
-        // Tentar usar API de busca se existir
         const response = await fetch(
           `${this.baseUrl}${this.endpoint}/buscar?termo=${encodeURIComponent(
             termo
@@ -108,10 +104,8 @@ class UnidadeMedidaService {
         if (response.ok) {
           return await response.json();
         }
-        // Se API retornar erro (404), fazer busca no cliente
         throw new Error("Endpoint de busca não encontrado");
       } catch (e) {
-        // Busca no cliente
         const todos = await this.getAll();
         return todos.filter(
           (u) =>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Histórico de Medicações - PetControl" />
+    <title>PetControl - Histórico de Medicações</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css"
+    />
+    <link rel="stylesheet" href="../../assets/css/style.css" />
+    <script>
+      window.API_BASE_URL = "http://localhost:8080";
+    </script>
+
+    <script src="../../assets/js/services/usuarioService.js"></script>
+    <script src="../../assets/js/services/authService.js"></script>
+
+    <script src="../../assets/js/components/sidebar.js" defer></script>
+  </head>
+  <body>
+    <main class="main-content">
+      <header class="content-header">
+        <button
+          class="btn-back"
+          onclick="window.location.href='efetuarMedicacao.html'"
+          aria-label="Voltar para efetuar medicação"
+        >
+          <i class="bi bi-arrow-left"></i> Voltar
+        </button>
+        <h1>Histórico de Medicações</h1>
+        <button
+          class="btn btn-primary"
+          onclick="window.location.href='efetuarMedicacao.html'"
+          aria-label="Efetuar nova medicação"
+        >
+          <i class="bi bi-plus-circle"></i> Nova Medicação
+        </button>
+      </header>
+
+      <div class="filtro-container mt-3 mb-3">
+        <form id="formFiltroHistorico" class="needs-validation" novalidate>
+          <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+              <label for="animalFilter" class="form-label">Animal</label>
+              <select
+                id="animalFilter"
+                class="form-select"
+                aria-label="Filtrar por animal"
+              >
+                <option value="">Todos os Animais</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label for="dateFilter" class="form-label">Data</label>
+              <input
+                type="date"
+                id="dateFilter"
+                class="form-control"
+                aria-label="Filtrar por data"
+              />
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+              <button
+                type="submit"
+                class="btn btn-primary w-100"
+                id="applyFilterButton"
+                aria-label="Aplicar filtro"
+              >
+                <i class="bi bi-search"></i> Filtrar
+              </button>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+              <button
+                type="button"
+                class="btn btn-secondary w-100"
+                id="clearFilterButton"
+                aria-label="Limpar filtro"
+              >
+                <i class="bi bi-x-circle"></i> Limpar
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="table-container">
+        <div class="table-responsive">
+          <table
+            id="historicoMedicacoesTable"
+            aria-label="Lista de histórico de medicações"
+          >
+            <thead>
+              <tr>
+                <th scope="col" class="sortable" data-sort="idmedicacao">
+                  ID Medicação
+                </th>
+                <th scope="col" class="sortable" data-sort="data">Data</th>
+                <th scope="col" class="sortable" data-sort="nomeAnimal">
+                  Animal
+                </th>
+                <th scope="col" class="sortable" data-sort="nomeMedicamento">
+                  Medicamento
+                </th>
+                <th scope="col" class="sortable" data-sort="composicao">
+                  Composição
+                </th>
+                <th scope="col" class="sortable" data-sort="dose">Posologia</th>
+                <th scope="col">Descrição Histórico</th>
+                <th scope="col">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="historicoMedicacoesTableBody"></tbody>
+          </table>
+        </div>
+
+        <div id="noDataMessage" class="no-data" style="display: none">
+          <i
+            class="bi bi-inbox"
+            style="
+              font-size: 2rem;
+              opacity: 0.4;
+              display: block;
+              margin-bottom: 8px;
+            "
+          ></i>
+          <p>Nenhum histórico de medicação encontrado</p>
+          <p class="mt-2">
+            <a href="efetuarMedicacao.html" class="btn btn-outline-primary">
+              <i class="bi bi-plus-circle"></i> Efetuar Nova Medicação
+            </a>
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="pagination"
+        id="pagination"
+        aria-label="Paginação da tabela"
+      ></div>
+
+      <div
+        id="deleteModal"
+        class="modal"
+        role="dialog"
+        aria-labelledby="deleteModalTitle"
+        aria-hidden="true"
+      >
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 id="deleteModalTitle">Confirmar Exclusão</h3>
+          </div>
+          <div class="modal-body">
+            <p>Tem certeza que deseja excluir esta medicação do histórico?</p>
+            <p
+              class="mt-2 mb-2"
+              style="
+                color: #664d03;
+                background-color: #fff3cd;
+                padding: 8px;
+                border-radius: 4px;
+              "
+            >
+              <i class="bi bi-exclamation-triangle"></i>
+              Esta ação não poderá ser desfeita.
+            </p>
+          </div>
+          <div class="modal-buttons">
+            <button id="confirmDelete" class="btn btn-danger">
+              <i class="bi bi-trash"></i> Excluir
+            </button>
+            <button id="cancelDelete" class="btn btn-secondary">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="modal fade"
+        id="detailsModal"
+        tabindex="-1"
+        role="dialog"
+        aria-labelledby="detailsModalTitle"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-header text-white">
+              <h5 class="modal-title" id="detailsModalTitle">
+                Detalhes da Medicação
+              </h5>
+              <button
+                type="button"
+                class="btn-close btn-close-white"
+                data-bs-dismiss="modal"
+                aria-label="Fechar"
+              ></button>
+            </div>
+            <div class="modal-body" id="detailsModalBody"></div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        id="toast"
+        class="toast"
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true"
+      >
+        <div class="toast-icon success">
+          <i class="bi bi-check-circle"></i>
+        </div>
+        <div class="toast-content">
+          <div class="toast-title" id="toastTitle">Sucesso!</div>
+          <div class="toast-message" id="toastMessage">
+            Operação realizada com sucesso
+          </div>
+        </div>
+        <button class="toast-close" aria-label="Fechar notificação">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+
+      <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner" role="status">
+          <span class="visually-hidden">Carregando...</span>
+        </div>
+      </div>
+    </main>
+
+    <script
+      type="module"
+      src="../../assets/js/controllers/HistoricoMedicacoesController.js"
+    ></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

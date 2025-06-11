@@ -14,15 +14,17 @@ public class ReceitaMedicamentoRequestDTO {
         private String dose;
         private Integer quantidadedias;
         private Integer intervalohoras;
+        private Integer frequencia_diaria;
         private Integer medicamento_idproduto;
 
         public PosologiaRequestDTO() {
         }
 
-        public PosologiaRequestDTO(String dose, Integer quantidadedias, Integer intervalohoras, Integer medicamento_idproduto) {
+        public PosologiaRequestDTO(String dose, Integer quantidadedias, Integer intervalohoras, Integer frequencia_diaria, Integer medicamento_idproduto) {
             this.dose = dose;
             this.quantidadedias = quantidadedias;
             this.intervalohoras = intervalohoras;
+            this.frequencia_diaria = frequencia_diaria;
             this.medicamento_idproduto = medicamento_idproduto;
         }
 
@@ -48,6 +50,14 @@ public class ReceitaMedicamentoRequestDTO {
 
         public void setIntervalohoras(Integer intervalohoras) {
             this.intervalohoras = intervalohoras;
+        }
+
+        public Integer getFrequencia_diaria() {
+            return frequencia_diaria;
+        }
+
+        public void setFrequencia_diaria(Integer frequencia_diaria) {
+            this.frequencia_diaria = frequencia_diaria;
         }
 
         public Integer getMedicamento_idproduto() {

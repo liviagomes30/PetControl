@@ -1,7 +1,5 @@
-// salvacao.petcontrol.dal.MedicamentoDAO.java
 package salvacao.petcontrol.dao;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import salvacao.petcontrol.config.SingletonDB;
 import salvacao.petcontrol.dto.MedicamentoCompletoDTO;
@@ -17,8 +15,36 @@ import java.util.List;
 @Repository
 public class MedicamentoDAO {
 
-    @Autowired
-    private ProdutoModel produtoModel = new ProdutoModel();
+    private MedicamentoCompletoDTO buildDTOFromResultSet(ResultSet rs) throws SQLException {
+        ProdutoModel produto = new ProdutoModel();
+        produto.setIdproduto(rs.getInt("idproduto"));
+        produto.setNome(rs.getString("nome"));
+        produto.setIdtipoproduto(rs.getInt("idtipoproduto"));
+        produto.setIdunidademedida(rs.getInt("idunidademedida"));
+        produto.setFabricante(rs.getString("fabricante"));
+        produto.setPreco(rs.getBigDecimal("preco"));
+        produto.setEstoqueMinimo(rs.getInt("estoque_minimo"));
+        produto.setDataCadastro(rs.getDate("data_cadastro"));
+        produto.setAtivo(rs.getBoolean("ativo"));
+
+        MedicamentoModel medicamento = new MedicamentoModel(
+                rs.getInt("idproduto"),
+                rs.getString("composicao")
+        );
+
+        TipoProdutoModel tipoProduto = new TipoProdutoModel(
+                rs.getInt("idtipoproduto"),
+                rs.getString("tipo_descricao")
+        );
+
+        UnidadeMedidaModel unidadeMedida = new UnidadeMedidaModel(
+                rs.getInt("idunidademedida"),
+                rs.getString("unidade_descricao"),
+                rs.getString("unidade_sigla")
+        );
+
+        return new MedicamentoCompletoDTO(produto, medicamento, tipoProduto, unidadeMedida);
+    }
 
     public MedicamentoModel getId(Integer id) {
         MedicamentoModel medicamento = null;
@@ -41,48 +67,21 @@ public class MedicamentoDAO {
     public MedicamentoCompletoDTO findMedicamentoCompleto(Integer id) {
         MedicamentoCompletoDTO dto = null;
         String sql = "SELECT m.idproduto, m.composicao, " +
-                "p.nome, p.idtipoproduto, p.idunidademedida, p.fabricante, p.preco, p.estoque_minimo, p.data_cadastro, " +
+                "p.nome, p.idtipoproduto, p.idunidademedida, p.fabricante, p.preco, p.estoque_minimo, p.data_cadastro, p.ativo, " + // Adicionada vírgula após p.ativo
                 "t.descricao AS tipo_descricao, " +
                 "u.descricao AS unidade_descricao, u.sigla AS unidade_sigla " +
                 "FROM medicamento m " +
                 "JOIN produto p ON m.idproduto = p.idproduto " +
                 "JOIN tipoproduto t ON p.idtipoproduto = t.idtipoproduto " +
                 "JOIN unidadedemedida u ON p.idunidademedida = u.idunidademedida " +
-                "WHERE m.idproduto = ?";
+                "WHERE m.idproduto = ? AND p.ativo = true";
 
         try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
-                ProdutoModel produto = new ProdutoModel(
-                        rs.getInt("idproduto"),
-                        rs.getString("nome"),
-                        rs.getInt("idtipoproduto"),
-                        rs.getInt("idunidademedida"),
-                        rs.getString("fabricante"),
-                        rs.getBigDecimal("preco"),
-                        rs.getInt("estoque_minimo"),
-                        rs.getDate("data_cadastro")
-                );
-
-                MedicamentoModel medicamento = new MedicamentoModel(
-                        rs.getInt("idproduto"),
-                        rs.getString("composicao")
-                );
-
-                TipoProdutoModel tipoProduto = new TipoProdutoModel(
-                        rs.getInt("idtipoproduto"),
-                        rs.getString("tipo_descricao")
-                );
-
-                UnidadeMedidaModel unidadeMedida = new UnidadeMedidaModel(
-                        rs.getInt("idunidademedida"),
-                        rs.getString("unidade_descricao"),
-                        rs.getString("unidade_sigla")
-                );
-
-                dto = new MedicamentoCompletoDTO(produto, medicamento, tipoProduto, unidadeMedida);
+                dto = buildDTOFromResultSet(rs);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -91,172 +90,108 @@ public class MedicamentoDAO {
         return dto;
     }
 
-    public MedicamentoModel gravar(MedicamentoModel medicamento, ProdutoModel produto) {
-        Connection conn = null;
-        try {
-            conn = SingletonDB.getConexao().getConnection();
-            conn.setAutoCommit(false);
+    public MedicamentoModel gravar(MedicamentoModel medicamento, ProdutoModel produtoModel, Connection conn) throws SQLException {
+        ProdutoModel novoProduto = produtoModel.getProdDAO().gravar(produtoModel, conn);
 
-            ProdutoModel novoProduto = produtoModel.getProdDAO().gravarComConexao(produto,conn);
-            if (novoProduto == null || novoProduto.getIdproduto() == null) {
-                throw new RuntimeException("Erro ao gravar produto - ID não gerado");
-            }
-
-            String sql = "INSERT INTO medicamento (idproduto, composicao) VALUES (?, ?)";
-            try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
-                stmt.setInt(1, novoProduto.getIdproduto());
-                stmt.setString(2, medicamento.getComposicao());
-
-                if (stmt.executeUpdate() > 0) {
-                    medicamento.setIdproduto(novoProduto.getIdproduto());
-                    SingletonDB.getConexao().getConnection().commit();
-                } else {
-                    SingletonDB.getConexao().getConnection().rollback();
-                    throw new RuntimeException("Falha ao inserir medicamento");
-                }
-            }
-
-            SingletonDB.getConexao().getConnection().setAutoCommit(true);
-
-        } catch (SQLException e) {
-            try {
-                SingletonDB.getConexao().getConnection().rollback();
-                SingletonDB.getConexao().getConnection().setAutoCommit(true);
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
-            throw new RuntimeException("Erro ao adicionar medicamento: " + e.getMessage(), e);
+        if (novoProduto == null || novoProduto.getIdproduto() == null) {
+            throw new SQLException("Erro ao gravar produto - ID não gerado");
         }
 
+        String sql = "INSERT INTO medicamento (idproduto, composicao) VALUES (?, ?)";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, novoProduto.getIdproduto());
+            stmt.setString(2, medicamento.getComposicao());
+
+            if (stmt.executeUpdate() > 0) {
+                medicamento.setIdproduto(novoProduto.getIdproduto());
+            } else {
+                throw new SQLException("Falha ao inserir medicamento");
+            }
+        } catch (SQLException e) {
+            throw e;
+        }
         return medicamento;
     }
 
-    public boolean alterar(Integer id, MedicamentoModel medicamento, ProdutoModel produto) {
-        try {
-            SingletonDB.getConexao().getConnection().setAutoCommit(false);
+    public boolean alterar(Integer id, MedicamentoModel medicamento, ProdutoModel produtoModel, Connection conn) throws SQLException {
+        boolean produtoAtualizado = produtoModel.getProdDAO().alterar(id, produtoModel);
 
-            boolean produtoAtualizado = produtoModel.getProdDAO().alterar(id, produto); // Updated method call
+        if (!produtoAtualizado) {
+            throw new SQLException("Não foi possível atualizar o produto associado ao medicamento.");
+        }
 
-            if (!produtoAtualizado) {
-                SingletonDB.getConexao().getConnection().rollback();
-                SingletonDB.getConexao().getConnection().setAutoCommit(true);
-                return false;
+        String sql = "UPDATE medicamento SET composicao = ? WHERE idproduto = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, medicamento.getComposicao());
+            stmt.setInt(2, id);
+
+            boolean result = stmt.executeUpdate() > 0;
+            if (!result) {
+                throw new SQLException("Falha ao atualizar medicamento");
             }
-
-            String sql = "UPDATE medicamento SET composicao = ? WHERE idproduto = ?";
-            try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
-                stmt.setString(1, medicamento.getComposicao());
-                stmt.setInt(2, id);
-
-                boolean result = stmt.executeUpdate() > 0;
-
-                if (result) {
-                    SingletonDB.getConexao().getConnection().commit();
-                } else {
-                    SingletonDB.getConexao().getConnection().rollback();
-                }
-
-                SingletonDB.getConexao().getConnection().setAutoCommit(true);
-
-                return result;
-            }
-
+            return result;
         } catch (SQLException e) {
-            try {
-                SingletonDB.getConexao().getConnection().rollback();
-                SingletonDB.getConexao().getConnection().setAutoCommit(true);
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
-            e.printStackTrace();
-            return false;
+            throw e;
         }
     }
 
-
-    public boolean apagar(Integer id) {
-        try {
-            if (!medicamentoPodeSerExcluido(id)) {
-                throw new RuntimeException("Este medicamento não pode ser excluído porque está sendo utilizado em medicações ou movimentações de estoque. Use a função de desativação em vez de exclusão.");
-            }
-
-            boolean autoCommitOriginal = SingletonDB.getConexao().getConnection().getAutoCommit();
-
-            try {
-                SingletonDB.getConexao().getConnection().setAutoCommit(false);
-
-                String sqlPosologia = "DELETE FROM posologia WHERE medicamento_idproduto = ?";
-                int posologiasExcluidas = 0;
-                try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sqlPosologia)) {
-                    stmt.setInt(1, id);
-                    posologiasExcluidas = stmt.executeUpdate();
-                    System.out.println("Posologias excluídas: " + posologiasExcluidas);
-                }
-
-                String sqlEstoque = "DELETE FROM estoque WHERE idproduto = ?";
-                int estoquesExcluidos = 0;
-                try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sqlEstoque)) {
-                    stmt.setInt(1, id);
-                    estoquesExcluidos = stmt.executeUpdate();
-                    System.out.println("Registros de estoque excluídos: " + estoquesExcluidos);
-                }
-
-                String sqlMedicamento = "DELETE FROM medicamento WHERE idproduto = ?";
-                int medicamentoExcluido = 0;
-                try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sqlMedicamento)) {
-                    stmt.setInt(1, id);
-                    medicamentoExcluido = stmt.executeUpdate();
-                    System.out.println("Medicamento excluído: " + (medicamentoExcluido > 0 ? "Sim" : "Não"));
-
-                    if (medicamentoExcluido <= 0) {
-                        System.out.println("Medicamento não encontrado, realizando rollback");
-                        SingletonDB.getConexao().getConnection().rollback();
-                        return false;
-                    }
-                }
-
-                boolean produtoDeletado = produtoModel.getProdDAO().apagar(id); // Updated method call
-                System.out.println("Produto excluído: " + (produtoDeletado ? "Sim" : "Não"));
-
-                if (produtoDeletado) {
-                    System.out.println("Exclusão concluída com sucesso, realizando commit");
-                    SingletonDB.getConexao().getConnection().commit();
-                } else {
-                    System.out.println("Falha ao excluir produto, realizando rollback");
-                    SingletonDB.getConexao().getConnection().rollback();
-                }
-
-                return produtoDeletado;
-
-            } finally {
-                try {
-                    SingletonDB.getConexao().getConnection().setAutoCommit(autoCommitOriginal);
-                    System.out.println("AutoCommit restaurado para: " + autoCommitOriginal);
-                } catch (SQLException ex) {
-                    System.out.println("Erro ao restaurar autoCommit: " + ex.getMessage());
-                    ex.printStackTrace();
-                }
-            }
-
-        } catch (SQLException e) {
-            try {
-                System.out.println("Erro durante exclusão: " + e.getMessage() + ", realizando rollback");
-                if (!SingletonDB.getConexao().getConnection().getAutoCommit()) {
-                    SingletonDB.getConexao().getConnection().rollback();
-                    System.out.println("Rollback executado após erro");
-                }
-
-                SingletonDB.getConexao().getConnection().setAutoCommit(true);
-                System.out.println("AutoCommit restaurado para true após erro");
-
-            } catch (SQLException ex) {
-                System.out.println("Erro durante rollback: " + ex.getMessage());
-                ex.printStackTrace();
-            }
-            e.printStackTrace();
-            throw new RuntimeException("Erro ao excluir medicamento: " + e.getMessage(), e);
+    public boolean apagar(Integer id, ProdutoModel produtoModel, Connection conn) throws SQLException {
+        if (!medicamentoPodeSerExcluido(id)) {
+            throw new SQLException("Este medicamento não pode ser excluído porque está sendo utilizado em medicações ou movimentações de estoque. Use a função de desativação em vez de exclusão.");
         }
+
+        String sqlPosologia = "DELETE FROM posologia WHERE medicamento_idproduto = ?";
+        int posologiasExcluidas = 0;
+        try (PreparedStatement stmt = conn.prepareStatement(sqlPosologia)) {
+            stmt.setInt(1, id);
+            posologiasExcluidas = stmt.executeUpdate();
+            System.out.println("Posologias excluídas: " + posologiasExcluidas);
+        }
+
+        String sqlMedicamento = "DELETE FROM medicamento WHERE idproduto = ?";
+        int medicamentoExcluido = 0;
+        try (PreparedStatement stmt = conn.prepareStatement(sqlMedicamento)) {
+            stmt.setInt(1, id);
+            medicamentoExcluido = stmt.executeUpdate();
+            System.out.println("Medicamento excluído: " + (medicamentoExcluido > 0 ? "Sim" : "Não"));
+            if (medicamentoExcluido <= 0) {
+                throw new SQLException("Medicamento não encontrado para exclusão.");
+            }
+        }
+
+        boolean produtoDeletado = produtoModel.getProdDAO().apagar(id, conn);
+        if (!produtoDeletado) {
+            throw new SQLException("Falha ao excluir o produto associado ao medicamento.");
+        }
+
+        return true;
     }
+
+    public List<MedicamentoCompletoDTO> getAllInactiveMedicamentos() {
+        List<MedicamentoCompletoDTO> list = new ArrayList<>();
+        String sql = "SELECT " +
+                "  p.idproduto, p.nome, p.idtipoproduto, p.idunidademedida, p.fabricante, p.preco, p.estoque_minimo, p.data_cadastro, p.ativo, " +
+                "  m.composicao, " +
+                "  t.descricao AS tipo_descricao, " +
+                "  u.descricao AS unidade_descricao, u.sigla AS unidade_sigla " +
+                "FROM medicamento m " +
+                "JOIN produto p ON m.idproduto = p.idproduto " +
+                "JOIN tipoproduto t ON p.idtipoproduto = t.idtipoproduto " +
+                "JOIN unidadedemedida u ON p.idunidademedida = u.idunidademedida " +
+                "WHERE p.ativo = false " +
+                "ORDER BY p.nome";
+
+        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                list.add(buildDTOFromResultSet(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
 
     public boolean desativarMedicamento(Integer id) {
         try {
@@ -304,54 +239,27 @@ public class MedicamentoDAO {
 
     public List<MedicamentoCompletoDTO> getAllMedicamentos() {
         List<MedicamentoCompletoDTO> list = new ArrayList<>();
-
-        String sql = "SELECT m.idproduto, m.composicao, " +
-                "p.nome, p.idtipoproduto, p.idunidademedida, p.fabricante, p.preco, p.estoque_minimo, p.data_cadastro, " +
-                "t.descricao AS tipo_descricao, " +
-                "u.descricao AS unidade_descricao, u.sigla AS unidade_sigla " +
+        // SQL CORRIGIDO: Removida a cláusula WHERE que estava faltando
+        String sql = "SELECT " +
+                "  p.idproduto, p.nome, p.idtipoproduto, p.idunidademedida, p.fabricante, p.preco, p.estoque_minimo, p.data_cadastro, p.ativo, " +
+                "  m.composicao, " +
+                "  t.descricao AS tipo_descricao, " +
+                "  u.descricao AS unidade_descricao, u.sigla AS unidade_sigla " +
                 "FROM medicamento m " +
                 "JOIN produto p ON m.idproduto = p.idproduto " +
                 "JOIN tipoproduto t ON p.idtipoproduto = t.idtipoproduto " +
-                "JOIN unidadedemedida u ON p.idunidademedida = u.idunidademedida";
+                "JOIN unidadedemedida u ON p.idunidademedida = u.idunidademedida " +
+                "WHERE p.ativo = true " + // FILTRO ADICIONADO AQUI
+                "ORDER BY p.nome";
 
-        try {
-            ResultSet rs = SingletonDB.getConexao().consultar(sql);
-
+        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                ProdutoModel produto = new ProdutoModel(
-                        rs.getInt("idproduto"),
-                        rs.getString("nome"),
-                        rs.getInt("idtipoproduto"),
-                        rs.getInt("idunidademedida"),
-                        rs.getString("fabricante"),
-                        rs.getBigDecimal("preco"),
-                        rs.getInt("estoque_minimo"),
-                        rs.getDate("data_cadastro")
-                );
-
-                MedicamentoModel medicamento = new MedicamentoModel(
-                        rs.getInt("idproduto"),
-                        rs.getString("composicao")
-                );
-
-                TipoProdutoModel tipoProduto = new TipoProdutoModel(
-                        rs.getInt("idtipoproduto"),
-                        rs.getString("tipo_descricao")
-                );
-
-                UnidadeMedidaModel unidadeMedida = new UnidadeMedidaModel(
-                        rs.getInt("idunidademedida"),
-                        rs.getString("unidade_descricao"),
-                        rs.getString("unidade_sigla")
-                );
-
-                MedicamentoCompletoDTO dto = new MedicamentoCompletoDTO(produto, medicamento, tipoProduto, unidadeMedida);
-                list.add(dto);
+                list.add(buildDTOFromResultSet(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
         return list;
     }
 
@@ -362,7 +270,7 @@ public class MedicamentoDAO {
             ResultSet rs = stmt.executeQuery();
             if (rs.next() && rs.getInt(1) > 0) {
                 System.out.println("Medicamento possui " + rs.getInt(1) + " medicações associadas");
-                return false; // Não pode ser excluído, pois está em medicações
+                return false;
             }
         }
 
@@ -381,7 +289,7 @@ public class MedicamentoDAO {
             ResultSet rs = stmt.executeQuery();
             if (rs.next() && rs.getInt(1) > 0) {
                 System.out.println("Medicamento possui " + rs.getInt(1) + " itens de movimentação associados");
-                return false; // Não pode ser excluído, pois está em movimentações
+                return false;
             }
         }
         String sqlAcerto = "SELECT COUNT(*) FROM itemacertoestoque WHERE produto_id = ?";
@@ -390,7 +298,7 @@ public class MedicamentoDAO {
             ResultSet rs = stmt.executeQuery();
             if (rs.next() && rs.getInt(1) > 0) {
                 System.out.println("Medicamento possui " + rs.getInt(1) + " itens de acerto de estoque associados");
-                return false; // Não pode ser excluído, pois está em acertos de estoque
+                return false;
             }
         }
 
@@ -551,5 +459,34 @@ public class MedicamentoDAO {
         }
 
         return list;
+    }
+
+    public List<MedicamentoCompletoDTO> buscarTodosDisponiveis() {
+        List<MedicamentoCompletoDTO> lista = new ArrayList<>();
+        String sql = "SELECT p.idproduto, p.nome, p.fabricante, p.preco, p.estoque_minimo, p.data_cadastro, p.ativo, " +
+                "m.composicao, " +
+                "e.quantidade, " +
+                "t.idtipoproduto, t.descricao AS tipo_descricao, " +
+                "u.idunidademedida, u.descricao AS unidade_descricao, u.sigla AS unidade_sigla " +
+                "FROM produto p " +
+                "JOIN medicamento m ON p.idproduto = m.idproduto " +
+                "JOIN estoque e ON p.idproduto = e.idproduto " +
+                "JOIN tipoproduto t ON p.idtipoproduto = t.idtipoproduto " +
+                "JOIN unidadedemedida u ON p.idunidademedida = u.idunidademedida " +
+                "WHERE p.ativo = true AND e.quantidade > 0 " +
+                "ORDER BY p.nome";
+
+        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                MedicamentoCompletoDTO dto = buildDTOFromResultSet(rs);
+                dto.setQuantidade(rs.getInt("quantidade"));
+                lista.add(dto);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return lista;
     }
 }

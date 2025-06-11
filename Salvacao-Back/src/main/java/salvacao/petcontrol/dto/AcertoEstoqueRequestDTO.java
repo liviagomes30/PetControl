@@ -3,8 +3,6 @@ package salvacao.petcontrol.dto;
 import java.util.List;
 import java.math.BigDecimal;
 
-// Esta classe é usada para receber dados do cliente (frontend) quando se deseja realizar um acerto de estoque.
-// apenas os dados essenciais para criar um acerto
 
 public class AcertoEstoqueRequestDTO {
     private Integer usuario_pessoa_id;
@@ -12,7 +10,6 @@ public class AcertoEstoqueRequestDTO {
     private String observacao;
     private List<ItemAcertoRequestDTO> itens;
 
-    // Contém dados completos do item, incluindo quantidades antes/depois, tipo de ajuste, e informações do produto
     public static class ItemAcertoRequestDTO {
         private Integer produto_id;
         private BigDecimal quantidade_nova;

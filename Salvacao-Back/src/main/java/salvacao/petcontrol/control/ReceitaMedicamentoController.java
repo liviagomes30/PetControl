@@ -29,12 +29,8 @@ public class ReceitaMedicamentoController {
     @Autowired
     private MedicamentoService medicamentoService;
 
-    public ReceitaMedicamentoController() {
-        if (receitaService == null) {
-            receitaService = new ReceitaMedicamentoService();
-        }
-    }
-
+    // ==================== CRUD OPERATIONS ====================
+    
     @PostMapping
     public ResponseEntity<Object> cadastrar(@RequestBody ReceitaMedicamentoRequestDTO request) {
         try {
@@ -91,6 +87,8 @@ public class ReceitaMedicamentoController {
         }
     }
 
+    // ==================== SEARCH OPERATIONS ====================
+
     @GetMapping("/animal/{animalId}")
     public ResponseEntity<Object> buscarPorAnimal(@PathVariable Integer animalId) {
         try {
@@ -133,6 +131,8 @@ public class ReceitaMedicamentoController {
         }
     }
 
+    // ==================== POSOLOGIA OPERATIONS ====================
+
     @GetMapping("/{receitaId}/posologias")
     public ResponseEntity<Object> buscarPosologiasPorReceita(@PathVariable Integer receitaId) {
         try {
@@ -152,6 +152,18 @@ public class ReceitaMedicamentoController {
             return ResponseEntity.badRequest().body("Erro ao buscar posologias por medicamento: " + e.getMessage());
         }
     }
+
+    @GetMapping("/{receitaId}/medicamentos")
+    public ResponseEntity<Object> buscarMedicamentosDaReceita(@PathVariable Integer receitaId) {
+        try {
+            List<PosologiaDTO> medicamentosComPosologia = receitaService.buscarPosologiasPorReceita(receitaId);
+            return ResponseEntity.ok(medicamentosComPosologia);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Erro ao buscar medicamentos da receita: " + e.getMessage());
+        }
+    }
+
+    // ==================== SUPPORT OPERATIONS ====================
 
     @GetMapping("/animais")
     public ResponseEntity<Object> buscarAnimais() {

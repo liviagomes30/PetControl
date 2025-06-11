@@ -1,8 +1,8 @@
-// salvacao.petcontrol.service.ProdutoService.java
 package salvacao.petcontrol.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import salvacao.petcontrol.config.SingletonDB;
 import salvacao.petcontrol.dto.ProdutoCompletoDTO;
 import salvacao.petcontrol.model.EstoqueModel;
 import salvacao.petcontrol.model.ProdutoModel;
@@ -10,12 +10,9 @@ import salvacao.petcontrol.model.UnidadeMedidaModel;
 import salvacao.petcontrol.model.TipoProdutoModel;
 import salvacao.petcontrol.util.ResultadoOperacao;
 
-import java.math.BigDecimal;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
-import salvacao.petcontrol.config.SingletonDB;
 
 @Service
 public class ProdutoService {
@@ -24,14 +21,13 @@ public class ProdutoService {
     private ProdutoModel produtoModel = new ProdutoModel();
 
     @Autowired
-    private TipoProdutoModel TipoProdutoModel = new TipoProdutoModel();
+    private TipoProdutoModel tipoProdutoModel = new TipoProdutoModel();
 
     @Autowired
-    private UnidadeMedidaModel UnidadeMedidaModel = new UnidadeMedidaModel();
+    private UnidadeMedidaModel unidadeMedidaModel = new UnidadeMedidaModel();
 
     @Autowired
     private EstoqueModel estoqueModel = new EstoqueModel();
-
 
     public ProdutoCompletoDTO getId(Integer id) {
         return produtoModel.getProdDAO().findProdutoCompleto(id);
@@ -58,18 +54,52 @@ public class ProdutoService {
             throw new Exception("Nome do produto é obrigatório");
         }
 
-        if (TipoProdutoModel.getTpDAO().getId(dto.getProduto().getIdtipoproduto()) == null) {
+        // Access DAO via Model instance
+        if (tipoProdutoModel.getTpDAO().getId(dto.getProduto().getIdtipoproduto()) == null) {
             throw new Exception("Tipo de produto não encontrado");
         }
 
-        if (UnidadeMedidaModel.getUnDAO().getId(dto.getProduto().getIdunidademedida()) == null) {
+        // Access DAO via Model instance
+        if (unidadeMedidaModel.getUnDAO().getId(dto.getProduto().getIdunidademedida()) == null) {
             throw new Exception("Unidade de medida não encontrada");
         }
 
+        Connection conn = null;
+        boolean autoCommitOriginal = true;
         try {
-            return produtoModel.getProdDAO().gravar(dto.getProduto());
-        } catch (RuntimeException e) {
-            throw new Exception("Erro ao adicionar produto: " + e.getMessage(), e);
+            conn = SingletonDB.getConexao().getConnection();
+            autoCommitOriginal = conn.getAutoCommit();
+            conn.setAutoCommit(false);
+
+            ProdutoModel novoProduto = produtoModel.getProdDAO().gravar(dto.getProduto(), conn);
+
+            if (novoProduto != null && novoProduto.getIdproduto() != null) {
+                if (!estoqueModel.getEstDAO().inicializarEstoqueComConexao(novoProduto.getIdproduto(), conn)) {
+                    throw new SQLException("Erro ao gravar estoque inicial");
+                }
+                conn.commit();
+                return novoProduto;
+            } else {
+                conn.rollback();
+                return null;
+            }
+        } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            throw new Exception("Erro ao adicionar produto e inicializar estoque: " + e.getMessage(), e);
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(autoCommitOriginal);
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
         }
     }
 
@@ -88,11 +118,11 @@ public class ProdutoService {
             throw new Exception("Produto não encontrado");
         }
 
-        if (TipoProdutoModel.getTpDAO().getId(dto.getProduto().getIdtipoproduto()) == null) {
+        if (tipoProdutoModel.getTpDAO().getId(dto.getProduto().getIdtipoproduto()) == null) {
             throw new Exception("Tipo de produto não encontrado");
         }
 
-        if (UnidadeMedidaModel.getUnDAO().getId(dto.getProduto().getIdunidademedida()) == null) {
+        if (unidadeMedidaModel.getUnDAO().getId(dto.getProduto().getIdunidademedida()) == null) {
             throw new Exception("Unidade de medida não encontrada");
         }
 
@@ -106,18 +136,29 @@ public class ProdutoService {
         }
 
         ResultadoOperacao resultado = new ResultadoOperacao();
+        Connection conn = null;
+        boolean autoCommitOriginal = true;
 
         try {
+            // Access DAO via Model instance
             boolean podeExcluir = produtoModel.getProdDAO().produtoPodeSerExcluido(id);
 
             if (podeExcluir) {
-                boolean sucesso = produtoModel.getProdDAO().apagar(id);
-                resultado.setOperacao("excluido");
-                resultado.setSucesso(sucesso);
+                conn = SingletonDB.getConexao().getConnection();
+                autoCommitOriginal = conn.getAutoCommit();
+                conn.setAutoCommit(false);
+
+                boolean sucesso = produtoModel.getProdDAO().apagar(id, conn);
 
                 if (sucesso) {
+                    conn.commit(); // Commit transaction
+                    resultado.setOperacao("excluido");
+                    resultado.setSucesso(true);
                     resultado.setMensagem("Produto excluído com sucesso");
                 } else {
+                    conn.rollback();
+                    resultado.setOperacao("excluido");
+                    resultado.setSucesso(false);
                     resultado.setMensagem("Falha ao excluir o produto");
                 }
             } else {
@@ -131,12 +172,25 @@ public class ProdutoService {
                     resultado.setMensagem("Falha ao desativar o produto");
                 }
             }
-
             return resultado;
 
         } catch (SQLException e) {
-            e.printStackTrace();
-            throw new Exception("Erro ao processar a exclusão: " + e.getMessage());
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            throw new Exception("Erro ao processar a exclusão: " + e.getMessage(), e);
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(autoCommitOriginal);
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
         }
     }
 

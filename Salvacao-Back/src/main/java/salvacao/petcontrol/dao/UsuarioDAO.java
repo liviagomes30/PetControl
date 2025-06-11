@@ -1,6 +1,5 @@
 package salvacao.petcontrol.dao;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import salvacao.petcontrol.config.SingletonDB;
 import salvacao.petcontrol.model.PessoaModel;
@@ -11,14 +10,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 
 @Repository
 public class UsuarioDAO {
-
-    @Autowired
-    private PessoaModel pessoaModel = new PessoaModel();
 
     public UsuarioModel getId(Integer pessoaId) {
         UsuarioModel usuario = null;
@@ -34,8 +31,8 @@ public class UsuarioDAO {
                         rs.getString("senha"),
                         rs.getInt("pessoa_idpessoa"));
 
-                // Carregar dados da pessoa
-                PessoaModel pessoa = pessoaModel.getPessoaDAO().getId(pessoaId);
+                // Carregar dados da pessoa usando consulta direta
+                PessoaModel pessoa = buscarPessoaPorId(pessoaId);
                 if (pessoa != null) {
                     usuario.setPessoa(pessoa);
                 }
@@ -46,7 +43,32 @@ public class UsuarioDAO {
         return usuario;
     }
 
-    public UsuarioModel gravar(UsuarioModel usuario) { // Added gravar method
+    // Método auxiliar para buscar pessoa por ID
+    private PessoaModel buscarPessoaPorId(Integer id) {
+        PessoaModel pessoa = null;
+        String sql = "SELECT * FROM pessoa WHERE idpessoa = ?";
+
+        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                pessoa = new PessoaModel(
+                        rs.getInt("idpessoa"),
+                        rs.getString("nome"),
+                        rs.getString("cpf"),
+                        rs.getString("endereco"),
+                        rs.getString("telefone"),
+                        rs.getString("email")
+                );
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return pessoa;
+    }
+
+    public UsuarioModel gravar(UsuarioModel usuario) {
         String sql = "INSERT INTO usuario (login, senha, pessoa_idpessoa) VALUES (?, ?, ?)";
         try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql,
                 Statement.RETURN_GENERATED_KEYS)) {
@@ -60,12 +82,39 @@ public class UsuarioDAO {
         return usuario;
     }
 
-    public boolean alterar(UsuarioModel usuario) {
-        String sql = "UPDATE usuario SET login = ?, senha = ? WHERE pessoa_idpessoa = ?";
-        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+    public UsuarioModel gravar(UsuarioModel usuario, Connection conn) throws SQLException {
+        String sql = "INSERT INTO usuario (login, senha, pessoa_idpessoa) VALUES (?, ?, ?)";
+        try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, usuario.getLogin());
             stmt.setString(2, usuario.getSenha());
             stmt.setInt(3, usuario.getPessoa_idpessoa());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new SQLException("Erro ao adicionar usuário: " + e.getMessage(), e);
+        }
+        return usuario;
+    }
+
+    public boolean alterar(UsuarioModel usuario) {
+        String sql;
+        boolean updatePassword = usuario.getSenha() != null && !usuario.getSenha().trim().isEmpty();
+        
+        if (updatePassword) {
+            sql = "UPDATE usuario SET login = ?, senha = ? WHERE pessoa_idpessoa = ?";
+        } else {
+            sql = "UPDATE usuario SET login = ? WHERE pessoa_idpessoa = ?";
+        }
+        
+        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+            stmt.setString(1, usuario.getLogin());
+            
+            if (updatePassword) {
+                stmt.setString(2, usuario.getSenha());
+                stmt.setInt(3, usuario.getPessoa_idpessoa());
+            } else {
+                stmt.setInt(2, usuario.getPessoa_idpessoa());
+            }
+            
             int linhasMod = stmt.executeUpdate();
             if (linhasMod == 0) {
                 throw new RuntimeException("Nenhum usuário foi atualizado.");
@@ -195,7 +244,7 @@ public class UsuarioDAO {
         // comment
         // In a real scenario, you might want to add an 'ativo' BOOLEAN field to the
         // usuario table
-        String sql = "UPDATE usuario SET login = CONCAT(login, '_INATIVO_', EXTRACT(EPOCH FROM NOW()::timestamp)) WHERE pessoa_idpessoa = ?";
+        String sql = "UPDATE usuario SET login = CONCAT(login, 'INATIVO', EXTRACT(EPOCH FROM NOW()::timestamp)) WHERE pessoa_idpessoa = ?";
         try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
             stmt.setInt(1, pessoaId);
             return stmt.executeUpdate() > 0;
@@ -208,8 +257,8 @@ public class UsuarioDAO {
     // Reactivate user
     public boolean reativarUsuario(Integer pessoaId) {
         // This assumes login was modified during deactivation
-        String sql = "UPDATE usuario SET login = SUBSTRING(login, 1, POSITION('_INATIVO_' IN login) - 1) " +
-                "WHERE pessoa_idpessoa = ? AND login LIKE '%_INATIVO_%'";
+        String sql = "UPDATE usuario SET login = SUBSTRING(login, 1, POSITION('INATIVO' IN login) - 1) " +
+                "WHERE pessoa_idpessoa = ? AND login LIKE '%INATIVO%'";
         try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
             stmt.setInt(1, pessoaId);
             return stmt.executeUpdate() > 0;
@@ -249,7 +298,6 @@ public class UsuarioDAO {
                 stmt.setString(4, searchPattern);
             }
             ResultSet rs = stmt.executeQuery();
-            
             while (rs.next()) {
                 UsuarioModel usuario = new UsuarioModel(
                         rs.getString("login"),

@@ -1,4 +1,4 @@
-// uiToast.js
+// Salvacao-Front/assets/js/utils/uiToast.js
 
 const UIToast = {
   mostrar: function (titulo, mensagem, tipo = "success", duracao = 5000) {
@@ -53,35 +53,62 @@ const UIToast = {
       display: flex;
     `;
 
-    toast.innerHTML = `
-      <div style="width: 30px; background-color: ${cor.bg}; color: white; display: flex; align-items: center; justify-content: center; font-size: 18px;">
-        ${cor.icon}
-      </div>
-      <div style="padding: 10px 15px; flex-grow: 1;">
-        <strong>${titulo}</strong>
-        <div>${mensagem}</div>
-      </div>
-      <button style="background: transparent; border: 0; font-size: 16px; padding: 10px; cursor: pointer; opacity: 0.5;" onclick="document.getElementById('${toastId}').remove()">×</button>
-    `;
+    // Cria os elementos internos do toast
+    const iconDiv = document.createElement("div");
+    iconDiv.style.cssText = `width: 30px; background-color: ${cor.bg}; color: white; display: flex; align-items: center; justify-content: center; font-size: 18px;`;
+    iconDiv.innerHTML = `${cor.icon}`;
+
+    const contentDiv = document.createElement("div");
+    contentDiv.style.cssText = `padding: 10px 15px; flex-grow: 1;`;
+    contentDiv.innerHTML = `<strong>${titulo}</strong><div>${mensagem}</div>`;
+
+    // Cria o botão de fechar como um elemento DOM separado
+    const closeButton = document.createElement("button");
+    closeButton.className = "toast-close-button"; // Adiciona uma classe para identificação
+    closeButton.style.cssText = `background: transparent; border: 0; font-size: 16px; padding: 10px; cursor: pointer; opacity: 0.5;`;
+    closeButton.innerHTML = `&times;`; // Caractere 'X'
+
+    // Adiciona os elementos ao toast
+    toast.appendChild(iconDiv);
+    toast.appendChild(contentDiv);
+    toast.appendChild(closeButton); // Adiciona o botão de fechar
 
     toastContainer.appendChild(toast);
 
+    // Adiciona o event listener para o botão de fechar
+    closeButton.addEventListener("click", () => {
+      // Inicia a transição de saída
+      toast.style.opacity = "0";
+      setTimeout(() => {
+        if (toast.parentNode) {
+          toast.parentNode.removeChild(toast);
+        }
+        // Remove o container se não houver mais toasts
+        if (toastContainer.children.length === 0 && toastContainer.parentNode) {
+          toastContainer.parentNode.removeChild(toastContainer);
+        }
+      }, 300); // Deve ser igual ou maior que o tempo de transição (0.3s)
+    });
+
+    // Inicia a transição de entrada
     setTimeout(() => {
       toast.style.opacity = "1";
     }, 10);
 
+    // Temporizador para ocultar automaticamente
     setTimeout(() => {
+      // Inicia a transição de saída
       toast.style.opacity = "0";
 
       setTimeout(() => {
         if (toast.parentNode) {
           toast.parentNode.removeChild(toast);
         }
-
+        // Remove o container se não houver mais toasts
         if (toastContainer.children.length === 0 && toastContainer.parentNode) {
           toastContainer.parentNode.removeChild(toastContainer);
         }
-      }, 300);
+      }, 300); // Deve ser igual ou maior que o tempo de transição (0.3s)
     }, duracao);
   },
 

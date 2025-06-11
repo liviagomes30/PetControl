@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PetControl - Lista de Pessoas</title>
+    <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css"
+    />
+    <link rel="stylesheet" href="../../assets/css/style.css" />
+    <link rel="stylesheet" href="../../assets/css/estiloComplementar.css" />
+
+    <!-- Services -->
+    <script src="../../assets/js/services/authService.js"></script>
+
+    <script src="../../assets/js/components/sidebar.js" defer></script>
+</head>
+<body>
+<div class="container">
+    <div class="header d-flex justify-content-between align-items-center">
+        <h1 class="h3" style="color: var(--vermelho-escuro)">
+            Lista de Pessoas
+        </h1>
+        <a href="cadastrarPessoa.html" class="btn btn-primary"
+        >Nova Pessoa</a
+        >
+    </div>
+
+    <div class="container mt-3">
+        <div class="row g-2 align-items-center">
+            <!-- Campo de pesquisa -->
+            <div class="col">
+                <input class="form-control form-control-sm" type="search" placeholder="Pesquisar" aria-label="Pesquisar" id="inputBusca">
+            </div>
+            <!-- Select -->
+            <div class="col-auto">
+                <select class="form-select form-select-sm" style="background-color: rgb(73, 71, 71); color: lightgray; border-radius: 10px; width: auto;" aria-label="Filtro" id="selectFiltro">
+                    <option value="1" selected>Nome</option>
+                    <option value="2">CPF</option>
+                    <option value="3">Email</option>
+                    <option value="4">Telefone</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <br>
+
+    <!-- Tabela de Pessoas -->
+    <div class="table-container">
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>CPF</th>
+                <th>Email</th>
+                <th>Telefone</th>
+                <th>Endereço</th>
+                <th>Ações</th>
+            </tr>
+            </thead>
+            <tbody id="tabela-pessoas">
+            <!-- Conteúdo será carregado dinamicamente -->
+            <tr>
+                <td colspan="7" class="text-center">Carregando pessoas...</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão -->
+<div class="modal fade" id="modalConfirmacaoExclusao" tabindex="-1" aria-labelledby="modalConfirmacaoExclusaoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalConfirmacaoExclusaoLabel">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir esta pessoa? Esta ação não pode ser desfeita.</p>
+                <p><strong>Nome:</strong> <span id="pessoa-nome-exclusao"></span></p>
+                <p><strong>CPF:</strong> <span id="pessoa-cpf-exclusao"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btnConfirmarExclusao">Excluir</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // PessoaService
+    class PessoaService {
+        constructor(baseUrl = "http://localhost:8080") {
+            this.baseUrl = baseUrl;
+            this.endpoint = "/pessoa";
+        }
+
+        async listarTodos() {
+            try {
+                const response = await fetch(`${this.baseUrl}${this.endpoint}/listar`, {
+                    method: "GET"
+                });
+
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        return []; // Retorna array vazio para renderizarTabela funcionar
+                    }
+                    throw new Error(`Erro ${response.status}: ${await response.text()}`);
+                }
+
+                const data = await response.json();
+                console.log("Dados recebidos da API listarTodos:", data);
+                return data;
+            } catch (error) {
+                console.error("Erro ao listar pessoas:", error);
+                throw error;
+            }
+        }
+
+        // Método simples para listar usando fetch direto
+        listar() {
+            const tabela = document.getElementById("tabela-pessoas");
+
+            fetch(`${this.baseUrl}${this.endpoint}/listar`)
+                .then(res => res.json())
+                .then(lista => {
+                    if(!Array.isArray(lista))
+                        throw new Error('A resposta da API não é uma lista');
+
+                    if(lista.length === 0) {
+                        tabela.innerHTML = `
+                            <tr>
+                                <td colspan="7" class="text-center">Nenhuma pessoa encontrada.</td>
+                            </tr>`;
+                        return;
+                    }
+
+                    tabela.innerHTML = ""; // Limpa a tabela
+
+                    lista.forEach(pessoa => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                                <td>${pessoa.idpessoa || '-'}</td>
+                                <td>${pessoa.nome || '-'}</td>
+                                <td>${this.formatarCPF(pessoa.cpf)}</td>
+                                <td>${pessoa.email || '-'}</td>
+                                <td>${this.formatarTelefone(pessoa.telefone)}</td>
+                                <td>${pessoa.endereco ? (pessoa.endereco.length > 30 ? pessoa.endereco.substring(0, 30) + '...' : pessoa.endereco) : '-'}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editarPessoa('${pessoa.cpf}')">Editar</button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="pessoaController.confirmarExclusao('${pessoa.cpf}', '${pessoa.nome}')">Excluir</button>
+                                </td>
+                            `;
+                        tabela.appendChild(tr);
+                    });
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar pessoas:', error);
+                    tabela.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="text-center text-danger">Erro ao carregar dados.</td>
+                        </tr>`;
+                });
+        }
+
+        // Métodos auxiliares para formatação
+        formatarCPF(cpf) {
+            if (!cpf) return '';
+            return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+        }
+
+        formatarTelefone(telefone) {
+            if (!telefone) return '';
+            if (telefone.length === 11) {
+                return telefone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+            } else if (telefone.length === 10) {
+                return telefone.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+            }
+            return telefone;
+        }
+
+        async buscarPorCpf(cpf) {
+            try {
+                const response = await fetch(`${this.baseUrl}${this.endpoint}/${cpf}`, {
+                    method: "GET"
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erro ${response.status}: ${await response.text()}`);
+                }
+
+                const data = await response.json();
+                console.log("Dados recebidos da API buscarPorCpf:", data);
+                return data;
+            } catch (error) {
+                console.error("Erro ao buscar pessoa:", error);
+                throw error;
+            }
+        }
+
+        async cadastrar(pessoa) {
+            try {
+                const response = await fetch(`${this.baseUrl}${this.endpoint}/cadastro`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(pessoa)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erro ${response.status}: ${await response.text()}`);
+                }
+
+                const data = await response.text();
+                console.log("Pessoa cadastrada:", data);
+                return data;
+            } catch (error) {
+                console.error("Erro ao cadastrar pessoa:", error);
+                throw error;
+            }
+        }
+
+        async atualizar(cpf, pessoa) {
+            try {
+                const response = await fetch(`${this.baseUrl}${this.endpoint}/alterar`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(pessoa)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erro ${response.status}: ${await response.text()}`);
+                }
+
+                const data = await response.text();
+                console.log("Pessoa atualizada:", data);
+                return data;
+            } catch (error) {
+                console.error("Erro ao atualizar pessoa:", error);
+                throw error;
+            }
+        }
+
+        async excluir(cpf) {
+            try {
+                const response = await fetch(`${this.baseUrl}${this.endpoint}/${cpf}`, {
+                    method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erro ${response.status}: ${await response.text()}`);
+                }
+
+                const data = await response.text();
+                console.log("Pessoa excluída:", data);
+                return data;
+            } catch (error) {
+                console.error("Erro ao excluir pessoa:", error);
+                throw error;
+            }
+        }
+    }
+
+    // Controller para gerenciar a página
+    class PessoaController {
+        constructor() {
+            this.service = new PessoaService();
+            this.cpfParaExcluir = null;
+            this.init();
+        }
+
+        init() {
+            // Inicializar quando o DOM estiver carregado
+            document.addEventListener('DOMContentLoaded', () => {
+                this.inicializarListagem();
+                this.configurarEventListeners();
+            });
+        }
+
+        configurarEventListeners() {
+            // Event listener para busca
+            const inputBusca = document.getElementById('inputBusca');
+            inputBusca.addEventListener('input', (e) => {
+                this.filtrarTabela(e.target.value);
+            });
+
+            // Event listener para o select de filtro
+            const selectFiltro = document.getElementById('selectFiltro');
+            selectFiltro.addEventListener('change', () => {
+                this.aplicarFiltro();
+            });
+
+            // Event listener para confirmação de exclusão
+            const btnConfirmarExclusao = document.getElementById('btnConfirmarExclusao');
+            btnConfirmarExclusao.addEventListener('click', () => {
+                this.excluirPessoa();
+            });
+        }
+
+        async inicializarListagem() {
+            try {
+                console.log("Carregando pessoas...");
+                // Usa o método simples do service que já renderiza a tabela
+                this.service.listar();
+
+                // Verificar mensagem na URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const message = urlParams.get("message");
+                if (message) {
+                    console.log("Mensagem de sucesso:", message);
+                    this.mostrarToast(message, 'success');
+                }
+            } catch (error) {
+                console.error("Erro ao carregar pessoas:", error);
+                const tabela = document.getElementById("tabela-pessoas");
+                tabela.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Erro ao carregar dados.</td></tr>`;
+            }
+        }
+
+        filtrarTabela(termo) {
+            const linhas = document.querySelectorAll('#tabela-pessoas tr');
+            linhas.forEach(linha => {
+                const texto = linha.textContent.toLowerCase();
+                linha.style.display = texto.includes(termo.toLowerCase()) ? '' : 'none';
+            });
+        }
+
+        aplicarFiltro() {
+            const filtro = document.getElementById('selectFiltro').value;
+            const termo = document.getElementById('inputBusca').value.toLowerCase();
+
+            if (!termo) return;
+
+            const linhas = document.querySelectorAll('#tabela-pessoas tr');
+            linhas.forEach(linha => {
+                const colunas = linha.querySelectorAll('td');
+                if (colunas.length === 0) return; // Skip header or empty rows
+
+                let textoParaFiltrar = '';
+                switch(filtro) {
+                    case '1': // Nome - coluna 1
+                        textoParaFiltrar = colunas[1].textContent.toLowerCase();
+                        break;
+                    case '2': // CPF - coluna 2
+                        textoParaFiltrar = colunas[2].textContent.toLowerCase();
+                        break;
+                    case '3': // Email - coluna 3
+                        textoParaFiltrar = colunas[3].textContent.toLowerCase();
+                        break;
+                    case '4': // Telefone - coluna 4
+                        textoParaFiltrar = colunas[4].textContent.toLowerCase();
+                        break;
+                    default:
+                        textoParaFiltrar = linha.textContent.toLowerCase();
+                }
+
+                linha.style.display = textoParaFiltrar.includes(termo) ? '' : 'none';
+            });
+        }
+
+        confirmarExclusao(cpf, nome) {
+            this.cpfParaExcluir = cpf;
+            document.getElementById('pessoa-nome-exclusao').textContent = nome;
+            document.getElementById('pessoa-cpf-exclusao').textContent = cpf;
+            const modal = new bootstrap.Modal(document.getElementById('modalConfirmacaoExclusao'));
+            modal.show();
+        }
+
+        async excluirPessoa() {
+            if (!this.cpfParaExcluir) return;
+
+            try {
+                await this.service.excluir(this.cpfParaExcluir);
+                this.mostrarToast('Pessoa excluída com sucesso!', 'success');
+                this.inicializarListagem(); // Recarregar a lista
+
+                // Fechar modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmacaoExclusao'));
+                modal.hide();
+            } catch (error) {
+                console.error('Erro ao excluir pessoa:', error);
+
+                // Mensagem mais específica baseada no erro
+                let mensagemErro = 'Erro ao excluir pessoa. Verifique se não há animais cadastrados para esta pessoa ou tente novamente.';
+
+                // Se o erro contém informações específicas, pode customizar ainda mais
+                if (error.message.includes('constraint') || error.message.includes('foreign key')) {
+                    mensagemErro = 'Não é possível excluir esta pessoa pois ela possui animais cadastrados no sistema.';
+                } else if (error.message.includes('400') || error.message.includes('Bad Request')) {
+                    mensagemErro = 'Pessoa com registros vinculados ou erro no sistema. Verifique se não há adoções associadas.';
+                }
+
+                this.mostrarToast(mensagemErro, 'error');
+
+                // Fechar modal mesmo com erro
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmacaoExclusao'));
+                if (modal) modal.hide();
+            }
+        }
+
+        mostrarToast(mensagem, tipo) {
+            const toast = document.createElement('div');
+            toast.className = `alert alert-${tipo === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+            toast.style.top = '20px';
+            toast.style.right = '20px';
+            toast.style.zIndex = '9999';
+            toast.innerHTML = `
+                    ${mensagem}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 5000);
+        }
+    }
+
+    // Funções globais para os botões inline
+    function editarPessoa(cpf) {
+        console.log('Editar pessoa:', cpf);
+        window.location.href = `editarPessoa.html?cpf=${encodeURIComponent(cpf)}`;
+    }
+
+    // Inicializar o controller
+    const pessoaController = new PessoaController();
+</script>
+</body>
+</html>

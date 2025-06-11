@@ -82,7 +82,6 @@ public class AnimalService {
         }
     }
 
-    // Verifica se data1 é menor ou igual à data2
     private void validarDataMenorOuIgual(LocalDate data1, LocalDate data2) throws Exception{
         if (data1 != null && data2 != null && data1.isAfter(data2)) {
             throw new Exception("Erro: A data de nascimento não pode ser maior que a data de resgate.");

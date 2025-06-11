@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PetControl - Editar Adoção</title>
+  <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+  />
+  <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css"
+  />
+  <link rel="stylesheet" href="../../assets/css/style.css" />
+  <link rel="stylesheet" href="../../assets/css/estiloComplementar.css" />
+
+  <!-- Services -->
+  <script src="../../assets/js/services/authService.js"></script>
+
+  <script src="../../assets/js/components/sidebar.js" defer></script>
+</head>
+<body>
+<div class="container mt-4">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3" style="color: var(--vermelho-escuro)">
+      Editar Adoção #<span id="adocao-numero"></span>
+    </h1>
+    <a href="listarDoacao.html" class="btn btn-secondary me-3">
+      <i class="bi bi-arrow-left"></i> Voltar
+    </a>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading" class="loading-spinner">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Carregando...</span>
+    </div>
+    <p class="mt-2">Carregando dados da adoção...</p>
+  </div>
+
+  <!-- Formulário -->
+  <div class="form-container" id="form-container" style="display: none;">
+    <form id="form-editar-adocao">
+      <div class="row">
+        <!-- Select do Animal -->
+        <div class="col-md-6 mb-3">
+          <label for="idAnimal" class="form-label">Animal para Adoção *</label>
+          <select class="form-select" id="idAnimal" required>
+            <option value="">Carregando animais...</option>
+          </select>
+          <div class="form-text">Selecione o animal que foi adotado</div>
+        </div>
+
+        <!-- Select do Adotante -->
+        <div class="col-md-6 mb-3">
+          <label for="idAdotante" class="form-label">Adotante *</label>
+          <select class="form-select" id="idAdotante" required>
+            <option value="">Carregando pessoas...</option>
+          </select>
+          <div class="form-text">Selecione a pessoa que adotou</div>
+        </div>
+
+        <!-- Informações da Pessoa Selecionada -->
+        <div class="col-12 mb-3">
+          <div id="pessoa-info" class="animal-info">
+            <h6>Informações do Adotante Selecionado:</h6>
+            <div class="row">
+              <div class="col-md-12">
+                <p><strong>Nome:</strong> <span id="pessoa-nome"></span></p>
+                <p><strong>CPF:</strong> <span id="pessoa-cpf"></span></p>
+                <p><strong>Email:</strong> <span id="pessoa-email"></span></p>
+                <p><strong>Telefone:</strong> <span id="pessoa-telefone"></span></p>
+                <p><strong>Endereço:</strong> <span id="pessoa-endereco"></span></p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Informações do Animal Selecionado -->
+        <div class="col-12 mb-3">
+          <div id="animal-info" class="animal-info">
+            <h6>Informações do Animal Selecionado:</h6>
+            <div class="row">
+              <div class="col-md-12">
+                <p><strong>Nome:</strong> <span id="animal-nome"></span></p>
+                <p><strong>Espécie:</strong> <span id="animal-especie"></span></p>
+                <p><strong>Raça:</strong> <span id="animal-raca"></span></p>
+                <p><strong>Porte:</strong> <span id="animal-porte"></span> | <strong>Sexo:</strong> <span id="animal-sexo"></span></p>
+                <p><strong>Status:</strong> <span id="animal-status"></span></p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Data da Adoção -->
+        <div class="col-md-6 mb-3">
+          <label for="dataAdocao" class="form-label">Data da Adoção *</label>
+          <input type="date" class="form-control" id="dataAdocao" required>
+        </div>
+
+        <!-- Status do Acompanhamento -->
+        <div class="col-md-6 mb-3">
+          <label for="statusAcompanhamento" class="form-label">Status do Acompanhamento *</label>
+          <select class="form-select" id="statusAcompanhamento" required>
+            <option value="">Selecione o status</option>
+            <option value="Pendente">Pendente</option>
+            <option value="Em acompanhamento">Em acompanhamento</option>
+            <option value="Aprovado">Aprovado</option>
+            <option value="Rejeitado">Rejeitado</option>
+            <option value="Cancelado">Cancelado</option>
+          </select>
+        </div>
+
+        <!-- Data do Acompanhamento -->
+        <div class="col-md-6 mb-3">
+          <label for="dataAcompanhamento" class="form-label">Data do Acompanhamento</label>
+          <input type="date" class="form-control" id="dataAcompanhamento">
+          <div class="form-text">Data da visita de acompanhamento (opcional)</div>
+        </div>
+
+        <!-- ID da Pessoa (campo oculto para pessoa_idpessoa) -->
+        <div class="col-md-6 mb-3" style="display: none;">
+          <label for="pessoa_idpessoa" class="form-label">ID da Pessoa Responsável</label>
+          <input type="number" class="form-control" id="pessoa_idpessoa" readonly>
+          <div class="form-text">Preenchido automaticamente com base no adotante selecionado</div>
+        </div>
+
+        <!-- Observações -->
+        <div class="col-12 mb-3">
+          <label for="obs" class="form-label">Observações</label>
+          <textarea class="form-control" id="obs" rows="4"
+                    placeholder="Observações sobre a adoção, comportamento do animal, requisitos especiais, etc."></textarea>
+        </div>
+      </div>
+
+      <!-- Botões -->
+      <div class="d-flex gap-2 justify-content-end">
+        <button type="button" class="btn btn-voltar" onclick="voltarParaLista()">
+          Cancelar
+        </button>
+        <button type="submit" class="btn btn-success" id="btn-salvar">
+          <span class="spinner-border spinner-border-sm d-none" id="spinner-salvar"></span>
+          Salvar Alterações
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Mensagem de erro -->
+  <div id="erro-container" class="alert alert-danger d-none" role="alert">
+    <h4 class="alert-heading">Erro ao carregar adoção!</h4>
+    <p id="erro-mensagem"></p>
+    <a href="listarDoacao.html" class="btn btn-outline-danger">Voltar para Lista</a>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  // Services
+  class AdocaoService {
+    constructor(baseUrl = "http://localhost:8080") {
+      this.baseUrl = baseUrl;
+      this.endpoint = "/adocao";
+    }
+
+    async buscarPorId(id) {
+      try {
+        const response = await fetch(`${this.baseUrl}${this.endpoint}/${id}`, {
+          method: "GET"
+        });
+
+        if (!response.ok) {
+          throw new Error(`Erro ${response.status}: ${await response.text()}`);
+        }
+
+        const data = await response.json();
+        console.log("Dados recebidos da API buscarPorId:", data);
+        return data;
+      } catch (error) {
+        console.error("Erro ao buscar adoção:", error);
+        throw error;
+      }
+    }
+
+    async atualizar(id, adocao) {
+      try {
+        const dadosParaEnvio = {
+          idAdocao: parseInt(id),
+          idAnimal: adocao.idAnimal,
+          idAdotante: adocao.idAdotante,
+          dataAdocao: adocao.dataAdocao,
+          statusAcompanhamento: adocao.statusAcompanhamento,
+          dataAcompanhamento: adocao.dataAcompanhamento,
+          pessoaIdPessoa: adocao.idAdotante, // Mesmo valor do adotante
+          obs: adocao.obs
+        };
+
+        console.log("Dados sendo enviados para API atualizar:", dadosParaEnvio);
+
+        const response = await fetch(`${this.baseUrl}${this.endpoint}/alterar`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(dadosParaEnvio)
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Erro da API:", errorText);
+          throw new Error(`Erro ${response.status}: ${errorText}`);
+        }
+
+        const data = await response.text();
+        console.log("Adoção atualizada:", data);
+        return data;
+      } catch (error) {
+        console.error("Erro ao atualizar adoção:", error);
+        throw error;
+      }
+    }
+  }
+
+  class PessoaService {
+    constructor(baseUrl = "http://localhost:8080") {
+      this.baseUrl = baseUrl;
+      this.endpoint = "/pessoa";
+    }
+
+    async listarTodos() {
+      try {
+        const response = await fetch(`${this.baseUrl}${this.endpoint}/listar`);
+
+        if (!response.ok) {
+          throw new Error(`Erro ${response.status}: ${await response.text()}`);
+        }
+
+        const data = await response.json();
+        console.log("Dados recebidos da API listarTodos pessoas:", data);
+        return data;
+      } catch (error) {
+        console.error("Erro ao listar pessoas:", error);
+        throw error;
+      }
+    }
+  }
+
+  class AnimalService {
+    constructor(baseUrl = "http://localhost:8080") {
+      this.baseUrl = baseUrl;
+      this.endpoint = "/animais";
+    }
+
+    async listarTodos() {
+      try {
+        const response = await fetch(`${this.baseUrl}${this.endpoint}`, {
+          method: "GET"
+        });
+
+        if (!response.ok) {
+          if (response.status == 404) {
+            return [];
+          } else {
+            throw new Error(`Erro ${response.status}: ${await response.text()}`);
+          }
+        }
+
+        const data = await response.json();
+        console.log("Dados recebidos da API listarTodos animais:", data);
+        return data;
+      } catch (error) {
+        console.error("Erro ao listar animais:", error);
+        throw error;
+      }
+    }
+  }
+
+  // Controller para edição
+  class EditarAdocaoController {
+    constructor() {
+      this.adocaoService = new AdocaoService();
+      this.animalService = new AnimalService();
+      this.pessoaService = new PessoaService();
+      this.idAdocao = null;
+      this.animais = [];
+      this.pessoas = [];
+      this.adocaoAtual = null;
+      this.init();
+    }
+
+    init() {
+      document.addEventListener('DOMContentLoaded', () => {
+        this.obterIdDaUrl();
+        this.configurarFormulario();
+        this.carregarDados();
+      });
+    }
+
+    obterIdDaUrl() {
+      const urlParams = new URLSearchParams(window.location.search);
+      this.idAdocao = urlParams.get('id');
+
+      if (!this.idAdocao) {
+        this.mostrarErro('ID da adoção não informado na URL');
+        return;
+      }
+
+      // Atualizar o número da adoção no header
+      document.getElementById('adocao-numero').textContent = this.idAdocao;
+    }
+
+    configurarFormulario() {
+      const form = document.getElementById('form-editar-adocao');
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.salvarAlteracoes();
+      });
+
+      // Event listener para mudança de animal
+      const selectAnimal = document.getElementById('idAnimal');
+      selectAnimal.addEventListener('change', (e) => {
+        this.mostrarInfoAnimal(e.target.value);
+      });
+
+      // Event listener para mudança de pessoa
+      const selectPessoa = document.getElementById('idAdotante');
+      selectPessoa.addEventListener('change', (e) => {
+        this.mostrarInfoPessoa(e.target.value);
+        this.sincronizarIdPessoa(e.target.value);
+      });
+    }
+
+    async carregarDados() {
+      try {
+        this.mostrarLoading(true);
+
+        // Carregar adoção, animais e pessoas em paralelo
+        const [adocao, animais, pessoas] = await Promise.all([
+          this.adocaoService.buscarPorId(this.idAdocao),
+          this.animalService.listarTodos(),
+          this.pessoaService.listarTodos()
+        ]);
+
+        this.adocaoAtual = adocao;
+        this.animais = animais;
+        this.pessoas = pessoas;
+
+        this.preencherSelectAnimais();
+        this.preencherSelectPessoas();
+        this.preencherFormulario(adocao);
+
+        this.mostrarLoading(false);
+        this.mostrarFormulario(true);
+
+      } catch (error) {
+        this.mostrarLoading(false);
+        this.mostrarErro(`Erro ao carregar dados: ${error.message}`);
+      }
+    }
+
+    preencherSelectAnimais() {
+      const select = document.getElementById('idAnimal');
+      select.innerHTML = '<option value="">Selecione um animal</option>';
+
+      if (this.animais.length === 0) {
+        select.innerHTML = '<option value="">Nenhum animal cadastrado</option>';
+        return;
+      }
+
+      // Para edição, incluir TODOS os animais (não apenas disponíveis)
+      // pois o animal atual pode estar "Adotado" mas ainda deve aparecer na lista
+      this.animais.forEach(animal => {
+        const option = document.createElement('option');
+        option.value = animal.id;
+        option.textContent = `${animal.nome} - ${animal.especie} (${animal.raca}) - ${animal.status}`;
+        select.appendChild(option);
+      });
+    }
+
+    preencherSelectPessoas() {
+      const select = document.getElementById('idAdotante');
+      select.innerHTML = '<option value="">Selecione uma pessoa</option>';
+
+      if (this.pessoas.length === 0) {
+        select.innerHTML = '<option value="">Nenhuma pessoa cadastrada</option>';
+        return;
+      }
+
+      console.log("Debug - Pessoas carregadas:", this.pessoas);
+
+      this.pessoas.forEach(pessoa => {
+        const option = document.createElement('option');
+        const pessoaId = pessoa.idpessoa;
+        option.value = pessoaId;
+        option.textContent = `${pessoa.nome} - ${pessoa.cpf}`;
+
+        console.log(`Debug - Adicionando opção: value="${pessoaId}", text="${option.textContent}"`);
+
+        select.appendChild(option);
+      });
+    }
+
+    preencherFormulario(adocao) {
+      // Selecionar animal
+      document.getElementById('idAnimal').value = adocao.idAnimal || '';
+
+      // Selecionar adotante
+      document.getElementById('idAdotante').value = adocao.idAdotante || '';
+
+      // Formatar data para input date (YYYY-MM-DD)
+      if (adocao.dataAdocao) {
+        const dataAdocao = new Date(adocao.dataAdocao);
+        document.getElementById('dataAdocao').value = dataAdocao.toISOString().split('T')[0];
+      }
+
+      document.getElementById('statusAcompanhamento').value = adocao.statusAcompanhamento || '';
+
+      // Formatar data de acompanhamento
+      if (adocao.dataAcompanhamento) {
+        const dataAcompanhamento = new Date(adocao.dataAcompanhamento);
+        document.getElementById('dataAcompanhamento').value = dataAcompanhamento.toISOString().split('T')[0];
+      }
+
+      document.getElementById('obs').value = adocao.obs || '';
+
+      // Sincronizar campo pessoa_idpessoa
+      document.getElementById('pessoa_idpessoa').value = adocao.idAdotante || '';
+
+      // Mostrar informações do animal e pessoa selecionados
+      this.mostrarInfoAnimal(adocao.idAnimal);
+      this.mostrarInfoPessoa(adocao.idAdotante);
+    }
+
+    mostrarInfoAnimal(animalId) {
+      const infoDiv = document.getElementById('animal-info');
+
+      if (!animalId) {
+        infoDiv.classList.remove('show');
+        return;
+      }
+
+      const animal = this.animais.find(a => a.id == animalId);
+      if (!animal) return;
+
+      // Preencher informações
+      document.getElementById('animal-nome').textContent = animal.nome || 'N/A';
+      document.getElementById('animal-especie').textContent = animal.especie || 'N/A';
+      document.getElementById('animal-raca').textContent = animal.raca || 'N/A';
+      document.getElementById('animal-porte').textContent = animal.porte || 'N/A';
+      document.getElementById('animal-sexo').textContent = animal.sexo || 'N/A';
+      document.getElementById('animal-status').textContent = animal.status || 'N/A';
+
+      infoDiv.classList.add('show');
+    }
+
+    mostrarInfoPessoa(pessoaId) {
+      const infoDiv = document.getElementById('pessoa-info');
+
+      if (!pessoaId) {
+        infoDiv.classList.remove('show');
+        return;
+      }
+
+      const pessoa = this.pessoas.find(p => p.idpessoa == pessoaId);
+      if (!pessoa) return;
+
+      // Preencher informações
+      document.getElementById('pessoa-nome').textContent = pessoa.nome || 'N/A';
+      document.getElementById('pessoa-cpf').textContent = pessoa.cpf || 'N/A';
+      document.getElementById('pessoa-email').textContent = pessoa.email || 'N/A';
+      document.getElementById('pessoa-telefone').textContent = pessoa.telefone || 'N/A';
+      document.getElementById('pessoa-endereco').textContent = pessoa.endereco || 'N/A';
+
+      infoDiv.classList.add('show');
+    }
+
+    sincronizarIdPessoa(pessoaId) {
+      // Preencher automaticamente o campo pessoa_idpessoa com o mesmo valor do adotante
+      const campoPersonaIdPessoa = document.getElementById('pessoa_idpessoa');
+      campoPersonaIdPessoa.value = pessoaId || '';
+
+      console.log(`Debug - Sincronização: pessoaId recebido="${pessoaId}", tipo=${typeof pessoaId}`);
+      console.log(`Debug - Campo pessoa_idpessoa preenchido com: "${campoPersonaIdPessoa.value}"`);
+    }
+
+    async salvarAlteracoes() {
+      try {
+        this.mostrarSpinnerSalvar(true);
+
+        const dadosFormulario = this.obterDadosFormulario();
+
+        // Validação básica
+        if (!dadosFormulario.idAnimal || !dadosFormulario.idAdotante) {
+          throw new Error('Animal e Adotante são obrigatórios');
+        }
+
+        console.log("Dados para atualização:", dadosFormulario);
+
+        await this.adocaoService.atualizar(this.idAdocao, dadosFormulario);
+
+        this.mostrarToast('Adoção atualizada com sucesso!', 'success');
+
+        // Redirecionar para lista após 1.5 segundos
+        setTimeout(() => {
+          window.location.href = 'listarDoacao.html?message=Adoção atualizada com sucesso!';
+        }, 1500);
+
+      } catch (error) {
+        this.mostrarSpinnerSalvar(false);
+        console.error("Erro completo:", error);
+        this.mostrarToast(`Erro ao salvar: ${error.message}`, 'error');
+      }
+    }
+
+    obterDadosFormulario() {
+      const selectAdotante = document.getElementById('idAdotante');
+      const valorAdotante = selectAdotante.value;
+
+      console.log("Debug - Valor bruto do select:", valorAdotante);
+      console.log("Debug - Tipo do valor:", typeof valorAdotante);
+
+      const pessoaId = valorAdotante ? parseInt(valorAdotante) : null;
+
+      console.log("Debug - Valor após parseInt:", pessoaId);
+
+      const dados = {
+        idAnimal: parseInt(document.getElementById('idAnimal').value),
+        idAdotante: pessoaId,
+        dataAdocao: document.getElementById('dataAdocao').value,
+        statusAcompanhamento: document.getElementById('statusAcompanhamento').value,
+        dataAcompanhamento: document.getElementById('dataAcompanhamento').value || null,
+        obs: document.getElementById('obs').value || null
+      };
+
+      console.log("Dados do formulário:", dados);
+      console.log("Confirmação: idAdotante =", dados.idAdotante);
+      return dados;
+    }
+
+    mostrarLoading(mostrar) {
+      const loading = document.getElementById('loading');
+      loading.style.display = mostrar ? 'block' : 'none';
+    }
+
+    mostrarFormulario(mostrar) {
+      const container = document.getElementById('form-container');
+      container.style.display = mostrar ? 'block' : 'none';
+    }
+
+    mostrarErro(mensagem) {
+      const erroContainer = document.getElementById('erro-container');
+      const erroMensagem = document.getElementById('erro-mensagem');
+
+      erroMensagem.textContent = mensagem;
+      erroContainer.classList.remove('d-none');
+    }
+
+    mostrarSpinnerSalvar(mostrar) {
+      const spinner = document.getElementById('spinner-salvar');
+      const btn = document.getElementById('btn-salvar');
+
+      if (mostrar) {
+        spinner.classList.remove('d-none');
+        btn.disabled = true;
+      } else {
+        spinner.classList.add('d-none');
+        btn.disabled = false;
+      }
+    }
+
+    mostrarToast(mensagem, tipo) {
+      const toast = document.createElement('div');
+      toast.className = `alert alert-${tipo === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+      toast.style.top = '20px';
+      toast.style.right = '20px';
+      toast.style.zIndex = '9999';
+      toast.innerHTML = `
+        ${mensagem}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.remove();
+      }, 5000);
+    }
+  }
+
+  // Função global para voltar
+  function voltarParaLista() {
+    window.location.href = 'listarDoacao.html';
+  }
+
+  // Inicializar controller
+  const editarController = new EditarAdocaoController();
+</script>
+</body>
+</html>

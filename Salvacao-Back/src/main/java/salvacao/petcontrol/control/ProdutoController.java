@@ -1,4 +1,3 @@
-// salvacao.petcontrol.control.ProdutoController.java
 package salvacao.petcontrol.control;
 
 import org.springframework.beans.factory.annotation.Autowired;

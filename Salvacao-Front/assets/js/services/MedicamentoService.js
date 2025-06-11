@@ -1,8 +1,7 @@
-// MedicamentoService.js
 class MedicamentoService {
   constructor(baseUrl = "http://localhost:8080") {
     this.baseUrl = baseUrl;
-    this.endpoint = "/medicamentos";
+    this.endpoint = "/api/medicamentos";
   }
 
   async listarTodos() {
@@ -26,6 +25,38 @@ class MedicamentoService {
     }
   }
 
+  async listarTodosDisponiveis() {
+    try {
+      const response = await fetch(
+        `${this.baseUrl}${this.endpoint}/disponiveis`
+      );
+      if (response.status === 404) {
+        return []; // Retorna um array vazio se nenhum for encontrado
+      }
+      if (!response.ok) {
+        throw new Error(`Erro ${response.status}: ${await response.text()}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error("Erro ao listar medicamentos disponíveis:", error);
+      throw error;
+    }
+  }
+
+  async listarTodosInativos() {
+    try {
+      const response = await fetch(`${this.baseUrl}${this.endpoint}/inativos`);
+      if (response.status === 404) return [];
+      if (!response.ok) {
+        throw new Error(`Erro ${response.status}: ${await response.text()}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error("Erro ao listar medicamentos inativos:", error);
+      throw error;
+    }
+  }
+
   async buscarPorId(id) {
     try {
       const response = await fetch(`${this.baseUrl}${this.endpoint}/${id}`);
@@ -41,7 +72,7 @@ class MedicamentoService {
 
   async cadastrar(medicamentoData) {
     try {
-      const response = await fetch(`${this.baseUrl}${this.endpoint}/cadastro`, {
+      const response = await fetch(`${this.baseUrl}${this.endpoint}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -101,9 +132,33 @@ class MedicamentoService {
     }
   }
 
+  async reativar(id) {
+    try {
+      // A rota de reativação está no controlador de PRODUTOS
+      const response = await fetch(`${this.baseUrl}/produtos/${id}/reativar`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+      return await response.text();
+    } catch (error) {
+      console.error(`Erro ao reativar medicamento ${id}:`, error);
+      throw error;
+    }
+  }
+
   async listarTiposProduto() {
     try {
       const response = await fetch(`${this.baseUrl}/tipos-produto`);
+      if (response.status === 404) {
+        console.warn("Nenhum tipo de produto encontrado (status 404). Retornando array vazio.");
+        return [];
+      }
       if (!response.ok) {
         throw new Error(`Erro ${response.status}: ${await response.text()}`);
       }
@@ -117,6 +172,10 @@ class MedicamentoService {
   async listarUnidadesMedida() {
     try {
       const response = await fetch(`${this.baseUrl}/unidades-medida`);
+      if (response.status === 404) {
+        console.warn("Nenhuma unidade de medida encontrada (status 404). Retornando array vazio.");
+        return [];
+      }
       if (!response.ok) {
         throw new Error(`Erro ${response.status}: ${await response.text()}`);
       }

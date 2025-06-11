@@ -1,10 +1,8 @@
 package salvacao.petcontrol.dao;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import salvacao.petcontrol.config.SingletonDB;
 import salvacao.petcontrol.model.EstoqueModel;
-import salvacao.petcontrol.model.ProdutoModel;
 
 import java.sql.*;
 import java.util.ArrayList;

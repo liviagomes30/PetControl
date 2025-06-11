@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - PetControl</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <link rel="stylesheet" href="./assets/css/login.css">
+    
+    <link rel="icon" type="image/x-icon" href="./assets/img/favicon.ico">
+</head>
+<body class="login-page">
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <div class="login-container">
+        <div class="login-header">
+            <div class="login-logo">
+                <i class="bi bi-heart-pulse"></i>
+            </div>
+            <h1 class="login-title">PetControl</h1>
+            <p class="login-subtitle">Sistema de Gestão Veterinária</p>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <form id="loginForm" class="login-form" novalidate>
+            <div class="form-group has-icon">
+                <label for="login">Usuário</label>
+                <input 
+                    type="text" 
+                    class="form-control" 
+                    id="login" 
+                    name="login"
+                    placeholder="Digite seu login"
+                    autocomplete="username"
+                    required
+                >
+                <span class="input-icon">
+                    <i class="bi bi-person"></i>
+                </span>
+            </div>
+
+            <div class="form-group has-icon">
+                <label for="password">Senha</label>
+                <input 
+                    type="password" 
+                    class="form-control" 
+                    id="password" 
+                    name="password"
+                    placeholder="Digite sua senha"
+                    autocomplete="current-password"
+                    required
+                >
+                <span class="input-icon" id="togglePassword" style="cursor: pointer;">
+                    <i class="bi bi-eye"></i>
+                </span>
+            </div>
+
+            <div class="remember-forgot">
+                <div class="form-check">
+                    <input 
+                        class="form-check-input" 
+                        type="checkbox" 
+                        id="rememberMe"
+                        name="rememberMe"
+                    >
+                    <label class="form-check-label" for="rememberMe">
+                        Lembrar-me
+                    </label>
+                </div>
+                <a href="#" class="forgot-password" onclick="showForgotPasswordModal()">
+                    Esqueceu a senha?
+                </a>
+            </div>
+
+            <button type="submit" class="btn btn-login" id="submitButton">
+                Entrar
+            </button>
+        </form>
+
+        <div class="divider">Ou</div>
+
+        <div class="text-center">
+            <p class="login-footer">
+                Não tem uma conta? 
+                <a href="./pages/usuarios/cadastro.html" class="forgot-password">
+                    Solicite acesso
+                </a>
+            </p>
+        </div>
+
+        <div class="login-footer mt-4">
+            <p>© 2024 PetControl. Todos os direitos reservados.</p>
+        </div>
+    </div>
+
+    <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-labelledby="forgotPasswordModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="forgotPasswordModalLabel">
+                        <i class="bi bi-key me-2"></i>
+                        Recuperar Senha
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Para recuperar sua senha, entre em contato com o administrador do sistema informando seu login:</p>
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Administrador:</strong> admin@petcontrol.com<br>
+                        <strong>Telefone:</strong> (11) 9999-9999
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.API_BASE_URL = "http://localhost:8080";
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script src="./assets/js/services/usuarioService.js"></script>
+    <script src="./assets/js/services/authService.js"></script>
+    
+    <script src="./assets/js/pages/login.js"></script>
+
+    <script>
+        function showForgotPasswordModal() {
+            const modal = new bootstrap.Modal(document.getElementById('forgotPasswordModal'));
+            modal.show();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.querySelector('.login-container');
+            container.style.opacity = '0';
+            container.style.transform = 'translateY(-20px)';
+            
+            setTimeout(() => {
+                container.style.transition = 'all 0.5s ease';
+                container.style.opacity = '1';
+                container.style.transform = 'translateY(0)';
+            }, 100);
+        });
+    </script>
+</body>
+</html> 
