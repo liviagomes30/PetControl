@@ -8,6 +8,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 @Repository
 public class ItemMovimentacaoDAO {
@@ -68,6 +70,43 @@ public class ItemMovimentacaoDAO {
         return item;
     }
 
+    public List<ItemMovimentacaoModel> getIdMovimentacao(Integer id) {
+        String sql = "SELECT * FROM itemmovimentacao WHERE movimentacao_id = ?";
+        List<ItemMovimentacaoModel> itens = new ArrayList<>();
+        ItemMovimentacaoModel item = null;
 
+
+        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+            stmt.setInt(1, id);
+            ResultSet resultset = stmt.executeQuery();
+
+            while (resultset.next()) {
+                item = new ItemMovimentacaoModel(
+                        resultset.getInt("iditem"),
+                        resultset.getInt("movimentacao_id"),
+                        resultset.getInt("produto_id"),
+                        resultset.getDouble("quantidade"),
+                        resultset.getInt("motivomovimentacao_id")
+                );
+                itens.add(item);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return itens;
+    }
+
+    public boolean apagar(Integer id){
+        String sql = "DELETE FROM itemmovimentacao WHERE movimentacao_id = ?";
+        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+            stmt.setInt(1, id);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 
 }

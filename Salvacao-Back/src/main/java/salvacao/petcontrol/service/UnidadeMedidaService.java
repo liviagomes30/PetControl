@@ -81,7 +81,6 @@ public class UnidadeMedidaService {
         if (unidadeMedida.getSigla().length() > 10) {
             throw new Exception("A sigla não pode ter mais de 10 caracteres.");
         }
-
         UnidadeMedidaModel existente = unidadeMedidaModel.getUnDAO().getId(unidadeMedida.getIdUnidadeMedida());
         if (existente == null) {
             throw new Exception("Unidade de medida não encontrada para atualização.");

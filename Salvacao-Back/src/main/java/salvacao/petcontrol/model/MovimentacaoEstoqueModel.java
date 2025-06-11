@@ -85,7 +85,7 @@ public class MovimentacaoEstoqueModel {
         this.fornecedor = fornecedor;
     }
 
-    public MovimentacaoEstoqueDAO getMovimentacaoEstoqueDAL() {
+    public MovimentacaoEstoqueDAO getMovimentacaoEstoqueDAO() {
         return movimentacaoEstoqueDAO;
     }
 }

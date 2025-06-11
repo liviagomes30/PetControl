@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PetControl - Registrar Entrada de produtos</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css"
+    />
+    <link rel="stylesheet" href="../../../assets/css/style.css" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../../../assets/js/services/authService.js"></script>
+    <script src="../../../assets/js/components/sidebar.js" defer></script>
+    <style>
+      /* .modal-backdrop {
+        z-index: -1;
+      } */
+    </style>
+  </head>
+  <body class="bg-light">
+    <div class="container py-4">
+      <div class="d-flex align-items-center mb-4">
+        <a href="listarRegistros.html" class="btn btn-outline-secondary me-3">
+          <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+        <h1 class="h4 text-danger m-0">Registrar Entrada de produtos</h1>
+      </div>
+
+      <div class="bg-white p-4 shadow rounded">
+        <form id="formEntrada" class="needs-validation" novalidate>
+          <div class="mb-3">
+            <label for="observacao" class="form-label">Observações</label>
+            <textarea
+              class="form-control"
+              id="observacao"
+              rows="3"
+              data-max-length="500"
+              data-show-counter="true"
+            ></textarea>
+          </div>
+
+          <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <span>Itens da entrada</span>
+              <button
+                type="button"
+                class="btn btn-sm btn-primary"
+                id="btnAdicionarItem"
+                data-bs-toggle="modal"
+                data-bs-target="#modalItem"
+              >
+                <i class="bi bi-plus-circle me-1"></i> Adicionar Item
+              </button>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Produto</th>
+                      <th>Add. Qtd.</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="itensEntrada">
+                    <tr id="nenhumItem">
+                      <td colspan="5" class="text-center">
+                        Nenhum item adicionado
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3 p-3 border-start border-3 border-danger bg-danger bg-opacity-10 rounded">
+            <small>
+              Os campos marcados com
+              <span class="text-danger fw-bold">*</span> são de preenchimento obrigatório.
+            </small>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2">
+            <a href="listarRegistros.html" class="btn btn-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Confirmar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal fade" id="modalItem" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-warning text-white">
+            <h5 class="modal-title">Adicionar Item</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+          </div>
+          <div class="modal-body">
+            <form id="formItem" class="needs-validation" novalidate>
+              <div class="mb-3">
+                <label for="selectProduto" class="form-label">
+                  Produto <span class="text-danger">*</span>
+                </label>
+                <select class="form-select" id="selectProduto" required>
+                  <option value="">Selecione um produto</option>
+                </select>
+                <div class="invalid-feedback">Por favor, selecione um produto.</div>
+              </div>
+
+              <div class="mb-3">
+                <label for="quantidadeAtual" class="form-label">Quantidade Atual</label>
+                <input type="text" class="form-control" id="quantidadeAtual" readonly />
+              </div>
+
+              <div class="mb-3">
+                <label for="quantidade" class="form-label">
+                  Quantidade para adicionar<span class="text-danger">*</span>
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="quantidade"
+                  data-mask="decimal"
+                  required
+                />
+                <div class="invalid-feedback">Por favor, informe a quantidade.</div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-primary" id="btnConfirmarItem">Adicionar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="loadingOverlay"
+      class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-none justify-content-center align-items-center"
+      style="z-index: 1050"
+    >
+      <div class="spinner-border text-light" role="status">
+        <span class="visually-hidden">Carregando...</span>
+      </div>
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+      import { entradaProdutoController } from "../../../assets/js/controllers/EntradaProdutoController.js";
+      import UIComponents from "../../../assets/js/components/uiComponents.js";
+
+      $('#modalItem').on('hidden.bs.modal', function () {
+      $('body').css({'overflow': '', 'padding-right': ''});
+      $('.modal-backdrop').remove();
+      });
+
+      document.addEventListener("DOMContentLoaded", () => {
+        if (UIComponents.InputMasks) {
+          UIComponents.InputMasks.inicializar();
+        }
+
+        entradaProdutoController.inicializarFormulario();
+      });
+    </script> 
+  </body>
+</html>

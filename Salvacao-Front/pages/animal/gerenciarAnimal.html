@@ -21,28 +21,33 @@
         <h1 class="h3" style="color: var(--vermelho-escuro)">
           Lista de Animais
         </h1>
-        <a href="cadastrarAnimal.html" class="btn btn-primary"
-          >Novo Animal</a
-        >
+        <a href="cadastrarAnimal.html" class="btn btn-primary">Novo Animal</a>
       </div>
-     
-      <div class="container mt-3">
+
+      <div class="filtro-container mt-3">
         <div class="row g-2 align-items-center">
-            <!-- Campo de pesquisa -->
-            <div class="col">
-                <input class="form-control form-control-sm" type="search" placeholder="Pesquisar" aria-label="Pesquisar">
-            </div>
-            <!-- Select -->
-            <div class="col-auto">
-                <select class="form-select form-select-sm" style="background-color: rgb(73, 71, 71); color: lightgray; border-radius: 10px; width: auto;" aria-label="Filtro">
-                    <option value="1" selected>Nome</option>
-                    <option value="2">Espécie</option>
-                    <option value="3">Raça</option>
-                </select>
-            </div>
+          <div class="col-auto d-none d-md-block">
+            <span class="filtro-texto">Filtrar por:</span>
+          </div>
+          <!-- Select -->
+          <div class="col-md-auto col-12 mb-2 mb-md-0">
+            <select class="filtro-select" aria-label="Filtro">
+              <option value="1" selected>Nome</option>
+              <option value="2">Espécie</option>
+              <option value="3">Raça</option>
+            </select>
+          </div>
+          <!-- Campo de pesquisa -->
+          <div class="col">
+            <input
+              class="form-control filtro-input"
+              type="search"
+              placeholder="Digite para pesquisar..."
+              aria-label="Pesquisar"
+            />
+          </div>
         </div>
       </div>
-      <br>
 
       <!-- Tabela de Animais -->
       <div class="bg-white shadow rounded p-4">
@@ -74,41 +79,43 @@
     <script type="module">
       import { animalController } from "../../assets/js/controllers/AnimalController.js";
 
-        document.addEventListener("DOMContentLoaded", () => {
-            console.log("InicializarListagem");
-            animalController.inicializarListagem();
+      document.addEventListener("DOMContentLoaded", () => {
+        console.log("InicializarListagem");
+        animalController.inicializarListagem();
 
-            const inputBusca = document.querySelector('input[type="search"]');
-            const selectFiltro = document.querySelector('select');
+        const inputBusca = document.querySelector('input[type="search"]');
+        const selectFiltro = document.querySelector("select");
 
-            const aplicarFiltro = () => {
-            const termo = inputBusca.value.trim();
-            const filtro = selectFiltro.value;
-            console.log("G: "+termo);
-            animalController.filtrarAnimais(termo, filtro);
-            };
+        const aplicarFiltro = () => {
+          const termo = inputBusca.value.trim();
+          const filtro = selectFiltro.value;
+          console.log("G: " + termo);
+          animalController.filtrarAnimais(termo, filtro);
+        };
 
-            // Evento ao digitar
-            inputBusca.addEventListener("input", aplicarFiltro);
+        // Evento ao digitar
+        inputBusca.addEventListener("input", aplicarFiltro);
 
-            // Evento ao mudar o select
-            selectFiltro.addEventListener("change", aplicarFiltro);
-        });
+        // Evento ao mudar o select
+        selectFiltro.addEventListener("change", aplicarFiltro);
+      });
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const mensagem = urlParams.get("message");
+      const urlParams = new URLSearchParams(window.location.search);
+      const mensagem = urlParams.get("message");
 
-        if (mensagem) {
-            import("../../assets/js/components/uiComponents.js").then(({ default: UIComponents }) => {
-                UIComponents.Toast.sucesso(mensagem);
+      if (mensagem) {
+        import("../../assets/js/components/uiComponents.js").then(
+          ({ default: UIComponents }) => {
+            UIComponents.Toast.sucesso(mensagem);
 
-                // Remove o parâmetro ?message da URL sem recarregar a página
-                const url = new URL(window.location);
-                url.searchParams.delete("message");
-                window.history.replaceState({}, document.title, url);
-            });
+            // Remove o parâmetro ?message da URL sem recarregar a página
+            const url = new URL(window.location);
+            url.searchParams.delete("message");
+            window.history.replaceState({}, document.title, url);
           }
-          window.animalController = animalController;
+        );
+      }
+      window.animalController = animalController;
     </script>
   </body>
 </html>

@@ -66,13 +66,15 @@ class AnimalController {
     }
 
     formatarDataLocal(dataISO) {
-    if (!dataISO) return "-";
+        if (!dataISO) return "-";
+        
+        const dataStr = typeof dataISO === "string" ? dataISO : String(dataISO);
     
-    const partes = dataISO.split("-");
-    if (partes.length !== 3) return "-";
+        const partes = dataStr.split(",");
+        if (partes.length !== 3) return "-";
 
-    const [ano, mes, dia] = partes;
-    return `${dia}/${mes}/${ano}`; 
+        const [ano, mes, dia] = partes;
+        return `${dia}/${mes}/${ano}`; 
     }
 
     renderizarTabela(animais) {
@@ -137,6 +139,27 @@ class AnimalController {
         });
     }
 
+    validarDataNaoFutura(onde,elemento) {
+        const data = new Date(elemento.value);
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+
+        if (data > hoje) {
+            UIComponents.Validacao.mostrarErro(onde,"A data não pode ser no futuro.");
+            return true;
+        }
+    }
+
+    validarDataMenorOuIgual(elemento1, elemento2) {
+        const data1 = new Date(elemento1.value);
+        const data2 = new Date(elemento2.value);
+
+        if (data1 > data2) {
+            UIComponents.Validacao.mostrarErro("datanascimento","A data de nascimento não pode ser maior que a data de resgate.");
+            return true;
+        }
+    }
+
 
     obterDadosFormulario() {
         const nomeElement = document.getElementById("nome");
@@ -152,9 +175,26 @@ class AnimalController {
         const corElement = document.getElementById("cor");
 
         
+        
 
-        if (!nomeElement || !especieElement || !sexoElement || !statusElement) {
+        // Verificação de campos obrigatórios
+        if (!nomeElement.value.trim() || !especieElement.value.trim() || !sexoElement.value.trim() || !statusElement.value.trim()) {
             throw new Error("Campos obrigatórios não preenchidos.");
+        }
+
+        if(datanascimentoElement){
+            if(this.validarDataNaoFutura("datanascimento",datanascimentoElement))
+                return false;
+        }
+
+        if(dataresgateElement){
+            if(this.validarDataNaoFutura("dataresgate",dataresgateElement))
+                return false;
+        }
+
+        if(datanascimentoElement && datanascimentoElement){
+            if(this.validarDataMenorOuIgual(datanascimentoElement,dataresgateElement))
+                return false;
         }
 
 
@@ -178,8 +218,10 @@ class AnimalController {
     async cadastrar(event) {
         event.preventDefault();
         try {
+                UIComponents.Validacao.limparErros("formAnimal");
                 const animal = this.obterDadosFormulario();
-                
+                if(!animal)
+                    return;
 
                 const resultado = await this.service.cadastrar(animal);
                 console.log("Resposta do backend:", resultado);
@@ -250,8 +292,25 @@ class AnimalController {
 
         
 
-        if (!nomeElement || !especieElement || !sexoElement || !statusElement) {
+        // Verificação de campos obrigatórios
+         if (!nomeElement.value.trim() || !especieElement.value.trim() || !sexoElement.value.trim() || !statusElement.value.trim()) {
             throw new Error("Campos obrigatórios não preenchidos.");
+        }
+        
+
+        if(datanascimentoElement){
+            if(this.validarDataNaoFutura("datanascimento",datanascimentoElement))
+                return false;
+        }
+
+        if(dataresgateElement){
+            if(this.validarDataNaoFutura("dataresgate",dataresgateElement))
+                return false;
+        }
+
+        if(datanascimentoElement && datanascimentoElement){
+            if(this.validarDataMenorOuIgual(datanascimentoElement,dataresgateElement))
+                return false;
         }
 
 
@@ -275,9 +334,12 @@ class AnimalController {
 
     async atualizar(idAnimal) {
             try {
-        
+                UIComponents.Validacao.limparErros("formAnimal");
                 console.log("IDAnimal: "+idAnimal);
                 const animal = this.obterDadosAtualizacao(idAnimal);
+
+                if(!animal)
+                    return;
             
                 UIComponents.Loading.mostrar("Atualizando animal...");
                 console.log(
@@ -330,6 +392,9 @@ class AnimalController {
 
       if (resposta.ok) {
           UIComponents.Toast.sucesso(MensagensPadroes.SUCESSO.EXCLUSAO);
+          setTimeout(() => {
+            location.reload();
+          }, 1500);
       } 
       else 
       {

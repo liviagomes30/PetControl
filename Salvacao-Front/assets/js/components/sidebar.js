@@ -131,7 +131,9 @@ document.addEventListener("DOMContentLoaded", function () {
         <a href="${getBasePath()}pages/produto/categorias.html" class="sidebar-submenu-item" id="submenu-produtos-categorias">Lista de Categorias</a>
         <a href="${getBasePath()}pages/produto/tipo/listarTipos.html" class="sidebar-submenu-item" id="submenu-produtos-tipos">Tipos de Produto</a>
         <a href="${getBasePath()}pages/produto/unidade/listarUnidades.html" class="sidebar-submenu-item" id="submenu-produtos-unidades">Unidades de Medida</a>
-      </ul>
+        <a href="${getBasePath()}pages/produto/entrada/listarRegistros.html" class="sidebar-submenu-item" id="submenu-produtos-entrada">Entrada Produtos</a>
+        <a href="${getBasePath()}pages/produto/saida/listarRegistros.html" class="sidebar-submenu-item" id="submenu-produtos-saida">Registrar Uso</a>
+        </ul>
       
       <a href="${getBasePath()}pages/acerto-estoque/listarAcertosEstoque.html" class="sidebar-item" id="menu-estoque">
         <div class="sidebar-item-content">

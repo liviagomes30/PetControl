@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PetControl - Listar Registros de saída</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css"
+    />
+    <link rel="stylesheet" href="../../../assets/css/style.css" />
+    <script src="../../../assets/js/services/authService.js"></script>
+    <script src="../../../assets/js/components/sidebar.js" defer></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header d-flex justify-content-between align-items-center">
+        <h1 class="h3" style="color: var(--vermelho-escuro)">
+          Registrar Saída
+        </h1>
+        <a href="registrarSaida.html" class="btn btn-primary">
+          Novo Registro
+        </a>
+      </div>
+
+      <div class="filtro-container mt-3">
+        <form id="formFiltroSaida" class="needs-validation" novalidate>
+          <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+              <label for="dataInicio" class="form-label required"
+                >Data Início</label
+              >
+              <input
+                type="date"
+                class="form-control"
+                id="dataInicio"
+                required
+              />
+              <div class="invalid-feedback">
+                Por favor, informe a data de início.
+              </div>
+            </div>
+            <div class="col-md-3">
+              <label for="dataFim" class="form-label required">Data Fim</label>
+              <input type="date" class="form-control" id="dataFim" required />
+              <div class="invalid-feedback">
+                Por favor, informe a data de fim.
+              </div>
+            </div>
+            <div class="col-md-2">
+              <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-search me-1"></i> Filtrar
+              </button>
+            </div>
+            <div class="col-md-2">
+              <button
+                type="button"
+                id="btnLimpar"
+                class="btn btn-secondary w-100"
+              >
+                <i class="bi bi-x-circle me-1"></i> Limpar
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+        <div class="bg-white shadow rounded p-4">
+        <table class="table table-hover">
+          <thead class="table-header">
+            <tr>
+              <th>ID</th>
+              <th>Usuario</th>
+              <th>Data do Uso</th>
+              <th>Observação</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-registro">
+            <!-- Conteúdo será carregado dinamicamente -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay">
+      <div class="spinner" role="status">
+        <span class="visually-hidden">Carregando...</span>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+      import {saidaProdutoController} from "../../../assets/js/controllers/SaidaProdutoController.js";
+      import UIComponents from "../../../assets/js/components/uiComponents.js";
+
+      window.addEventListener("DOMContentLoaded", () => {
+        console.log("DOM carregado");
+        const msg = localStorage.getItem("mensagemSucesso");
+        if (msg) {
+          UIComponents.Toast.sucesso(msg);
+          localStorage.removeItem("mensagemSucesso"); // limpa pra não mostrar de novo
+        }
+      });
+
+      window.addEventListener("DOMContentLoaded", () => {
+        const params = new URLSearchParams(window.location.search);
+        const msg = params.get("message");
+
+        if (msg) {
+          UIComponents.Toast.sucesso(msg);
+          const url = new URL(window.location);
+          url.searchParams.delete("message");
+          window.history.replaceState({}, document.title, url);
+        }
+      });
+
+
+
+      document.addEventListener("DOMContentLoaded", () => {
+        saidaProdutoController.inicializarListagemRegistros();
+        saidaProdutoController.inicializarListagemRegistros();
+
+        const formFiltro = document.getElementById("formFiltroSaida");
+        if (formFiltro) {
+          formFiltro.addEventListener("submit", (e) => {
+            e.preventDefault();
+            if (!formFiltro.checkValidity()) {
+              e.stopPropagation();
+            } else {
+              saidaProdutoController.aplicarFiltro(e);
+            }
+            formFiltro.classList.add("was-validated");
+          });
+        }
+
+        const btnLimpar = document.getElementById("btnLimpar");
+        if (btnLimpar) {
+          btnLimpar.addEventListener("click", () => {
+            document.getElementById("dataInicio").value = "";
+            document.getElementById("dataFim").value = "";
+            formFiltro.classList.remove("was-validated");
+            saidaProdutoController.inicializarListagemRegistros();
+          });
+        }
+
+        const hoje = new Date();
+        const dataFormatada = hoje.toISOString().split("T")[0];
+
+        const dataFimInput = document.getElementById("dataFim");
+        if (dataFimInput && !dataFimInput.value) {
+          dataFimInput.value = dataFormatada;
+        }
+
+        const dataInicio = new Date();
+        dataInicio.setDate(dataInicio.getDate() - 30);
+        const dataInicioFormatada = dataInicio.toISOString().split("T")[0];
+
+        const dataInicioInput = document.getElementById("dataInicio");
+        if (dataInicioInput && !dataInicioInput.value) {
+          dataInicioInput.value = dataInicioFormatada;
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -298,7 +298,6 @@ public class UsuarioDAO {
                 stmt.setString(4, searchPattern);
             }
             ResultSet rs = stmt.executeQuery();
-
             while (rs.next()) {
                 UsuarioModel usuario = new UsuarioModel(
                         rs.getString("login"),

@@ -4,7 +4,6 @@ import java.util.List;
 import java.math.BigDecimal;
 
 
-
 public class AcertoEstoqueRequestDTO {
     private Integer usuario_pessoa_id;
     private String motivo;
