@@ -103,11 +103,13 @@ class EntradaProdutoController{
     formatarDataLocal(dataISO) {
         if (!dataISO) return "-";
         
-        const partes = dataISO.split("-");
+        const dataStr = typeof dataISO === "string" ? dataISO : String(dataISO);
+    
+        const partes = dataStr.split(",");
         if (partes.length !== 3) return "-";
 
         const [ano, mes, dia] = partes;
-        return `${dia}/${mes}/${ano}`; // formato pt-BR
+        return `${dia}/${mes}/${ano}`; 
     }
 
     async aplicarFiltro(event) {
@@ -212,8 +214,8 @@ class EntradaProdutoController{
       const estoque = await this.service.obterEstoque(produtoId);
       const quantidadeAtualInput = document.getElementById("quantidadeAtual");
       if (quantidadeAtualInput) {
-        const quantidade = parseFloat(estoque.quantidade || 0).toFixed(2);
-        quantidadeAtualInput.value = quantidade.replace(".", ",");
+        const quantidade = parseFloat(estoque.quantidade || 0);
+        quantidadeAtualInput.value = quantidade;
       }
       UIComponents.Loading.esconder();
     } catch (error) {
@@ -230,6 +232,11 @@ class EntradaProdutoController{
   }
 
 
+  abrirModal(idModal) {
+    const modal = new bootstrap.Modal(document.getElementById(idModal));
+    modal.show();
+  }
+
     async inicializarFormulario() {
     try {
         UIComponents.Validacao.limparErros("formEntrada");
@@ -245,7 +252,7 @@ class EntradaProdutoController{
             document.getElementById("quantidadeAtual").textContent = 0;
             this.prepararModal();
             UIComponents.Loading.esconder();
-            UIComponents.ModalHelper.abrirModal("modalItem");
+            this.abrirModal("modalItem");
             });
             
         }
@@ -300,7 +307,7 @@ class EntradaProdutoController{
           const hoje = new Date();
           hoje.setHours(0, 0, 0, 0);
           const entradaProdutos = new EntradaProdutoModel({
-            usuario_pessoa_id: 1,
+            usuario_pessoa_id: 2,
             observacao: observacao,
             data: hoje,
             itens: this.itensEntrada

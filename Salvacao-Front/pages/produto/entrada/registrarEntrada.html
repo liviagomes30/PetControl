@@ -13,6 +13,8 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css"
     />
     <link rel="stylesheet" href="../../../assets/css/style.css" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../../../assets/js/services/authService.js"></script>
     <script src="../../../assets/js/components/sidebar.js" defer></script>
     <style>
       /* .modal-backdrop {
@@ -154,6 +156,11 @@
     <script type="module">
       import { entradaProdutoController } from "../../../assets/js/controllers/EntradaProdutoController.js";
       import UIComponents from "../../../assets/js/components/uiComponents.js";
+
+      $('#modalItem').on('hidden.bs.modal', function () {
+      $('body').css({'overflow': '', 'padding-right': ''});
+      $('.modal-backdrop').remove();
+      });
 
       document.addEventListener("DOMContentLoaded", () => {
         if (UIComponents.InputMasks) {

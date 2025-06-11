@@ -103,11 +103,13 @@ class SaidaProdutoController{
     formatarDataLocal(dataISO) {
         if (!dataISO) return "-";
         
-        const partes = dataISO.split("-");
+        const dataStr = typeof dataISO === "string" ? dataISO : String(dataISO);
+    
+        const partes = dataStr.split(",");
         if (partes.length !== 3) return "-";
 
         const [ano, mes, dia] = partes;
-        return `${dia}/${mes}/${ano}`; // formato pt-BR
+        return `${dia}/${mes}/${ano}`; 
     }
 
     async aplicarFiltro(event) {
@@ -212,8 +214,8 @@ class SaidaProdutoController{
       const estoque = await this.service.obterEstoque(produtoId);
       const quantidadeAtualInput = document.getElementById("quantidadeAtual");
       if (quantidadeAtualInput) {
-        const quantidade = parseFloat(estoque.quantidade || 0).toFixed(2);
-        quantidadeAtualInput.value = quantidade.replace(".", ",");
+        const quantidade = parseFloat(estoque.quantidade || 0);
+        quantidadeAtualInput.value = quantidade;
       }
       UIComponents.Loading.esconder();
     } catch (error) {
@@ -229,6 +231,10 @@ class SaidaProdutoController{
     }
   }
 
+  abrirModal(idModal) {
+    const modal = new bootstrap.Modal(document.getElementById(idModal));
+    modal.show();
+  }
 
     async inicializarFormulario() {
     try {
@@ -245,7 +251,7 @@ class SaidaProdutoController{
             document.getElementById("quantidadeAtual").textContent = 0;
             this.prepararModal();
             UIComponents.Loading.esconder();
-            UIComponents.ModalHelper.abrirModal("modalItem");
+            this.abrirModal("modalItem");
             });
             
         }
@@ -334,7 +340,7 @@ class SaidaProdutoController{
           }
           
           const entradaProdutos = new EntradaProdutoModel({
-              usuario_pessoa_id: 1,
+              usuario_pessoa_id: 2,
               observacao: observacao,
               data: data,
               itens: this.itensSaida

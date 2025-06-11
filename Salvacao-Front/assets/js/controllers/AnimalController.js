@@ -66,13 +66,15 @@ class AnimalController {
     }
 
     formatarDataLocal(dataISO) {
-    if (!dataISO) return "-";
+        if (!dataISO) return "-";
+        
+        const dataStr = typeof dataISO === "string" ? dataISO : String(dataISO);
     
-    const partes = dataISO.split("-");
-    if (partes.length !== 3) return "-";
+        const partes = dataStr.split(",");
+        if (partes.length !== 3) return "-";
 
-    const [ano, mes, dia] = partes;
-    return `${dia}/${mes}/${ano}`; 
+        const [ano, mes, dia] = partes;
+        return `${dia}/${mes}/${ano}`; 
     }
 
     renderizarTabela(animais) {
