@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 
 import salvacao.petcontrol.dto.ReceitaMedicamentoDTO;
 import salvacao.petcontrol.dto.ReceitaMedicamentoRequestDTO;
-import salvacao.petcontrol.model.ReceitaMedicamentoModel;
 import salvacao.petcontrol.dto.PosologiaDTO;
 import salvacao.petcontrol.service.ReceitaMedicamentoService;
 import salvacao.petcontrol.service.AnimalService;
@@ -30,12 +29,8 @@ public class ReceitaMedicamentoController {
     @Autowired
     private MedicamentoService medicamentoService;
 
-    public ReceitaMedicamentoController() {
-        if (receitaService == null) {
-            receitaService = new ReceitaMedicamentoService();
-        }
-    }
-
+    // ==================== CRUD OPERATIONS ====================
+    
     @PostMapping
     public ResponseEntity<Object> cadastrar(@RequestBody ReceitaMedicamentoRequestDTO request) {
         try {
@@ -92,6 +87,8 @@ public class ReceitaMedicamentoController {
         }
     }
 
+    // ==================== SEARCH OPERATIONS ====================
+
     @GetMapping("/animal/{animalId}")
     public ResponseEntity<Object> buscarPorAnimal(@PathVariable Integer animalId) {
         try {
@@ -134,6 +131,8 @@ public class ReceitaMedicamentoController {
         }
     }
 
+    // ==================== POSOLOGIA OPERATIONS ====================
+
     @GetMapping("/{receitaId}/posologias")
     public ResponseEntity<Object> buscarPosologiasPorReceita(@PathVariable Integer receitaId) {
         try {
@@ -154,6 +153,18 @@ public class ReceitaMedicamentoController {
         }
     }
 
+    @GetMapping("/{receitaId}/medicamentos")
+    public ResponseEntity<Object> buscarMedicamentosDaReceita(@PathVariable Integer receitaId) {
+        try {
+            List<PosologiaDTO> medicamentosComPosologia = receitaService.buscarPosologiasPorReceita(receitaId);
+            return ResponseEntity.ok(medicamentosComPosologia);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Erro ao buscar medicamentos da receita: " + e.getMessage());
+        }
+    }
+
+    // ==================== SUPPORT OPERATIONS ====================
+
     @GetMapping("/animais")
     public ResponseEntity<Object> buscarAnimais() {
         try {
@@ -169,65 +180,6 @@ public class ReceitaMedicamentoController {
             return ResponseEntity.ok(medicamentoService.getAll());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Erro ao buscar medicamentos: " + e.getMessage());
-        }
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<Object> getId(@PathVariable Integer id) {
-        try {
-            ReceitaMedicamentoModel receita = receitaService.getId(id);
-            return ResponseEntity.ok(receita);
-        } catch (Exception e) {
-            ResultadoOperacao resultado = new ResultadoOperacao("buscar", false, e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(resultado);
-        }
-    }
-
-    @PostMapping
-    public ResponseEntity<Object> gravar(@RequestBody ReceitaMedicamentoModel receitaMedicamento) {
-        try {
-            ReceitaMedicamentoModel novaReceita = receitaService.gravar(receitaMedicamento);
-            return ResponseEntity.status(HttpStatus.CREATED).body(novaReceita);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
-
-    @GetMapping("/animal/{animalId}")
-    public ResponseEntity<Object> getReceitasByAnimal(@PathVariable Integer animalId) {
-        try {
-            List<ReceitaMedicamentoModel> receitas = receitaService.getReceitasByAnimal(animalId);
-            if (!receitas.isEmpty()) {
-                return ResponseEntity.ok(receitas);
-            }
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Nenhuma receita encontrada para este animal.");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Erro ao buscar receitas por animal: " + e.getMessage());
-        }
-    }
-
-    @GetMapping
-    public ResponseEntity<Object> getAll() {
-        try {
-            List<ReceitaMedicamentoModel> receitas = receitaService.getAll();
-            if (!receitas.isEmpty()) {
-                return ResponseEntity.ok(receitas);
-            }
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Nenhuma receita de medicamento encontrada.");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Erro ao buscar receitas de medicamento: " + e.getMessage());
-        }
-    }
-
-    @GetMapping("/{receitaId}/medicamentos")
-    public ResponseEntity<Object> buscarMedicamentosDaReceita(@PathVariable Integer receitaId) {
-        try {
-            List<PosologiaDTO> medicamentosComPosologia = receitaService.buscarPosologiasPorReceita(receitaId);
-            return ResponseEntity.ok(medicamentosComPosologia);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Erro ao buscar medicamentos da receita: " + e.getMessage());
         }
     }
 }

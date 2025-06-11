@@ -14,35 +14,50 @@ import java.util.List;
 
 @CrossOrigin(origins = "*")
 @RestController
-@RequestMapping("/medicamentos")
+@RequestMapping("/api/medicamentos")
 public class MedicamentoController {
 
     @Autowired
     private MedicamentoService medicamentoService;
 
-    @GetMapping("/listar")
-    public ResponseEntity<Object> getAll() {
-        List<MedicamentoCompletoDTO> medicamentos = medicamentoService.getAll();
-        if (!medicamentos.isEmpty()) {
-            return ResponseEntity.ok(medicamentos);
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Nenhum medicamento encontrado");
-    }
+    // ==================== CRUD OPERATIONS ====================
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Object> getId(@PathVariable Integer id) {
-        MedicamentoCompletoDTO medicamento = medicamentoService.getId(id);
-        if (medicamento != null) {
-            return ResponseEntity.ok(medicamento);
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Medicamento não encontrado");
-    }
-
-    @PostMapping("/cadastro")
-    public ResponseEntity<Object> gravar(@RequestBody MedicamentoCompletoDTO medicamento) {
+    @PostMapping
+    public ResponseEntity<Object> cadastrar(@RequestBody MedicamentoCompletoDTO medicamento) {
         try {
             MedicamentoModel novoMedicamento = medicamentoService.gravar(medicamento);
             return ResponseEntity.status(HttpStatus.CREATED).body(novoMedicamento);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping
+    public ResponseEntity<Object> listarTodos() {
+        try {
+            List<MedicamentoCompletoDTO> medicamentos = medicamentoService.getAll();
+            if (!medicamentos.isEmpty()) {
+                return ResponseEntity.ok(medicamentos);
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Nenhum medicamento encontrado");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Erro ao listar medicamentos: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/listar")
+    public ResponseEntity<Object> listar() {
+        return listarTodos();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Object> buscarPorId(@PathVariable Integer id) {
+        try {
+            MedicamentoCompletoDTO medicamento = medicamentoService.getId(id);
+            if (medicamento != null) {
+                return ResponseEntity.ok(medicamento);
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Medicamento não encontrado");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -62,7 +77,7 @@ public class MedicamentoController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Object> apagarMedicamento(@PathVariable Integer id) {
+    public ResponseEntity<Object> excluir(@PathVariable Integer id) {
         try {
             ResultadoOperacao resultado = medicamentoService.apagarMedicamento(id);
             return ResponseEntity.ok(resultado);
@@ -71,49 +86,72 @@ public class MedicamentoController {
         }
     }
 
+    // ==================== SEARCH OPERATIONS ====================
+
     @GetMapping("/nome/{filtro}")
-    public ResponseEntity<Object> getNome(@PathVariable String filtro){
-        List<MedicamentoCompletoDTO> medicamentoList = medicamentoService.getNome(filtro);
-        if(!medicamentoList.isEmpty())
-            return ResponseEntity.ok(medicamentoList);
-        else
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Nenhum Medicamento encontrado");
+    public ResponseEntity<Object> buscarPorNome(@PathVariable String filtro) {
+        try {
+            List<MedicamentoCompletoDTO> medicamentoList = medicamentoService.getNome(filtro);
+            if (!medicamentoList.isEmpty()) {
+                return ResponseEntity.ok(medicamentoList);
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Nenhum medicamento encontrado");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Erro ao buscar medicamentos por nome: " + e.getMessage());
+        }
     }
 
     @GetMapping("/composicao/{filtro}")
-    public ResponseEntity<Object> getComposicao(@PathVariable String filtro){
-        List<MedicamentoCompletoDTO> medicamentoList = medicamentoService.getComposicao(filtro);
-        if(!medicamentoList.isEmpty())
-            return ResponseEntity.ok(medicamentoList);
-        else
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Nenhum Medicamento encontrado");
+    public ResponseEntity<Object> buscarPorComposicao(@PathVariable String filtro) {
+        try {
+            List<MedicamentoCompletoDTO> medicamentoList = medicamentoService.getComposicao(filtro);
+            if (!medicamentoList.isEmpty()) {
+                return ResponseEntity.ok(medicamentoList);
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Nenhum medicamento encontrado");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Erro ao buscar medicamentos por composição: " + e.getMessage());
+        }
     }
 
     @GetMapping("/tipo/{filtro}")
-    public ResponseEntity<Object> getTipo(@PathVariable String filtro){
-        List<MedicamentoCompletoDTO> medicamentoList = medicamentoService.getTipo(filtro);
-        if(!medicamentoList.isEmpty())
-            return ResponseEntity.ok(medicamentoList);
-        else
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Nenhum Medicamento encontrado");
+    public ResponseEntity<Object> buscarPorTipo(@PathVariable String filtro) {
+        try {
+            List<MedicamentoCompletoDTO> medicamentoList = medicamentoService.getTipo(filtro);
+            if (!medicamentoList.isEmpty()) {
+                return ResponseEntity.ok(medicamentoList);
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Nenhum medicamento encontrado");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Erro ao buscar medicamentos por tipo: " + e.getMessage());
+        }
+    }
+
+    // ==================== STATUS OPERATIONS ====================
+
+    @GetMapping("/inativos")
+    public ResponseEntity<Object> listarInativos() {
+        try {
+            List<MedicamentoCompletoDTO> medicamentos = medicamentoService.getAllInactive();
+            if (!medicamentos.isEmpty()) {
+                return ResponseEntity.ok(medicamentos);
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Nenhum medicamento inativo encontrado");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Erro ao listar medicamentos inativos: " + e.getMessage());
+        }
     }
 
     @GetMapping("/disponiveis")
-    public ResponseEntity<Object> buscarMedicamentosDisponiveis() {
+    public ResponseEntity<Object> listarDisponiveis() {
         try {
             List<MedicamentoCompletoDTO> medicamentos = medicamentoService.listarTodosDisponiveis();
-            return ResponseEntity.ok(medicamentos);
+            if (!medicamentos.isEmpty()) {
+                return ResponseEntity.ok(medicamentos);
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Nenhum medicamento disponível encontrado");
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Erro ao buscar medicamentos disponíveis: " + e.getMessage());
+            return ResponseEntity.badRequest().body("Erro ao listar medicamentos disponíveis: " + e.getMessage());
         }
-    }
-
-    @GetMapping("/inativos")
-    public ResponseEntity<Object> getAllInactive() {
-        List<MedicamentoCompletoDTO> medicamentos = medicamentoService.getAllInactive();
-        if (!medicamentos.isEmpty()) {
-            return ResponseEntity.ok(medicamentos);
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Nenhum medicamento inativo encontrado");
     }
 }

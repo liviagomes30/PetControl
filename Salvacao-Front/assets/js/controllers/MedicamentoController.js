@@ -312,23 +312,48 @@ class MedicamentoController {
       const selectTipo = document.getElementById("tipoProduto");
       const selectUnidade = document.getElementById("unidadeMedida");
       if (selectTipo) {
-        while (selectTipo.options.length > 1) selectTipo.remove(1);
-        tipos.forEach((tipo) => {
-          const option = document.createElement("option");
-          option.value = tipo.idtipoproduto;
-          option.textContent = tipo.descricao;
-          selectTipo.appendChild(option);
-        });
+        while (selectTipo.options.length > 1) {
+          selectTipo.remove(1);
+        }
+
+        if (tipos.length === 0) {
+          console.warn("Nenhum tipo de produto encontrado no sistema");
+        } else {
+          tipos.forEach((tipo) => {
+            const option = document.createElement("option");
+            option.value = tipo.idtipoproduto;
+            option.textContent = tipo.descricao;
+            selectTipo.appendChild(option);
+          });
+        }
       }
       if (selectUnidade) {
-        while (selectUnidade.options.length > 1) selectUnidade.remove(1);
-        unidades.forEach((unidade) => {
-          const id = unidade.idunidademedida ?? unidade.idUnidadeMedida;
-          const option = document.createElement("option");
-          option.value = id;
-          option.textContent = unidade.descricao;
-          selectUnidade.appendChild(option);
-        });
+        while (selectUnidade.options.length > 1) {
+          selectUnidade.remove(1);
+        }
+
+        if (unidades.length === 0) {
+          console.warn("Nenhuma unidade de medida encontrada no sistema");
+        } else {
+          unidades.forEach((unidade) => {
+            const id =
+              unidade.idunidademedida !== undefined
+                ? unidade.idunidademedida
+                : unidade.idUnidadeMedida;
+
+            const option = document.createElement("option");
+            option.value = id;
+            option.textContent = unidade.descricao;
+            selectUnidade.appendChild(option);
+          });
+        }
+      }
+
+      if (tipos.length === 0 || unidades.length === 0) {
+        const msg = [];
+        if (tipos.length === 0) msg.push("tipos de produtos");
+        if (unidades.length === 0) msg.push("unidades de medida");
+        throw new Error(`Nenhum(a) ${msg.join(" e ")} encontrado(a) no sistema. Verifique se o banco de dados está inicializado corretamente.`);
       }
     } catch (error) {
       throw new Error("Falha ao carregar tipos e unidades: " + error.message);

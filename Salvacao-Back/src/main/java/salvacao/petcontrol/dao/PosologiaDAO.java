@@ -106,37 +106,37 @@ public class PosologiaDAO {
         return null;
     }
 
-    public List<PosologiaDTO> listarPorReceita(Integer receitaId) {
-        List<PosologiaDTO> lista = new ArrayList<>();
-        String sql = "SELECT p.dose, p.quantidadedias, p.intervalohoras, p.medicamento_idproduto, " +
-                    "p.receitamedicamento_idreceita, pr.nome as medicamento_nome, m.composicao " +
-                    "FROM posologia p " +
-                    "JOIN medicamento m ON p.medicamento_idproduto = m.idproduto " +
-                    "JOIN produto pr ON m.idproduto = pr.idproduto " +
-                    "WHERE p.receitamedicamento_idreceita = ? " +
-                    "ORDER BY pr.nome";
+    // public List<PosologiaDTO> listarPorReceita(Integer receitaId) {
+    //     List<PosologiaDTO> lista = new ArrayList<>();
+    //     String sql = "SELECT p.dose, p.quantidadedias, p.intervalohoras, p.medicamento_idproduto, " +
+    //                 "p.receitamedicamento_idreceita, pr.nome as medicamento_nome, m.composicao " +
+    //                 "FROM posologia p " +
+    //                 "JOIN medicamento m ON p.medicamento_idproduto = m.idproduto " +
+    //                 "JOIN produto pr ON m.idproduto = pr.idproduto " +
+    //                 "WHERE p.receitamedicamento_idreceita = ? " +
+    //                 "ORDER BY pr.nome";
         
-        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
-            stmt.setInt(1, receitaId);
-            ResultSet rs = stmt.executeQuery();
+    //     try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+    //         stmt.setInt(1, receitaId);
+    //         ResultSet rs = stmt.executeQuery();
             
-            while (rs.next()) {
-                PosologiaDTO posologia = new PosologiaDTO();
-                posologia.setDose(rs.getString("dose"));
-                posologia.setQuantidadedias(rs.getInt("quantidadedias"));
-                posologia.setIntervalohoras(rs.getInt("intervalohoras"));
-                posologia.setMedicamento_idproduto(rs.getInt("medicamento_idproduto"));
-                posologia.setReceitamedicamento_idreceita(rs.getInt("receitamedicamento_idreceita"));
-                posologia.setMedicamentoNome(rs.getString("medicamento_nome"));
-                posologia.setMedicamentoComposicao(rs.getString("composicao"));
+    //         while (rs.next()) {
+    //             PosologiaDTO posologia = new PosologiaDTO();
+    //             posologia.setDose(rs.getString("dose"));
+    //             posologia.setQuantidadedias(rs.getInt("quantidadedias"));
+    //             posologia.setIntervalohoras(rs.getInt("intervalohoras"));
+    //             posologia.setMedicamento_idproduto(rs.getInt("medicamento_idproduto"));
+    //             posologia.setReceitamedicamento_idreceita(rs.getInt("receitamedicamento_idreceita"));
+    //             posologia.setMedicamentoNome(rs.getString("medicamento_nome"));
+    //             posologia.setMedicamentoComposicao(rs.getString("composicao"));
                 
-                lista.add(posologia);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return lista;
-    }
+    //             lista.add(posologia);
+    //         }
+    //     } catch (SQLException e) {
+    //         e.printStackTrace();
+    //     }
+    //     return lista;
+    // }
 
     public List<PosologiaDTO> listarPorMedicamento(Integer medicamentoId) {
         List<PosologiaDTO> lista = new ArrayList<>();

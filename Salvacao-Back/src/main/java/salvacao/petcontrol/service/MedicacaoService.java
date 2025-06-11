@@ -235,17 +235,11 @@ public class MedicacaoService {
                     throw new SQLException("Falha ao decrementar o estoque para o medicamento ID: " + item.getIdMedicamentoProduto());
                 }
 
-                MedicacaoModel medicacao = new MedicacaoModel();
-                medicacao.setIdanimal(request.getIdAnimal());
-                medicacao.setPosologia_medicamento_idproduto(item.getIdMedicamentoProduto());
-                medicacao.setPosologia_receitamedicamento_idreceita(request.getIdReceitaMedicamento());
-                medicacao.setData(request.getDataMedicao() != null ? request.getDataMedicao() : LocalDate.now());
-                MedicacaoModel novaMedicacao = medicacaoModel.getMedDAO().gravar(medicacao, conn);
-
+                // Cria o histórico primeiro (sem referenciar a medicação ainda)
                 HistoricoModel historico = new HistoricoModel();
                 historico.setAnimal_idanimal(request.getIdAnimal());
-                historico.setData(medicacao.getData());
-                historico.setMedicacao_idmedicacao(novaMedicacao.getIdmedicacao());
+                historico.setData(request.getDataMedicao() != null ? request.getDataMedicao() : LocalDate.now());
+                historico.setMedicacao_idmedicacao(null); // Será atualizado depois
                 MedicamentoCompletoDTO medCompleto = medicamentoModel.getMedDAO().findMedicamentoCompleto(item.getIdMedicamentoProduto());
                 String nomeMedicamento = medCompleto != null ? medCompleto.getProduto().getNome() : "ID " + item.getIdMedicamentoProduto();
                 historico.setDescricao(item.getDescricaoHistorico() != null && !item.getDescricaoHistorico().trim().isEmpty() ?
@@ -253,10 +247,20 @@ public class MedicacaoService {
                         "Medicação de " + nomeMedicamento + " administrada (Qtd: " + item.getQuantidadeAdministrada() + ").");
                 HistoricoModel novoHistorico = historicoModel.getHistDAO().gravar(historico, conn);
 
-                novaMedicacao.setIdhistorico(novoHistorico.getIdhistorico());
-                boolean medicacaoAtualizada = medicacaoModel.getMedDAO().alterar(novaMedicacao, conn);
-                if (!medicacaoAtualizada) {
-                    throw new SQLException("Falha ao vincular o histórico à medicação.");
+                // Agora cria a medicação com o ID do histórico
+                MedicacaoModel medicacao = new MedicacaoModel();
+                medicacao.setIdanimal(request.getIdAnimal());
+                medicacao.setIdhistorico(novoHistorico.getIdhistorico());
+                medicacao.setPosologia_medicamento_idproduto(item.getIdMedicamentoProduto());
+                medicacao.setPosologia_receitamedicamento_idreceita(request.getIdReceitaMedicamento());
+                medicacao.setData(request.getDataMedicao() != null ? request.getDataMedicao() : LocalDate.now());
+                MedicacaoModel novaMedicacao = medicacaoModel.getMedDAO().gravar(medicacao, conn);
+
+                // Atualiza o histórico com o ID da medicação criada
+                novoHistorico.setMedicacao_idmedicacao(novaMedicacao.getIdmedicacao());
+                boolean historicoAtualizado = historicoModel.getHistDAO().alterar(novoHistorico, conn);
+                if (!historicoAtualizado) {
+                    throw new SQLException("Falha ao vincular a medicação ao histórico.");
                 }
             }
 
@@ -369,8 +373,24 @@ public class MedicacaoService {
                 throw new SQLException("Falha ao decrementar estoque.");
             }
 
+            // Cria o histórico primeiro (sem referenciar a medicação ainda)
+            HistoricoModel historico = new HistoricoModel();
+            historico.setAnimal_idanimal(idAnimal);
+            historico.setData(dataMedicao);
+            historico.setMedicacao_idmedicacao(null); // Será atualizado depois
+            historico.setDescricao(descricaoHistorico != null && !descricaoHistorico.isEmpty() ?
+                    descricaoHistorico :
+                    "Medicação de " + medicamentoCompleto.getProduto().getNome() + " administrada.");
+
+            HistoricoModel novoHistorico = historicoModel.getHistDAO().gravar(historico, conn);
+            if (novoHistorico == null || novoHistorico.getIdhistorico() == null) {
+                throw new SQLException("Falha ao registrar histórico da medicação.");
+            }
+
+            // Agora cria a medicação com o ID do histórico
             MedicacaoModel medicacao = new MedicacaoModel();
             medicacao.setIdanimal(idAnimal);
+            medicacao.setIdhistorico(novoHistorico.getIdhistorico());
             medicacao.setPosologia_medicamento_idproduto(idMedicamentoProduto);
 
             if (idReceitaMedicamento != null) {
@@ -385,24 +405,11 @@ public class MedicacaoService {
                 throw new SQLException("Falha ao registrar medicação.");
             }
 
-            HistoricoModel historico = new HistoricoModel();
-            historico.setAnimal_idanimal(idAnimal);
-            historico.setData(dataMedicao);
-            historico.setMedicacao_idmedicacao(novaMedicacao.getIdmedicacao()); // Link to new medication
-            historico.setDescricao(descricaoHistorico != null && !descricaoHistorico.isEmpty() ?
-                    descricaoHistorico :
-                    "Medicação de " + medicamentoCompleto.getProduto().getNome() + " administrada.");
-
-
-            HistoricoModel novoHistorico = historicoModel.getHistDAO().gravar(historico, conn);
-            if (novoHistorico == null || novoHistorico.getIdhistorico() == null) {
-                throw new SQLException("Falha ao registrar histórico da medicação.");
-            }
-
-            novaMedicacao.setIdhistorico(novoHistorico.getIdhistorico());
-            boolean medicacaoAtualizadaComHistorico = medicacaoModel.getMedDAO().alterar(novaMedicacao, conn);
-            if (!medicacaoAtualizadaComHistorico) {
-                throw new SQLException("Falha ao atualizar medicação com ID de histórico.");
+            // Atualiza o histórico com o ID da medicação criada
+            novoHistorico.setMedicacao_idmedicacao(novaMedicacao.getIdmedicacao());
+            boolean historicoAtualizado = historicoModel.getHistDAO().alterar(novoHistorico, conn);
+            if (!historicoAtualizado) {
+                throw new SQLException("Falha ao vincular a medicação ao histórico.");
             }
 
 

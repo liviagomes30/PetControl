@@ -1,7 +1,7 @@
 class MedicamentoService {
   constructor(baseUrl = "http://localhost:8080") {
     this.baseUrl = baseUrl;
-    this.endpoint = "/medicamentos";
+    this.endpoint = "/api/medicamentos";
   }
 
   async listarTodos() {
@@ -72,7 +72,7 @@ class MedicamentoService {
 
   async cadastrar(medicamentoData) {
     try {
-      const response = await fetch(`${this.baseUrl}${this.endpoint}/cadastro`, {
+      const response = await fetch(`${this.baseUrl}${this.endpoint}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -155,6 +155,10 @@ class MedicamentoService {
   async listarTiposProduto() {
     try {
       const response = await fetch(`${this.baseUrl}/tipos-produto`);
+      if (response.status === 404) {
+        console.warn("Nenhum tipo de produto encontrado (status 404). Retornando array vazio.");
+        return [];
+      }
       if (!response.ok) {
         throw new Error(`Erro ${response.status}: ${await response.text()}`);
       }
@@ -168,6 +172,10 @@ class MedicamentoService {
   async listarUnidadesMedida() {
     try {
       const response = await fetch(`${this.baseUrl}/unidades-medida`);
+      if (response.status === 404) {
+        console.warn("Nenhuma unidade de medida encontrada (status 404). Retornando array vazio.");
+        return [];
+      }
       if (!response.ok) {
         throw new Error(`Erro ${response.status}: ${await response.text()}`);
       }
