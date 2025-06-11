@@ -6,6 +6,7 @@ class ReceituarioModel {
         this.clinica = data.clinica || '';
         this.animal_idanimal = data.animal_idanimal || null;
         this.animalNome = data.animalNome || '';
+        this.frequencia_diaria = data.frequencia_diaria || null;
         this.posologias = data.posologias || [];
     }
 
@@ -115,6 +116,13 @@ class ReceituarioModel {
             }
         }
 
+        if (posologia.frequencia_diaria !== undefined && posologia.frequencia_diaria !== null) {
+            const freq = parseInt(posologia.frequencia_diaria);
+            if (isNaN(freq) || freq <= 0) {
+                erros.frequencia_diaria = 'Frequência diária deve ser um número positivo';
+            }
+        }
+
         return erros;
     }
 
@@ -128,6 +136,7 @@ class ReceituarioModel {
                 dose: p.dose.trim(),
                 quantidadedias: parseInt(p.quantidadedias),
                 intervalohoras: parseInt(p.intervalohoras),
+                frequencia_diaria: p.frequencia_diaria !== undefined ? parseInt(p.frequencia_diaria) : null,
                 medicamento_idproduto: parseInt(p.medicamento_idproduto)
             }))
         };
@@ -141,6 +150,7 @@ class ReceituarioModel {
             clinica: data.clinica,
             animal_idanimal: data.animal_idanimal,
             animalNome: data.animalNome,
+            frequencia_diaria: data.frequencia_diaria,
             posologias: data.posologias || []
         });
     }
@@ -150,6 +160,7 @@ class ReceituarioModel {
             dose: posologia.dose || '',
             quantidadedias: posologia.quantidadedias || '',
             intervalohoras: posologia.intervalohoras || '',
+            frequencia_diaria: posologia.frequencia_diaria || null,
             medicamento_idproduto: posologia.medicamento_idproduto || null,
             medicamentoNome: posologia.medicamentoNome || '',
             medicamentoComposicao: posologia.medicamentoComposicao || ''
@@ -178,6 +189,7 @@ class ReceituarioModel {
         this.clinica = '';
         this.animal_idanimal = null;
         this.animalNome = '';
+        this.frequencia_diaria = null;
         this.posologias = [];
     }
 

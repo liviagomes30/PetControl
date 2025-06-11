@@ -706,6 +706,14 @@ class ReceituarioController {
           .value,
         intervalohoras: document.getElementById(`intervalohoras_${realIndex}`)
           .value,
+        frequencia_diaria: (function() {
+          const intervalo = parseInt(document.getElementById(`intervalohoras_${realIndex}`).value);
+          if (isNaN(intervalo) || intervalo <= 0) return null;
+          if (intervalo <= 24) {
+            return Math.round(24 / intervalo);
+          }
+          return 1;
+        })()
       };
       dados.posologias.push(posologia);
     });
