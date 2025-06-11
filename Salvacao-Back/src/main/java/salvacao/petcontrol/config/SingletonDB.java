@@ -12,7 +12,7 @@ public class SingletonDB
         try
         {
             Class.forName("org.postgresql.Driver");
-            conexao = DriverManager.getConnection("jdbc:postgresql://localhost:5432/petcontrol-db", "postgres", "postgres123");
+            conexao = DriverManager.getConnection("jdbc:postgresql://localhost:5432/ong_salvacao", "postgres", "StrongP0stgres!");
         }
         catch(Exception e)
         {

@@ -10,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -67,7 +68,7 @@ public class UsuarioDAO {
         return pessoa;
     }
 
-    public UsuarioModel gravar(UsuarioModel usuario) { // Added gravar method
+    public UsuarioModel gravar(UsuarioModel usuario) {
         String sql = "INSERT INTO usuario (login, senha, pessoa_idpessoa) VALUES (?, ?, ?)";
         try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql,
                 Statement.RETURN_GENERATED_KEYS)) {
@@ -77,6 +78,19 @@ public class UsuarioDAO {
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao adicionar usuário: " + e.getMessage(), e);
+        }
+        return usuario;
+    }
+
+    public UsuarioModel gravar(UsuarioModel usuario, Connection conn) throws SQLException {
+        String sql = "INSERT INTO usuario (login, senha, pessoa_idpessoa) VALUES (?, ?, ?)";
+        try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setString(1, usuario.getLogin());
+            stmt.setString(2, usuario.getSenha());
+            stmt.setInt(3, usuario.getPessoa_idpessoa());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new SQLException("Erro ao adicionar usuário: " + e.getMessage(), e);
         }
         return usuario;
     }
