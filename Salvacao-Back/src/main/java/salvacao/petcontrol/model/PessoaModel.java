@@ -1,7 +1,8 @@
 package salvacao.petcontrol.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.stereotype.Repository;
-import salvacao.petcontrol.dao.PessoaDAO;
+import salvacao.petcontrol.dao.AdocaoDAL;
 
 @Repository
 public class PessoaModel {
@@ -11,10 +12,10 @@ public class PessoaModel {
     private String endereco;
     private String telefone;
     private String email;
-    private PessoaDAO pessoaDAO;
+    private AdocaoDAL.PessoaDAL pessoaDAL;
 
     public PessoaModel() {
-        pessoaDAO = new PessoaDAO();
+        pessoaDAL = new AdocaoDAL.PessoaDAL();
     }
 
     public PessoaModel(Integer idpessoa, String nome, String cpf, String endereco, String telefone, String email) {
@@ -24,6 +25,16 @@ public class PessoaModel {
         this.endereco = endereco;
         this.telefone = telefone;
         this.email = email;
+        this.pessoaDAL = new AdocaoDAL.PessoaDAL();
+    }
+
+    // Método para acessar o DAO
+    @JsonIgnore
+    public AdocaoDAL.PessoaDAL getDAL() {
+        if (pessoaDAL == null) {
+            pessoaDAL = new AdocaoDAL.PessoaDAL();
+        }
+        return pessoaDAL;
     }
 
     public Integer getIdpessoa() {
@@ -72,9 +83,5 @@ public class PessoaModel {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public PessoaDAO getPessoaDAO() {
-        return pessoaDAO;
     }
 }

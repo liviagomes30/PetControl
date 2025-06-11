@@ -11,9 +11,8 @@ public class SingletonDB
     {
         try
         {
-            //informações do banco
-            Class.forName("org.postgresql.Driver"); //driver do banco
-            conexao = DriverManager.getConnection("jdbc:postgresql://localhost:5432/ong_salvacao", "postgres", "StrongP0stgres!");
+            Class.forName("org.postgresql.Driver");
+            conexao = DriverManager.getConnection("jdbc:postgresql://localhost:5432/petcontrol-db", "postgres", "postgres123");
         }
         catch(Exception e)
         {

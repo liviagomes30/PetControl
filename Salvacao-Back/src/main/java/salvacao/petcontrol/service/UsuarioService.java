@@ -151,17 +151,17 @@ public class UsuarioService {
 
         try {
             Integer pessoaId;
-            
+
             if (dto.getUsuario().getPessoa_idpessoa() == null) {
                 PessoaModel pessoaModel = new PessoaModel();
-                PessoaModel novaPessoa = pessoaModel.getPessoaDAO().gravar(dto.getPessoa());
+                PessoaModel novaPessoa = pessoaModel.getDAL().addPessoa(dto.getPessoa());
                 pessoaId = novaPessoa.getIdpessoa();
             } else {
                 pessoaId = dto.getUsuario().getPessoa_idpessoa();
             }
-            
+
             dto.getUsuario().setPessoa_idpessoa(pessoaId);
-            
+
             return usuarioModel.getUsuDAO().gravar(dto.getUsuario());
         } catch (RuntimeException e) {
             throw new Exception("Erro ao adicionar usuario: " + e.getMessage(), e);

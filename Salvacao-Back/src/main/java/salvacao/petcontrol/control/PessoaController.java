@@ -1,17 +1,18 @@
 package salvacao.petcontrol.control;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import salvacao.petcontrol.model.PessoaModel;
 import salvacao.petcontrol.service.PessoaService;
-import salvacao.petcontrol.util.ResultadoOperacao;
+
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @CrossOrigin(origins = "*")
 @RestController
-@RequestMapping("/pessoas")
+@RequestMapping("/pessoa")
 public class PessoaController {
 
     private final PessoaService pessoaService;
@@ -20,80 +21,55 @@ public class PessoaController {
         this.pessoaService = pessoaService;
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Object> getId(@PathVariable Integer id) {
-        try {
-            PessoaModel pessoa = pessoaService.getId(id);
-            return ResponseEntity.ok(pessoa);
-        } catch (Exception e) {
-            ResultadoOperacao resultado = new ResultadoOperacao("buscar", false, e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(resultado);
-        }
-    }
-
-    @GetMapping
+    @GetMapping("/listar")
     public ResponseEntity<Object> getAll() {
-        List<PessoaModel> pessoas = pessoaService.getAll();
-        if (!pessoas.isEmpty()) {
-            return ResponseEntity.ok(pessoas);
-        }
-        ResultadoOperacao resultado = new ResultadoOperacao("listar", false, "Nenhuma pessoa encontrada");
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(resultado);
+        List<PessoaModel> listPessoa = pessoaService.getAllPessoa();
+        return ResponseEntity.ok(listPessoa); // lista vazia é uma resposta válida
     }
 
-    @GetMapping("/nome/{filtro}")
-    public ResponseEntity<Object> getByNome(@PathVariable String filtro) {
-        List<PessoaModel> pessoas = pessoaService.getByNome(filtro);
-        if (!pessoas.isEmpty()) {
-            return ResponseEntity.ok(pessoas);
-        }
-        ResultadoOperacao resultado = new ResultadoOperacao("listar", false, "Nenhuma pessoa encontrada com o nome especificado");
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(resultado);
+
+    @GetMapping("/{cpf}")
+    public ResponseEntity<Object> getPessoaCpf(@PathVariable String cpf) {
+        PessoaModel pessoa = pessoaService.getPessoaCpf(cpf);
+        if(pessoa != null)
+            return ResponseEntity.ok(pessoa);
+        return ResponseEntity.badRequest().body("Pessoa não encontrada!");
     }
 
-    @GetMapping("/cpf/{filtro}")
-    public ResponseEntity<Object> getByCpf(@PathVariable String filtro) {
-        List<PessoaModel> pessoas = pessoaService.getByCpf(filtro);
-        if (!pessoas.isEmpty()) {
-            return ResponseEntity.ok(pessoas);
-        }
-        ResultadoOperacao resultado = new ResultadoOperacao("listar", false, "Nenhuma pessoa encontrada com o CPF especificado");
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(resultado);
-    }
-
-    @GetMapping("/email/{filtro}")
-    public ResponseEntity<Object> getByEmail(@PathVariable String filtro) {
-        List<PessoaModel> pessoas = pessoaService.getByEmail(filtro);
-        if (!pessoas.isEmpty()) {
-            return ResponseEntity.ok(pessoas);
-        }
-        ResultadoOperacao resultado = new ResultadoOperacao("listar", false, "Nenhuma pessoa encontrada com o email especificado");
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(resultado);
-    }
-
-    @GetMapping("/telefone/{filtro}")
-    public ResponseEntity<Object> getByTelefone(@PathVariable String filtro) {
-        List<PessoaModel> pessoas = pessoaService.getByTelefone(filtro);
-        if (!pessoas.isEmpty()) {
-            return ResponseEntity.ok(pessoas);
-        }
-        ResultadoOperacao resultado = new ResultadoOperacao("listar", false, "Nenhuma pessoa encontrada com o telefone especificado");
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(resultado);
-    }
-
-    @PostMapping
-    public ResponseEntity<Object> gravar(@RequestBody PessoaModel pessoa) {
+    @PostMapping("/cadastro")
+    public ResponseEntity<Object> addPessoa(@RequestBody PessoaModel pessoa) {
         try {
-            PessoaModel novaPessoa = pessoaService.gravar(pessoa);
-            return ResponseEntity.status(HttpStatus.CREATED).body(novaPessoa);
-        } catch (Exception e) {
+            PessoaModel novaPessoa = pessoaService.addPessoa(pessoa);
+            return ResponseEntity.ok(novaPessoa);
+        } catch(Exception e) {
+            return ResponseEntity.badRequest().body("Erro ao adicionar pessoa: " + e.getMessage());
+        }
+    }
+
+    @PutMapping("/alterar")
+    public ResponseEntity<Object> updatePessoa(@RequestBody PessoaModel pessoa) {
+        try {
+            boolean atualizada = pessoaService.updatePessoa(pessoa.getCpf(), pessoa);
+            if (atualizada) {
+                return ResponseEntity.ok("Pessoa alterada com sucesso!");
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Pessoa não encontrada com o CPF: " + pessoa.getCpf());
+            }
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("Erro ao atualizar pessoa: " + e.getMessage());
         }
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Object> alterar(@PathVariable Integer id, @RequestBody PessoaModel pessoa) {
+    @DeleteMapping("/{cpf}")
+    public ResponseEntity<Object> deletePessoa(@PathVariable String cpf) {
         try {
-            pessoa.setIdpessoa(id);
-            boolean atualizado = pessoaService.alterar(pessoa);
-
+            pessoaService.deletePessoa(cpf);
+            return ResponseEntity.ok("Pessoa deletada com sucesso!");
+        } catch(Exception e) {
+            return ResponseEntity.badRequest().body("Erro ao deletar pessoa!");
+        }
+    }
+}

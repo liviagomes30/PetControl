@@ -12,12 +12,11 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import java.sql.Connection;
 
 @Repository
 public class UsuarioDAO {
 
-    public UsuarioModel getId(Integer pessoaId, PessoaModel pessoaModel) {
+    public UsuarioModel getId(Integer pessoaId) {
         UsuarioModel usuario = null;
         String sql = "SELECT * FROM usuario WHERE pessoa_idpessoa = ?";
 
@@ -31,7 +30,8 @@ public class UsuarioDAO {
                         rs.getString("senha"),
                         rs.getInt("pessoa_idpessoa"));
 
-                PessoaModel pessoa = pessoaModel.getPessoaDAO().getId(pessoaId);
+                // Carregar dados da pessoa usando consulta direta
+                PessoaModel pessoa = buscarPessoaPorId(pessoaId);
                 if (pessoa != null) {
                     usuario.setPessoa(pessoa);
                 }
@@ -42,46 +42,65 @@ public class UsuarioDAO {
         return usuario;
     }
 
-    public UsuarioModel gravar(UsuarioModel usuario, Connection conn) throws SQLException { 
-      String sql = "INSERT INTO usuario (login, senha, pessoa_idpessoa) VALUES (?, ?, ?)";
-      try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-          stmt.setString(1, usuario.getLogin());
-          stmt.setString(2, usuario.getSenha());
-          stmt.setInt(3, usuario.getPessoa_idpessoa());
-          int linhasMod = stmt.executeUpdate();
-          if (linhasMod == 0) {
-              throw new SQLException("Nenhum usuário foi adicionado.");
-          }
-          ResultSet rs = stmt.getGeneratedKeys();
-          if (rs.next()) {
+    // Método auxiliar para buscar pessoa por ID
+    private PessoaModel buscarPessoaPorId(Integer id) {
+        PessoaModel pessoa = null;
+        String sql = "SELECT * FROM pessoa WHERE idpessoa = ?";
 
-          }
-      } catch (SQLException e) {
-          throw e;
-      }
-      return usuario;
+        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                pessoa = new PessoaModel(
+                        rs.getInt("idpessoa"),
+                        rs.getString("nome"),
+                        rs.getString("cpf"),
+                        rs.getString("endereco"),
+                        rs.getString("telefone"),
+                        rs.getString("email")
+                );
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return pessoa;
     }
 
-    public boolean alterar(UsuarioModel usuario, Connection conn) throws SQLException { 
+    public UsuarioModel gravar(UsuarioModel usuario) { // Added gravar method
+        String sql = "INSERT INTO usuario (login, senha, pessoa_idpessoa) VALUES (?, ?, ?)";
+        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql,
+                Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setString(1, usuario.getLogin());
+            stmt.setString(2, usuario.getSenha());
+            stmt.setInt(3, usuario.getPessoa_idpessoa());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao adicionar usuário: " + e.getMessage(), e);
+        }
+        return usuario;
+    }
+
+    public boolean alterar(UsuarioModel usuario) {
         String sql = "UPDATE usuario SET login = ?, senha = ? WHERE pessoa_idpessoa = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) { 
+        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
             stmt.setString(1, usuario.getLogin());
             stmt.setString(2, usuario.getSenha());
             stmt.setInt(3, usuario.getPessoa_idpessoa());
             int linhasMod = stmt.executeUpdate();
             if (linhasMod == 0) {
-                return false; 
+                throw new RuntimeException("Nenhum usuário foi atualizado.");
             } else {
                 return true;
             }
         } catch (SQLException e) {
-            throw e; 
+            throw new RuntimeException("Erro ao atualizar usuário: " + e.getMessage(), e);
         }
     }
 
-    public boolean apagar(Integer pessoaId, Connection conn) throws SQLException { 
+    public boolean apagar(Integer pessoaId) throws SQLException {
         String sqlCheckAcertoEstoque = "SELECT COUNT(*) FROM acertoestoque WHERE usuario_pessoa_id = ?";
-        try (PreparedStatement stmtCheck = conn.prepareStatement(sqlCheckAcertoEstoque)) { 
+        try (PreparedStatement stmtCheck = SingletonDB.getConexao().getPreparedStatement(sqlCheckAcertoEstoque)) {
             stmtCheck.setInt(1, pessoaId);
             ResultSet rs = stmtCheck.executeQuery();
             if (rs.next() && rs.getInt(1) > 0) {
@@ -90,11 +109,12 @@ public class UsuarioDAO {
         }
 
         String sql = "DELETE FROM usuario WHERE pessoa_idpessoa = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
             stmt.setInt(1, pessoaId);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            throw e; 
+            e.printStackTrace();
+            return false;
         }
     }
 
@@ -196,7 +216,7 @@ public class UsuarioDAO {
         // comment
         // In a real scenario, you might want to add an 'ativo' BOOLEAN field to the
         // usuario table
-        String sql = "UPDATE usuario SET login = CONCAT(login, '_INATIVO_', EXTRACT(EPOCH FROM NOW()::timestamp)) WHERE pessoa_idpessoa = ?";
+        String sql = "UPDATE usuario SET login = CONCAT(login, 'INATIVO', EXTRACT(EPOCH FROM NOW()::timestamp)) WHERE pessoa_idpessoa = ?";
         try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
             stmt.setInt(1, pessoaId);
             return stmt.executeUpdate() > 0;
@@ -209,8 +229,8 @@ public class UsuarioDAO {
     // Reactivate user
     public boolean reativarUsuario(Integer pessoaId) {
         // This assumes login was modified during deactivation
-        String sql = "UPDATE usuario SET login = SUBSTRING(login, 1, POSITION('_INATIVO_' IN login) - 1) " +
-                "WHERE pessoa_idpessoa = ? AND login LIKE '%_INATIVO_%'";
+        String sql = "UPDATE usuario SET login = SUBSTRING(login, 1, POSITION('INATIVO' IN login) - 1) " +
+                "WHERE pessoa_idpessoa = ? AND login LIKE '%INATIVO%'";
         try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
             stmt.setInt(1, pessoaId);
             return stmt.executeUpdate() > 0;
@@ -250,7 +270,7 @@ public class UsuarioDAO {
                 stmt.setString(4, searchPattern);
             }
             ResultSet rs = stmt.executeQuery();
-            
+
             while (rs.next()) {
                 UsuarioModel usuario = new UsuarioModel(
                         rs.getString("login"),

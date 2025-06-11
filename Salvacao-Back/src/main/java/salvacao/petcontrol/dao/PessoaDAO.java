@@ -47,10 +47,14 @@ public class PessoaDAO {
             stmt.setString(3, pessoa.getEndereco());
             stmt.setString(4, pessoa.getTelefone());
             stmt.setString(5, pessoa.getEmail());
+
             int linhasMod = stmt.executeUpdate();
+
             if (linhasMod > 0) {
                 ResultSet rs = stmt.getGeneratedKeys();
                 if (rs.next()) {
+                    // LINHA DE CORREÇÃO ADICIONADA:
+                    // Atribui o ID gerado pelo banco de dados de volta ao objeto 'pessoa'.
                     pessoa.setIdpessoa(rs.getInt(1));
                 }
             } else {

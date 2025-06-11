@@ -37,9 +37,9 @@ public class AcertoEstoqueService {
 
     @Autowired
     private UnidadeMedidaModel unidadeMedidaModel = new UnidadeMedidaModel(); 
-    @Autowired
-    private PessoaModel pessoaModel;
 
+    @Autowired
+    private PessoaModel pessoaModel = new PessoaModel();
 
     public AcertoEstoqueCompletoDTO getId(Integer id) throws Exception {
         AcertoEstoqueModel acerto = acertoEstoqueModel.getAcDAO().getId(id);
@@ -47,7 +47,7 @@ public class AcertoEstoqueService {
             throw new Exception("Acerto de estoque não encontrado");
         }
 
-        UsuarioModel usuario = usuarioModel.getUsuDAO().getId(acerto.getUsuario_pessoa_id(), pessoaModel);
+        UsuarioModel usuario = usuarioModel.getUsuDAO().getId(acerto.getUsuario_pessoa_id());
 
         List<ItemAcertoEstoqueModel> itensModel = acertoEstoqueModel.getAcDAO().getItensAcerto(id);
         List<ItemAcertoEstoqueDTO> itensDTO = new ArrayList<>();
@@ -99,7 +99,7 @@ public class AcertoEstoqueService {
             throw new Exception("É necessário ao menos um item para acerto de estoque");
         }
 
-        UsuarioModel usuario = usuarioModel.getUsuDAO().getId(request.getUsuario_pessoa_id(), pessoaModel);
+        UsuarioModel usuario = usuarioModel.getUsuDAO().getId(request.getUsuario_pessoa_id());
         if (usuario == null) {
             throw new Exception("Usuário não encontrado");
         }
