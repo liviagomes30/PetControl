@@ -1,7 +1,7 @@
 class ReceitaMedicamentoService {
   constructor(baseUrl = "http://localhost:8080") {
     this.baseUrl = baseUrl;
-    this.endpoint = "/receitas-medicamento";
+    this.endpoint = "/medicacoes";
   }
 
   async getAll() {
