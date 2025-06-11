@@ -1,6 +1,11 @@
 package salvacao.petcontrol.model;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.springframework.stereotype.Repository;
+import salvacao.petcontrol.dao.AdocaoDAL;
 import java.time.LocalDate;
 
+@Repository
 public class AdocaoModel {
     private int idAdocao;
     private int idAdotante;
@@ -10,9 +15,11 @@ public class AdocaoModel {
     private String obs;
     private String statusAcompanhamento;
     private LocalDate dataAcompanhamento;
+    private AdocaoDAL adocaoDAL;
 
     // Construtor vazio
     public AdocaoModel() {
+        adocaoDAL = new AdocaoDAL();
     }
 
     // Construtor com todos os campos
@@ -26,6 +33,16 @@ public class AdocaoModel {
         this.obs = obs;
         this.statusAcompanhamento = statusAcompanhamento;
         this.dataAcompanhamento = dataAcompanhamento;
+        this.adocaoDAL = new AdocaoDAL();
+    }
+
+    // Método para acessar o DAO
+    @JsonIgnore
+    public AdocaoDAL getDAL() {
+        if (adocaoDAL == null) {
+            adocaoDAL = new AdocaoDAL();
+        }
+        return adocaoDAL;
     }
 
     public int getIdAdocao() {

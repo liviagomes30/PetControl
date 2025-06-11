@@ -1,9 +1,6 @@
 package salvacao.petcontrol.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import salvacao.petcontrol.dao.EventoDAO;
-import salvacao.petcontrol.dao.EventoDAO;
 import salvacao.petcontrol.model.EventoModel;
 import salvacao.petcontrol.util.Validation;
 
@@ -13,8 +10,11 @@ import java.util.List;
 @Service
 public class EventoService {
 
-    @Autowired
-    private EventoDAO eventoDAL;
+    private EventoModel eventoModel;
+
+    public EventoService() {
+        this.eventoModel = new EventoModel();
+    }
 
     public EventoModel addEvento(EventoModel evento) throws Exception {
         // Validações básicas
@@ -43,23 +43,23 @@ public class EventoService {
             throw new Exception("Animal informado é inválido!");
         }
 
-        return eventoDAL.addEvento(evento);
+        return eventoModel.getDAL().addEvento(evento);
     }
 
     public EventoModel getEventoById(int id) {
-        return eventoDAL.findById(id);
+        return eventoModel.getDAL().findById(id);
     }
 
     public List<EventoModel> getEventosByData(LocalDate data) {
-        return eventoDAL.findByData(data);
+        return eventoModel.getDAL().findByData(data);
     }
 
     public List<EventoModel> getEventosByAnimal(int animalId) {
-        return eventoDAL.findByAnimal(animalId);
+        return eventoModel.getDAL().findByAnimal(animalId);
     }
 
     public List<EventoModel> getEventosByStatus(String status) {
-        return eventoDAL.findByStatus(status);
+        return eventoModel.getDAL().findByStatus(status);
     }
 
     public boolean updateEvento(int id, EventoModel evento) throws Exception {
@@ -81,7 +81,7 @@ public class EventoService {
         }
 
         // Verificar se o evento existe
-        if (eventoDAL.findById(id) == null) {
+        if (eventoModel.getDAL().findById(id) == null) {
             throw new Exception("Evento não encontrado!");
         }
 
@@ -90,28 +90,28 @@ public class EventoService {
             throw new Exception("Animal informado é inválido!");
         }
 
-        return eventoDAL.updateEvento(id, evento);
+        return eventoModel.getDAL().updateEvento(id, evento);
     }
 
     public void deleteEvento(int id) throws Exception {
-        EventoModel eventoDelete = eventoDAL.findById(id);
+        EventoModel eventoDelete = eventoModel.getDAL().findById(id);
 
         if (eventoDelete == null) {
             throw new Exception("Evento não encontrado!");
         }
 
-        if (!eventoDAL.deleteEvento(id)) {
+        if (!eventoModel.getDAL().deleteEvento(id)) {
             throw new Exception("Erro ao deletar evento!");
         }
     }
 
     public List<EventoModel> getAllEventos() {
-        return eventoDAL.getAll();
+        return eventoModel.getDAL().getAll();
     }
 
     public List<EventoModel> getEventosProximos() {
         // Retorna eventos com data >= hoje
-        return eventoDAL.getAll().stream()
+        return eventoModel.getDAL().getAll().stream()
                 .filter(evento -> evento.getData() != null &&
                         !evento.getData().isBefore(LocalDate.now()))
                 .toList();
@@ -119,7 +119,7 @@ public class EventoService {
 
     public List<EventoModel> getEventosPassados() {
         // Retorna eventos com data < hoje
-        return eventoDAL.getAll().stream()
+        return eventoModel.getDAL().getAll().stream()
                 .filter(evento -> evento.getData() != null &&
                         evento.getData().isBefore(LocalDate.now()))
                 .toList();
