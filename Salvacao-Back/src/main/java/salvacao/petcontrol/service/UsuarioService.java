@@ -4,19 +4,25 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import salvacao.petcontrol.model.UsuarioModel;
 import salvacao.petcontrol.util.ResultadoOperacao;
+import salvacao.petcontrol.dao.PessoaDAO;
+import salvacao.petcontrol.config.SingletonDB;
+import java.sql.Connection;
+import salvacao.petcontrol.dto.UsuarioDTO;
+import salvacao.petcontrol.dto.UsuarioCompletoDTO;
+import salvacao.petcontrol.model.PessoaModel;
 
 import java.sql.SQLException;
 import java.util.List;
 import java.util.ArrayList;
-import salvacao.petcontrol.dto.UsuarioDTO;
-import salvacao.petcontrol.dto.UsuarioCompletoDTO;
-import salvacao.petcontrol.model.PessoaModel;
 
 @Service
 public class UsuarioService {
 
     @Autowired
     private UsuarioModel usuarioModel = new UsuarioModel();
+    
+    @Autowired
+    private PessoaDAO pessoaDAO = new PessoaDAO();
 
     public UsuarioCompletoDTO getId(Integer id) {
         return usuarioModel.getUsuDAO().findUsuarioCompleto(id);
@@ -149,12 +155,19 @@ public class UsuarioService {
             throw new Exception("Dados da pessoa são obrigatórios");
         }
 
+        if (usuarioModel.getUsuDAO().loginExists(dto.getUsuario().getLogin())) {
+            throw new Exception("Login já existe. Escolha outro login.");
+        }
+
+        Connection conn = null;
         try {
+            conn = SingletonDB.getConexao().getConnection();
+            conn.setAutoCommit(false);
+
             Integer pessoaId;
 
             if (dto.getUsuario().getPessoa_idpessoa() == null) {
-                PessoaModel pessoaModel = new PessoaModel();
-                PessoaModel novaPessoa = pessoaModel.getDAL().addPessoa(dto.getPessoa());
+                PessoaModel novaPessoa = pessoaDAO.gravar(dto.getPessoa(), conn);
                 pessoaId = novaPessoa.getIdpessoa();
             } else {
                 pessoaId = dto.getUsuario().getPessoa_idpessoa();
@@ -162,9 +175,27 @@ public class UsuarioService {
 
             dto.getUsuario().setPessoa_idpessoa(pessoaId);
 
-            return usuarioModel.getUsuDAO().gravar(dto.getUsuario());
-        } catch (RuntimeException e) {
+            UsuarioModel novoUsuario = usuarioModel.getUsuDAO().gravar(dto.getUsuario(), conn);
+            
+            conn.commit();
+            return novoUsuario;
+        } catch (Exception e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (Exception rollbackEx) {
+                    rollbackEx.printStackTrace();
+                }
+            }
             throw new Exception("Erro ao adicionar usuario: " + e.getMessage(), e);
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
         }
     }
 
