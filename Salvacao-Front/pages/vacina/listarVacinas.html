@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta
+                name="description"
+                content="Gerenciamento de Tipos de Vacina - PetControl"
+        />
+        <title>PetControl - Gerenciar Vacinas</title>
+        <link
+                rel="stylesheet"
+                href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css"
+        />
+        <link rel="stylesheet" href="../../assets/css/style.css" />
+        <script src="../../assets/js/components/sidebar.js" defer></script>
+    </head>
+    <body>
+        <main class="main-content">
+            <header class="content-header">
+                <h1>Gerenciar Tipos de Vacina</h1>
+                <button
+                        class="btn btn-primary"
+                        onclick="window.location.href='cadastrarVacina.html'"
+                        aria-label="Cadastrar nova vacina"
+                >
+                    <i class="bi bi-plus-circle"></i> Nova Vacina
+                </button>
+            </header>
+
+            <div class="search-container">
+                <label for="searchInput" class="visually-hidden"
+                >Buscar vacina</label
+                >
+                <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Buscar por descrição..."
+                        class="search-input"
+                        aria-label="Buscar vacina"
+                />
+                <button id="searchButton" class="search-button" aria-label="Executar busca">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+
+            <div class="table-container">
+                <div class="table-responsive">
+                    <table id="vacinasTable" aria-label="Lista de tipos de vacina">
+                        <thead>
+                            <tr>
+                                <th scope="col">ID</th>
+                                <th scope="col">Descrição</th>
+                                <th scope="col" style="text-align: center;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vacinasTableBody">
+                        </tbody>
+                    </table>
+                </div>
+                <div id="noDataMessage" class="no-data" style="display: none;">
+                    Nenhuma vacina encontrada.
+                </div>
+            </div>
+
+            <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-icon success">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+                <div class="toast-content">
+                    <div class="toast-title" id="toastTitle">Sucesso!</div>
+                    <div class="toast-message" id="toastMessage">Operação realizada com sucesso.</div>
+                </div>
+                <button class="toast-close" aria-label="Fechar notificação">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+
+            <div id="loadingOverlay" class="loading-overlay">
+                <div class="spinner" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                </div>
+            </div>
+        </main>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script type="module">
+            import VacinaController from "../../assets/js/controllers/VacinaController.js";
+            import UIComponents from "../../assets/js/components/uiComponents.js";
+            import MensagensPadroes from "../../assets/js/utils/mensagensPadroes.js";
+
+            document.addEventListener("DOMContentLoaded", () => {
+                if (!window.vacinaController) {
+                    window.vacinaController = new VacinaController();
+                }
+
+                if (window.vacinaController.inicializarListagem) {
+                    window.vacinaController.inicializarListagem();
+                } else {
+                    console.error("Método inicializarListagem não encontrado no VacinaController.");
+                }
+
+                const searchInput = document.getElementById("searchInput");
+                const searchButton = document.getElementById("searchButton");
+
+                if(searchButton && searchInput && window.vacinaController.filtrarVacinas) {
+                    searchButton.addEventListener("click", () => {
+                        window.vacinaController.filtrarVacinas(searchInput.value);
+                    });
+                    searchInput.addEventListener("keyup", (event) => {
+                        if (event.key === "Enter") {
+                            window.vacinaController.filtrarVacinas(searchInput.value);
+                        }
+                        // Para busca em tempo real ao limpar o campo
+                        if (searchInput.value.trim() === "" && event.key !== "Enter") {
+                            window.vacinaController.filtrarVacinas(""); // Recarrega todos os itens
+                        }
+                    });
+                }
+
+                // Lógica do Toast (se não for gerenciada por UIComponents no controller)
+                const toastClose = document.querySelector(".toast-close");
+                if (toastClose) {
+                    toastClose.addEventListener("click", function () {
+                        const toastElement = document.getElementById("toast");
+                        if (toastElement) toastElement.classList.remove("show");
+                    });
+                }
+
+                // Verifica se há mensagem de sucesso na URL (ex: após cadastro/edição)
+                const urlParams = new URLSearchParams(window.location.search);
+                const message = urlParams.get('message');
+                if (message) {
+                    UIComponents.Toast.sucesso(decodeURIComponent(message));
+                    // Limpa o parâmetro da URL para não mostrar o toast novamente ao recarregar
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            });
+        </script>
+    </body>
+</html>

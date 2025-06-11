@@ -90,13 +90,30 @@ document.addEventListener("DOMContentLoaded", function () {
         <a href="${getBasePath()}pages/receituario/cadastrarReceituario.html" class="sidebar-submenu-item" id="submenu-receituario-novo">Novo Receituário</a>
       </ul>
       
-      <a href="${getBasePath()}pages/vacinacao/index.html" class="sidebar-item" id="menu-vacinacao">
+       <div class="sidebar-item" id="menu-vacinacao" onclick="toggleSubmenu('vacinacaoSubmenu')">
         <div class="sidebar-item-content">
           <i class="bi bi-bandaid sidebar-item-icon"></i>
           <span class="sidebar-item-text">Vacinação</span>
         </div>
-        <i class="bi bi-chevron-right sidebar-item-arrow"></i>
-      </a>
+        <i class="bi bi-chevron-down sidebar-item-arrow"></i>
+      </div>
+      <ul id="vacinacaoSubmenu" class="sidebar-submenu">
+        <li>
+          <a href="${getBasePath()}pages/vacina/listarVacinas.html" class="sidebar-submenu-item" id="submenu-vacina-gerenciar-tipos">Gerenciar vacinas</a>
+        </li>
+        <!--
+        <li>
+          <a href="${getBasePath()}pages/vacina/cadastrarVacina.html" class="sidebar-submenu-item" id="submenu-vacina-cadastrar-tipo">Cadastrar Tipo de Vacina</a>
+        </li>
+        -->
+        <li>
+          <a href="${getBasePath()}pages/vacinacao/cadastrarVacinacao.html" class="sidebar-submenu-item" id="submenu-vacinacao-registrar-ato">Efetuar vacinação</a>
+        </li>
+         <li>
+          <a href="${getBasePath()}pages/vacinacao/listarVacinacoes.html" class="sidebar-submenu-item" id="submenu-vacinacao-listar-atos">Histórico de vacinação</a>
+        </li>
+      </ul>
+
       
       <div class="sidebar-item" id="menu-pessoas" onclick="toggleSubmenu('pessoasSubmenu')">
         <div class="sidebar-item-content">

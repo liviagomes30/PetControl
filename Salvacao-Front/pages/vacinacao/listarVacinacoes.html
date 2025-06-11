@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>PetControl - Todas as Vacinações</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css" />
+        <link rel="stylesheet" href="../../assets/css/style.css" />
+        <script src="../../assets/js/components/sidebar.js" defer></script>
+    </head>
+    <body>
+        <main class="main-content">
+            <header class="content-header">
+                <button class="btn-back" onclick="window.location.href='../../index.html'" aria-label="Voltar para Home">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </button>
+                <h1>Todos os Registros de Vacinação</h1>
+            </header>
+
+            <div class="form-container">
+                <div class="form-group">
+                    <label for="animalSearchInput">Filtrar por Nome do Animal</label>
+                    <input type="text" id="animalSearchInput" placeholder="Digite o nome do animal para filtrar..." class="form-input-searchable" autocomplete="off"/>
+                </div>
+            </div>
+
+            <hr class="form-divider">
+
+            <div class="section-container">
+                <h2 id="agendadasTitle">Vacinações Agendadas</h2>
+                <div class="table-container">
+                    <div class="table-responsive">
+                        <table id="agendadasTable">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Data Agendada</th>
+                                    <th scope="col">Animal</th>
+                                    <th scope="col">Vacina (Tipo)</th>
+                                    <th scope="col">Local</th>
+                                    <th scope="col" style="text-align: center;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="agendadasTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div id="noAgendadasMessage" class="no-data"></div>
+                </div>
+            </div>
+
+            <hr class="form-divider">
+
+            <div class="section-container">
+                <h2 id="realizadasTitle">Vacinações Realizadas (Histórico)</h2>
+                <div class="table-container">
+                    <div class="table-responsive">
+                        <table id="realizadasTable">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Data Aplicação</th>
+                                    <th scope="col">Animal</th>
+                                    <th scope="col">Vacina (Tipo)</th>
+                                    <th scope="col">Local</th>
+                                    <th scope="col">Lote</th>
+                                    <th scope="col">Validade</th>
+                                    <th scope="col" style="text-align: center;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="realizadasTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div id="noRealizadasMessage" class="no-data"></div>
+                </div>
+            </div>
+
+            <div id="loadingOverlay" class="loading-overlay">
+                <div class="spinner" role="status"><span class="visually-hidden">Carregando...</span></div>
+            </div>
+        </main>
+
+        <script type="module">
+            import VacinacaoController from '../../assets/js/controllers/VacinacaoController.js';
+
+            document.addEventListener("DOMContentLoaded", () => {
+                if (!window.vacinacaoGeralController) {
+                    window.vacinacaoGeralController = new VacinacaoController();
+                }
+                window.vacinacaoGeralController.inicializarPaginaListagemGeral();
+            });
+        </script>
+    </body>
+</html>

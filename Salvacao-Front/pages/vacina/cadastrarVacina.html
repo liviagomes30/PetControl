@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta
+                name="description"
+                content="Cadastro de Vacinas - PetControl"
+        />
+        <title>PetControl - Nova Vacina</title>
+        <link
+                rel="stylesheet"
+                href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css"
+        />
+        <link rel="stylesheet" href="../../assets/css/style.css" /> <script src="../../assets/js/components/sidebar.js" defer></script> </head>
+    <body>
+        <main class="main-content">
+            <header class="content-header">
+                <button
+                        class="btn-back"
+                        onclick="window.location.href='listarVacinas.html'"
+                        aria-label="Voltar para lista de vacinas"
+                >
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </button>
+                <h1>Cadastrar Vacina</h1>
+            </header>
+
+            <div class="form-container">
+                <form id="vacinaForm" novalidate>
+                    <input type="hidden" id="id_vacina" value="0" />
+
+                    <div class="form-group">
+                        <label for="descricao_vacina" class="required">Descrição</label>
+                        <input
+                                type="text"
+                                id="descricao_vacina"
+                                name="descricao_vacina"
+                                required
+                                placeholder="Digite o nome ou descrição da vacina"
+                                aria-required="true"
+                                aria-describedby="descricao-error descricao-help"
+                        />
+                        <div
+                                class="error-message"
+                                id="descricao-error"
+                                aria-live="polite"
+                        ></div>
+                        <small id="descricao-help" class="form-help-text">
+                            Por exemplo: V10, Antirrábica, Giárdia...
+                        </small>
+                    </div>
+
+                    <div class="form-buttons">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Confirmar
+                        </button>
+                        <button
+                                type="button"
+                                class="btn btn-secondary"
+                                onclick="window.location.href='listarVacinas.html'"
+                        >
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div
+                    id="toast"
+                    class="toast"
+                    role="alert"
+                    aria-live="assertive"
+                    aria-atomic="true"
+            >
+                <div class="toast-icon success">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+                <div class="toast-content">
+                    <div class="toast-title" id="toastTitle">Sucesso!</div>
+                    <div class="toast-message" id="toastMessage">
+                        Operação realizada com sucesso!
+                    </div>
+                </div>
+                <button class="toast-close" aria-label="Fechar notificação">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+
+            <div id="loadingOverlay" class="loading-overlay">
+                <div class="spinner" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                </div>
+            </div>
+        </main>
+
+        <script type="module">
+            // Importa o VacinaController como um módulo ES6
+            import VacinaController from '../../assets/js/controllers/VacinaController.js'; //
+            // Se UIComponents e MensagensPadroes forem usados DIRETAMENTE neste script, importe-os.
+            // Caso contrário, o VacinaController já os importa para seu uso interno.
+            // import UIComponents from '../../assets/js/components/uiComponents.js';
+            // import MensagensPadroes from '../../assets/js/utils/mensagensPadroes.js';
+
+
+            document.addEventListener("DOMContentLoaded", () => {
+                // Instancia o VacinaController. Agora ele está definido por causa do import.
+                if (!window.vacinaController) {
+                    window.vacinaController = new VacinaController();
+                }
+
+                const form = document.getElementById("vacinaForm");
+                const idVacinaInput = document.getElementById("id_vacina");
+                const descricaoInput = document.getElementById("descricao_vacina");
+                const descricaoError = document.getElementById("descricao-error");
+                const loadingOverlay = document.getElementById("loadingOverlay");
+
+                function validarDescricao(campo) {
+                    if (!campo || !descricaoError) return false; // Adiciona checagem de existência dos elementos
+
+                    if (campo.value.trim() === "") {
+                        descricaoError.textContent = "Este campo é obrigatório";
+                        campo.classList.add("invalid");
+                        return false;
+                    } else if (campo.value.length < 2) {
+                        descricaoError.textContent = "A descrição deve ter pelo menos 2 caracteres";
+                        campo.classList.add("invalid");
+                        return false;
+                    } else if (campo.value.length > 100) {
+                        descricaoError.textContent = "A descrição deve ter no máximo 100 caracteres";
+                        campo.classList.add("invalid");
+                        return false;
+                    } else {
+                        descricaoError.textContent = "";
+                        campo.classList.remove("invalid");
+                        return true;
+                    }
+                }
+
+                if (descricaoInput) {
+                    descricaoInput.addEventListener("input", function () { validarDescricao(this); });
+                    descricaoInput.addEventListener("blur", function () { validarDescricao(this); });
+                }
+
+                if (form) {
+                    form.addEventListener("submit", function (event) {
+                        event.preventDefault();
+
+                        if (validarDescricao(descricaoInput)) {
+                            if(loadingOverlay) loadingOverlay.classList.add("show");
+
+                            const vacinaData = {
+                                id: idVacinaInput.value,
+                                descricao: descricaoInput.value.trim()
+                            };
+
+                            // O objeto window.vacinaController foi instanciado acima
+                            window.vacinaController.salvar(vacinaData)
+                                    .then(() => {
+                                        // A mensagem de sucesso e loading já são tratados pelo UIComponents dentro do controller.
+                                        // O controller.salvar agora retorna uma promessa, mas o toast/redirect é melhor
+                                        // se o controller retornar algo ou se o HTML escutar um evento customizado.
+                                        // Por simplicidade, mantendo o toast e redirect aqui se o controller não o fizer.
+                                        // (Na verdade, o controller.salvar que eu forneci já usa UIComponents.Toast e esconde o loading)
+
+                                        // Para consistência, deixe o controller tratar o toast de sucesso se possível.
+                                        // Se o controller já redireciona ou usa UIComponents.Toast.sucesso:
+                                        // Apenas aguarde o redirecionamento ou a ação do controller.
+                                        // Se precisar de redirect aqui:
+                                        setTimeout(() => {
+                                            // Idealmente, a mensagem de sucesso seria passada por props ou uma lib de estado.
+                                            // Para o redirecionamento:
+                                            window.location.href = "listarVacinas.html?message=" + encodeURIComponent("Vacina cadastrada com sucesso!");
+                                        }, 1500); // Pequeno delay para o usuário ver o toast do controller, se houver
+                                    })
+                                    .catch((erro) => {
+                                        // O controller.salvar já deve usar UIComponents.ModalErro ou UIComponents.Toast.erro
+                                        console.error("Erro ao tentar salvar vacina (na página):", erro);
+                                        // Se o controller não mostrou um modal de erro, você pode mostrar um toast aqui.
+                                        // mostrarToastLocal("Erro no Cadastro", erro.message || "Não foi possível cadastrar a vacina.", "error");
+                                        if(loadingOverlay) loadingOverlay.classList.remove("show");
+                                    });
+                        } else {
+                            // Se a validação falhar, podemos mostrar um toast genérico de erro de formulário
+                            mostrarToastLocal("Erro de Validação", "Por favor, corrija os erros no formulário.", "error");
+                        }
+                    });
+                }
+
+                // Função local para mostrar toast (alternativa se não usar UIComponents diretamente aqui)
+                function mostrarToastLocal(titulo, mensagem, tipo = "success") {
+                    const toast = document.getElementById("toast");
+                    const toastTitle = document.getElementById("toastTitle");
+                    const toastMessage = document.getElementById("toastMessage");
+                    const toastIconDiv = toast ? toast.querySelector(".toast-icon") : null;
+
+                    if (!toast || !toastTitle || !toastMessage || !toastIconDiv) {
+                        console.warn("Elementos do toast não encontrados para mostrarToastLocal");
+                        return;
+                    }
+
+                    toastTitle.textContent = titulo;
+                    toastMessage.textContent = mensagem;
+
+                    toastIconDiv.className = "toast-icon " + tipo;
+                    if (tipo === "success") {
+                        toastIconDiv.innerHTML = '<i class="bi bi-check-circle"></i>';
+                    } else { // 'error' ou qualquer outro tipo
+                        toastIconDiv.innerHTML = '<i class="bi bi-exclamation-triangle"></i>';
+                    }
+
+                    toast.classList.add("show");
+                    setTimeout(() => {
+                        toast.classList.remove("show");
+                    }, 5000);
+                }
+
+                const toastCloseButton = document.querySelector(".toast-close");
+                if (toastCloseButton) {
+                    toastCloseButton.addEventListener("click", function () {
+                        const toastElement = document.getElementById("toast");
+                        if(toastElement) toastElement.classList.remove("show");
+                    });
+                }
+            });
+        </script>
+    </body>
+</html>
