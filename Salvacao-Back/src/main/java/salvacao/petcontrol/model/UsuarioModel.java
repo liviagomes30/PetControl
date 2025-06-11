@@ -28,7 +28,6 @@ public class UsuarioModel {
         this.pessoa = pessoa;
     }
 
-    // Getters e Setters
     public String getLogin() {
         return login;
     }

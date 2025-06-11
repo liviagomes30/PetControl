@@ -1,9 +1,10 @@
 package salvacao.petcontrol.model;
 
-import java.time.LocalDate;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.stereotype.Repository;
 import salvacao.petcontrol.dao.ReceitaMedicamentoDAO;
+
+import java.time.LocalDate;
 
 @Repository
 public class ReceitaMedicamentoModel {
@@ -12,18 +13,39 @@ public class ReceitaMedicamentoModel {
     private String medico;
     private String clinica;
     private Integer animal_idanimal;
-    private ReceitaMedicamentoDAO receitaDAO;
+    private String status;
+
+    private ReceitaMedicamentoDAO receitaMedicamentoDAO;
 
     public ReceitaMedicamentoModel() {
-        receitaDAO = new ReceitaMedicamentoDAO();
+        this.receitaMedicamentoDAO = new ReceitaMedicamentoDAO();
     }
 
-    public ReceitaMedicamentoModel(Integer idreceita, LocalDate data, String medico, String clinica, Integer animal_idanimal) {
+    public ReceitaMedicamentoModel(Integer idreceita, LocalDate data, String medico, String clinica, Integer animal_idanimal, String status, ReceitaMedicamentoDAO receitaMedicamentoDAO) {
         this.idreceita = idreceita;
         this.data = data;
         this.medico = medico;
         this.clinica = clinica;
         this.animal_idanimal = animal_idanimal;
+        this.status = status;
+        this.receitaMedicamentoDAO = receitaMedicamentoDAO;
+    }
+
+    public ReceitaMedicamentoModel(int idreceita, LocalDate data, String medico, String clinica, int animalIdanimal, String status) {
+        this.idreceita = idreceita;
+        this.data = data;
+        this.medico = medico;
+        this.clinica = clinica;
+        this.animal_idanimal = animalIdanimal;
+        this.status = status;
+    }
+
+    public ReceitaMedicamentoModel(int idreceita, LocalDate data, String medico, String clinica, int animalIdanimal) {
+        this.idreceita = idreceita;
+        this.data = data;
+        this.medico = medico;
+        this.clinica = clinica;
+        this.animal_idanimal = animalIdanimal;
     }
 
     public Integer getIdreceita() {
@@ -66,7 +88,15 @@ public class ReceitaMedicamentoModel {
         this.animal_idanimal = animal_idanimal;
     }
 
-    public ReceitaMedicamentoDAO getReceitaDAO() {
-        return receitaDAO;
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public ReceitaMedicamentoDAO getRmDAO() {
+        return receitaMedicamentoDAO;
     }
 }

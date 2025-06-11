@@ -1,10 +1,11 @@
-// salvacao.petcontrol.service.UnidadeMedidaService.java
 package salvacao.petcontrol.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import salvacao.petcontrol.config.SingletonDB;
 import salvacao.petcontrol.model.UnidadeMedidaModel;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -35,7 +36,36 @@ public class UnidadeMedidaService {
         if (unidadeMedida.getSigla().length() > 10) {
             throw new Exception("A sigla não pode ter mais de 10 caracteres.");
         }
-        return unidadeMedidaModel.getUnDAO().gravar(unidadeMedida);
+
+        Connection conn = null;
+        boolean autoCommitOriginal = true;
+        try {
+            conn = SingletonDB.getConexao().getConnection();
+            autoCommitOriginal = conn.getAutoCommit();
+            conn.setAutoCommit(false);
+
+            UnidadeMedidaModel novaUnidadeMedida = unidadeMedidaModel.getUnDAO().gravar(unidadeMedida, conn);
+
+            conn.commit();
+            return novaUnidadeMedida;
+        } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback(); // Rollback on error
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            throw new Exception("Erro ao cadastrar unidade de medida: " + e.getMessage(), e);
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(autoCommitOriginal);
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
     }
 
     public boolean alterar(UnidadeMedidaModel unidadeMedida) throws Exception {
@@ -51,11 +81,45 @@ public class UnidadeMedidaService {
         if (unidadeMedida.getSigla().length() > 10) {
             throw new Exception("A sigla não pode ter mais de 10 caracteres.");
         }
+
         UnidadeMedidaModel existente = unidadeMedidaModel.getUnDAO().getId(unidadeMedida.getIdUnidadeMedida());
         if (existente == null) {
             throw new Exception("Unidade de medida não encontrada para atualização.");
         }
-        return unidadeMedidaModel.getUnDAO().alterar(unidadeMedida);
+
+        Connection conn = null;
+        boolean autoCommitOriginal = true;
+        try {
+            conn = SingletonDB.getConexao().getConnection();
+            autoCommitOriginal = conn.getAutoCommit();
+            conn.setAutoCommit(false);
+
+            boolean atualizado = unidadeMedidaModel.getUnDAO().alterar(unidadeMedida, conn);
+
+            if (atualizado) {
+                conn.commit();
+            } else {
+                conn.rollback();
+            }
+            return atualizado;
+        } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            throw new Exception("Erro ao atualizar unidade de medida: " + e.getMessage(), e);
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(autoCommitOriginal);
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
     }
 
     public boolean apagar(Integer id) throws Exception {
@@ -63,10 +127,39 @@ public class UnidadeMedidaService {
         if (existente == null) {
             throw new Exception("Unidade de medida não encontrada para exclusão.");
         }
+
+        Connection conn = null;
+        boolean autoCommitOriginal = true;
         try {
-            return unidadeMedidaModel.getUnDAO().apagar(id);
+            conn = SingletonDB.getConexao().getConnection();
+            autoCommitOriginal = conn.getAutoCommit();
+            conn.setAutoCommit(false);
+
+            boolean deletado = unidadeMedidaModel.getUnDAO().apagar(id, conn);
+
+            if (deletado) {
+                conn.commit();
+            } else {
+                conn.rollback();
+            }
+            return deletado;
         } catch (SQLException e) {
-            throw new Exception("Erro ao excluir unidade de medida: " + e.getMessage());
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            throw new Exception("Erro ao excluir unidade de medida: " + e.getMessage(), e);
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(autoCommitOriginal);
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
         }
     }
 

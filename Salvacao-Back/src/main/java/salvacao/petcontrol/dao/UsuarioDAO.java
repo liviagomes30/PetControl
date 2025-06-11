@@ -216,7 +216,7 @@ public class UsuarioDAO {
         // comment
         // In a real scenario, you might want to add an 'ativo' BOOLEAN field to the
         // usuario table
-        String sql = "UPDATE usuario SET login = CONCAT(login, '_INATIVO_', EXTRACT(EPOCH FROM NOW()::timestamp)) WHERE pessoa_idpessoa = ?";
+        String sql = "UPDATE usuario SET login = CONCAT(login, 'INATIVO', EXTRACT(EPOCH FROM NOW()::timestamp)) WHERE pessoa_idpessoa = ?";
         try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
             stmt.setInt(1, pessoaId);
             return stmt.executeUpdate() > 0;
@@ -229,8 +229,8 @@ public class UsuarioDAO {
     // Reactivate user
     public boolean reativarUsuario(Integer pessoaId) {
         // This assumes login was modified during deactivation
-        String sql = "UPDATE usuario SET login = SUBSTRING(login, 1, POSITION('_INATIVO_' IN login) - 1) " +
-                "WHERE pessoa_idpessoa = ? AND login LIKE '%_INATIVO_%'";
+        String sql = "UPDATE usuario SET login = SUBSTRING(login, 1, POSITION('INATIVO' IN login) - 1) " +
+                "WHERE pessoa_idpessoa = ? AND login LIKE '%INATIVO%'";
         try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
             stmt.setInt(1, pessoaId);
             return stmt.executeUpdate() > 0;

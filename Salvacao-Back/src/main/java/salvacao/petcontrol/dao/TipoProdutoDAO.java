@@ -1,4 +1,3 @@
-// salvacao.petcontrol.dal.TipoProdutoDAO.java
 package salvacao.petcontrol.dao;
 
 import org.springframework.stereotype.Repository;
@@ -11,6 +10,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.sql.Connection; // Import Connection
 
 @Repository
 public class TipoProdutoDAO {
@@ -51,9 +51,9 @@ public class TipoProdutoDAO {
         return list;
     }
 
-    public TipoProdutoModel gravar(TipoProdutoModel tipoProduto) { // Added gravar method
+    public TipoProdutoModel gravar(TipoProdutoModel tipoProduto, Connection conn) throws SQLException {
         String sql = "INSERT INTO tipoproduto (descricao) VALUES (?)";
-        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, tipoProduto.getDescricao());
             int linhasMod = stmt.executeUpdate();
             if (linhasMod > 0) {
@@ -61,33 +61,35 @@ public class TipoProdutoDAO {
                 if (rs.next()) {
                     tipoProduto.setIdtipoproduto(rs.getInt(1));
                 }
+            } else {
+                throw new SQLException("Falha ao adicionar tipo de produto.");
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Erro ao adicionar tipo de produto: " + e.getMessage(), e);
+            throw e;
         }
         return tipoProduto;
     }
 
-    public boolean alterar(TipoProdutoModel tipoProduto) { // Added alterar method
+    public boolean alterar(TipoProdutoModel tipoProduto, Connection conn) throws SQLException {
         String sql = "UPDATE tipoproduto SET descricao = ? WHERE idtipoproduto = ?";
-        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, tipoProduto.getDescricao());
             stmt.setInt(2, tipoProduto.getIdtipoproduto());
             int linhasMod = stmt.executeUpdate();
             if (linhasMod == 0) {
-                throw new RuntimeException("Nenhum tipo de produto foi atualizado.");
+                return false;
             } else {
                 return true;
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Erro ao atualizar tipo de produto: " + e.getMessage(), e);
+            throw e;
         }
     }
 
-    public boolean apagar(Integer id) throws SQLException { // Added apagar method
+    public boolean apagar(Integer id, Connection conn) throws SQLException {
         // Check if TipoProduto is referenced by any Produto
         String sqlCheck = "SELECT COUNT(*) FROM produto WHERE idtipoproduto = ?";
-        try (PreparedStatement stmtCheck = SingletonDB.getConexao().getPreparedStatement(sqlCheck)) {
+        try (PreparedStatement stmtCheck = conn.prepareStatement(sqlCheck)) {
             stmtCheck.setInt(1, id);
             ResultSet rs = stmtCheck.executeQuery();
             if (rs.next() && rs.getInt(1) > 0) {
@@ -96,16 +98,15 @@ public class TipoProdutoDAO {
         }
 
         String sql = "DELETE FROM tipoproduto WHERE idtipoproduto = ?";
-        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+            throw e;
         }
     }
 
-    public List<TipoProdutoModel> getByDescricao(String filtro) { // Implemented the method
+    public List<TipoProdutoModel> getByDescricao(String filtro) {
         List<TipoProdutoModel> list = new ArrayList<>();
         String sql = "SELECT * FROM tipoproduto WHERE UPPER(descricao) LIKE UPPER(?)";
         try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {

@@ -234,39 +234,48 @@
       import acertoEstoqueController from "../../assets/js/controllers/AcertoEstoqueController.js";
       import UIComponents from "../../assets/js/components/uiComponents.js";
 
-      document.addEventListener("DOMContentLoaded", () => {
-        if (UIComponents.InputMasks) {
-          UIComponents.InputMasks.inicializar();
-        }
+      // Wrap the DOMContentLoaded logic in an async IIFE or a function
+      // to ensure acertoEstoqueController is fully loaded before being accessed.
+      (async () => {
+        // Added async IIFE
+        document.addEventListener("DOMContentLoaded", () => {
+          if (UIComponents.InputMasks) {
+            UIComponents.InputMasks.inicializar();
+          }
 
-        acertoEstoqueController.inicializarFormulario();
+          // acertoEstoqueController is already an instance due to 'export default new AcertoEstoqueController();'
+          // No 'new' keyword needed here.
+          acertoEstoqueController.inicializarFormulario();
 
-        document
-          .getElementById("motivo")
-          .addEventListener("change", function () {
-            const outroContainer = document.getElementById(
-              "motivoOutroContainer"
-            );
-            const motivoOutroInput = document.getElementById("motivoOutro");
+          document
+            .getElementById("motivo")
+            .addEventListener("change", function () {
+              const outroContainer = document.getElementById(
+                "motivoOutroContainer"
+              );
+              const motivoOutroInput = document.getElementById("motivoOutro");
 
-            if (this.value === "Outro") {
-              outroContainer.classList.remove("d-none");
-              motivoOutroInput.setAttribute("required", "true");
-            } else {
-              outroContainer.classList.add("d-none");
-              motivoOutroInput.removeAttribute("required");
-              motivoOutroInput.value = "";
-              motivoOutroInput.classList.remove("is-invalid");
-              motivoOutroInput.classList.remove("is-valid");
-            }
-          });
+              // IMPORTANT: Clear validation state when changing selection
+              motivoOutroInput.classList.remove("is-invalid", "is-valid");
+              UIComponents.Validacao.limparErros("motivoOutro");
 
-        document
-          .getElementById("btnAdicionarItem")
-          .addEventListener("click", () => {
-            acertoEstoqueController.prepararModal();
-          });
-      });
+              if (this.value === "Outro") {
+                outroContainer.classList.remove("d-none");
+                motivoOutroInput.setAttribute("required", "true");
+              } else {
+                outroContainer.classList.add("d-none");
+                motivoOutroInput.removeAttribute("required");
+                motivoOutroInput.value = "";
+              }
+            });
+
+          document
+            .getElementById("btnAdicionarItem")
+            .addEventListener("click", () => {
+              acertoEstoqueController.prepararModal();
+            });
+        });
+      })();
     </script>
   </body>
 </html>

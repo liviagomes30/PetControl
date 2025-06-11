@@ -1,192 +1,30 @@
 import MedicamentoService from "../services/MedicamentoService.js";
-import MedicamentoModel from "../models/MedicamentoModel.js";
 import MensagensPadroes from "../utils/mensagensPadroes.js";
 import UIComponents from "../components/uiComponents.js";
+import MedicamentoModel from "../models/MedicamentoModel.js";
 
 class MedicamentoController {
   constructor() {
     this.service = new MedicamentoService();
     this.tipoProdutoValue = null;
     this.unidadeMedidaValue = null;
+    this.medicamentosAtivos = [];
+    this.medicamentosInativos = [];
+    this.inicializarListagem();
   }
 
-  async inicializarListagem() {
-    try {
-      UIComponents.Loading.mostrar("Carregando medicamentos...");
-      const medicamentos = await this.service.listarTodos();
-      this.renderizarTabela(medicamentos);
+  inicializarListagem() {
+    this.carregarMedicamentosAtivos();
+    this.carregarMedicamentosInativos();
+    this.vincularEventosFiltro();
 
-      // Verificar mensagem na URL
-      const urlParams = new URLSearchParams(window.location.search);
-      const message = urlParams.get("message");
-      if (message) {
-        UIComponents.Toast.sucesso(message);
-      }
-    } catch (error) {
-      console.error("Erro ao carregar medicamentos:", error);
-      UIComponents.ModalErro.mostrar(MensagensPadroes.ERRO.CARREGAMENTO);
-    } finally {
-      UIComponents.Loading.esconder();
-    }
-  }
-
-  renderizarTabela(medicamentos) {
-    const tabela = document.getElementById("tabela-medicamentos");
-    if (!tabela) return;
-
-    tabela.innerHTML = "";
-
-    if (medicamentos.length === 0) {
-      tabela.innerHTML = `
-      <tr>
-        <td colspan="9" class="text-center">Nenhum medicamento encontrado.</td>
-      </tr>
-    `;
-      return;
-    }
-
-    medicamentos.forEach((med) => {
-      if (!med.produto) {
-        console.warn("Produto não encontrado no medicamento:", med);
-        med.produto = {};
-      }
-
-      if (!med.medicamento) {
-        console.warn("Dados do medicamento não encontrados:", med);
-        med.medicamento = {};
-      }
-
-      const nome = med.produto.nome || "-";
-
-      const composicao = med.medicamento.composicao || "-";
-
-      const tipoProduto = med.tipoProduto?.descricao || "-";
-
-      const unidadeMedida = med.unidadeMedida?.descricao || "-";
-
-      const fabricante = med.produto.fabricante || "-";
-
-      let precoFormatado = "-";
-      if (med.produto.preco !== null && med.produto.preco !== undefined) {
-        try {
-          const preco = parseFloat(med.produto.preco);
-          if (!isNaN(preco)) {
-            precoFormatado = `R$ ${preco.toFixed(2).replace(".", ",")}`;
-          }
-        } catch (error) {
-          console.warn("Erro ao formatar preço:", error);
-        }
-      }
-
-      let dataCadastro = "-";
-      if (med.produto.dataCadastro) {
-        try {
-          const data = new Date(med.produto.dataCadastro);
-          if (!isNaN(data.getTime())) {
-            dataCadastro = data.toLocaleDateString("pt-BR");
-          }
-        } catch (error) {
-          console.warn("Erro ao formatar data:", error);
-        }
-      }
-
-      let estoqueMinimo = "-";
-      if (
-        med.produto.estoqueMinimo !== null &&
-        med.produto.estoqueMinimo !== undefined
-      ) {
-        try {
-          const estoque = parseInt(med.produto.estoqueMinimo);
-          if (!isNaN(estoque)) {
-            estoqueMinimo = estoque.toString();
-          }
-        } catch (error) {
-          console.warn("Erro ao formatar estoque mínimo:", error);
-        }
-      }
-
-      const idProduto = med.produto.idproduto || 0;
-
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-      <td>${nome}</td>
-      <td>${composicao}</td>
-      <td>${tipoProduto}</td>
-      <td>${unidadeMedida}</td>
-      <td>${fabricante}</td>
-      <td>${precoFormatado}</td>
-      <td>${estoqueMinimo}</td>
-      <td>${dataCadastro}</td>
-      <td>
-        <a href="editarMedicamento.html?id=${idProduto}" class="btn btn-sm btn-primary">Editar</a>
-        <button onclick="medicamentoController.confirmarExclusao(${idProduto})" class="btn btn-sm btn-outline-secondary">Excluir</button>
-      </td>
-    `;
-      tabela.appendChild(tr);
-    });
-  }
-
-  confirmarExclusao(id) {
-    UIComponents.ModalConfirmacao.mostrar(
-      "Confirmar exclusão",
-      MensagensPadroes.CONFIRMACAO.EXCLUSAO,
-      () => {
-        this.excluir(id).catch((error) => {
-          console.error("Erro ao excluir:", error);
-          UIComponents.Toast.erro(
-            MensagensPadroes.ERRO.EXCLUSAO +
-              (error.message ? `: ${error.message}` : "")
-          );
-        });
-      }
-    );
-  }
-
-  async excluir(id) {
-    try {
-      UIComponents.Loading.mostrar("Excluindo medicamento...");
-
-      try {
-        const resposta = await this.service.excluir(id);
-
-        if (resposta.sucesso) {
-          if (resposta.operacao === "excluido") {
-            UIComponents.Toast.sucesso(MensagensPadroes.SUCESSO.EXCLUSAO);
-          } else if (resposta.operacao === "desativado") {
-            UIComponents.Toast.sucesso(
-              "Medicamento desativado com sucesso. Este item está sendo utilizado no sistema e não pode ser excluído completamente."
-            );
-          }
-
-          await this.inicializarListagem();
-          return resposta;
-        } else {
-          UIComponents.Toast.erro(
-            resposta.mensagem || MensagensPadroes.ERRO.EXCLUSAO
-          );
-          return resposta;
-        }
-      } catch (error) {
-        if (
-          error.message &&
-          error.message.includes("Cannot commit when autoCommit is enabled")
-        ) {
-          UIComponents.Toast.sucesso(MensagensPadroes.SUCESSO.EXCLUSAO);
-          setTimeout(() => this.inicializarListagem(), 500);
-          return { sucesso: true };
-        } else {
-          throw error;
-        }
-      }
-    } catch (error) {
-      console.error("Erro ao processar:", error);
-      UIComponents.Toast.erro(
-        MensagensPadroes.ERRO.EXCLUSAO +
-          (error.message ? `: ${error.message}` : "")
-      );
-      throw error;
-    } finally {
-      UIComponents.Loading.esconder();
+    const urlParams = new URLSearchParams(window.location.search);
+    const message = urlParams.get("message");
+    if (message) {
+      UIComponents.Toast.sucesso(message);
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete("message");
+      window.history.replaceState({}, document.title, newUrl.toString());
     }
   }
 
@@ -230,42 +68,250 @@ class MedicamentoController {
     }
   }
 
-  configurarMascarasCampos() {
-    const campoPreco = document.getElementById("preco");
-    if (campoPreco) {
-      campoPreco.setAttribute("data-mask", "money");
-      campoPreco.setAttribute("type", "text");
-      campoPreco.setAttribute("placeholder", "0,00");
-    }
+  async carregarSelectsTipoUnidade() {
+    try {
+      const tipos = await this.service.listarTiposProduto();
+      const unidades = await this.service.listarUnidadesMedida();
+      const selectTipo = document.getElementById("tipoProduto");
+      const selectUnidade = document.getElementById("unidadeMedida");
 
-    const campoEstoque = document.getElementById("estoqueMinimo");
-    if (campoEstoque) {
-      campoEstoque.setAttribute("data-mask", "number");
-      campoEstoque.setAttribute("placeholder", "0");
-    }
+      if (selectTipo) {
+        tipos.forEach((tipo) => {
+          const option = document.createElement("option");
+          option.value = tipo.idtipoproduto;
+          option.textContent = tipo.descricao;
+          selectTipo.appendChild(option);
+        });
+      }
 
-    const campoNome = document.getElementById("nome");
-    if (campoNome) {
-      campoNome.setAttribute("data-max-length", "100");
-      campoNome.setAttribute("data-show-counter", "true");
+      if (selectUnidade) {
+        unidades.forEach((unidade) => {
+          const option = document.createElement("option");
+          option.value = unidade.idunidademedida;
+          option.textContent = unidade.descricao;
+          selectUnidade.appendChild(option);
+        });
+      }
+    } catch (error) {
+      throw new Error("Falha ao carregar tipos e unidades: " + error.message);
     }
-
-    const campoComposicao = document.getElementById("composicao");
-    if (campoComposicao) {
-      campoComposicao.setAttribute("data-max-length", "200");
-      campoComposicao.setAttribute("data-show-counter", "true");
-    }
-
-    const campoFabricante = document.getElementById("fabricante");
-    if (campoFabricante) {
-      campoFabricante.setAttribute("data-max-length", "100");
-    }
-
-    UIComponents.InputMasks.inicializar();
   }
 
-  limparMensagensErro() {
-    UIComponents.Validacao.limparErros("formMedicamento");
+  async carregarMedicamento(id) {
+    try {
+      UIComponents.Loading.mostrar("Carregando medicamento...");
+      const data = await this.service.buscarPorId(id);
+      if (!data || !data.produto || !data.medicamento) {
+        throw new Error("Dados do medicamento não encontrados.");
+      }
+
+      document.getElementById("idproduto").value = data.produto.idproduto;
+      document.getElementById("nome").value = data.produto.nome || "";
+      document.getElementById("composicao").value =
+        data.medicamento.composicao || "";
+      document.getElementById("fabricante").value =
+        data.produto.fabricante || "";
+      document.getElementById("tipoProduto").value = data.produto.idtipoproduto;
+      document.getElementById("unidadeMedida").value =
+        data.produto.idunidademedida;
+
+      const precoField = document.getElementById("preco");
+      if (precoField) {
+        precoField.value = data.produto.preco
+          ? UIComponents.InputMasks.formatarValorMonetario(data.produto.preco)
+          : "";
+      }
+
+      const estoqueField = document.getElementById("estoqueMinimo");
+      if (estoqueField) {
+        estoqueField.value = data.produto.estoqueMinimo || "";
+      }
+    } catch (error) {
+      throw new Error(
+        "Não foi possível carregar os dados do medicamento: " + error.message
+      );
+    }
+  }
+
+  vincularEventosFiltro() {
+    const searchInput = document.getElementById("searchInput");
+    const searchButton = document.getElementById("searchButton");
+    const clearSearchButton = document.getElementById("clearSearchButton");
+
+    if (searchButton)
+      searchButton.addEventListener("click", () =>
+        this.filtrarMedicamentosAtivos()
+      );
+    if (searchInput)
+      searchInput.addEventListener("keyup", (e) => {
+        if (e.key === "Enter") this.filtrarMedicamentosAtivos();
+      });
+    if (clearSearchButton)
+      clearSearchButton.addEventListener("click", () => {
+        searchInput.value = "";
+        this.renderizarTabelaAtivos(this.medicamentosAtivos);
+      });
+  }
+
+  async carregarMedicamentosAtivos() {
+    try {
+      UIComponents.Loading.mostrar("Carregando medicamentos ativos...");
+      this.medicamentosAtivos = await this.service.listarTodos();
+      this.renderizarTabelaAtivos(this.medicamentosAtivos);
+    } catch (error) {
+      UIComponents.ModalErro.mostrar(
+        "Erro ao carregar medicamentos ativos: " + error.message
+      );
+    } finally {
+      UIComponents.Loading.esconder();
+    }
+  }
+
+  async carregarMedicamentosInativos() {
+    try {
+      UIComponents.Loading.mostrar("Carregando medicamentos inativos...");
+      this.medicamentosInativos = await this.service.listarTodosInativos();
+      this.renderizarTabelaInativos(this.medicamentosInativos);
+    } catch (error) {
+      UIComponents.ModalErro.mostrar(
+        "Erro ao carregar medicamentos inativos: " + error.message
+      );
+    } finally {
+      UIComponents.Loading.esconder();
+    }
+  }
+
+  renderizarTabelaAtivos(medicamentos) {
+    const tabela = document.getElementById("tabela-medicamentos");
+    if (!tabela) return;
+    tabela.innerHTML = "";
+    if (medicamentos.length === 0) {
+      tabela.innerHTML = `<tr><td colspan="6" class="text-center">Nenhum medicamento ativo encontrado.</td></tr>`;
+      return;
+    }
+    medicamentos.forEach((med) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${med.produto.nome || "-"}</td>
+        <td>${med.medicamento.composicao || "-"}</td>
+        <td>${med.tipoProduto?.descricao || "-"}</td>
+        <td>${med.unidadeMedida?.descricao || "-"}</td>
+        <td>${med.produto.fabricante || "-"}</td>
+        <td>
+          <a href="editarMedicamento.html?id=${
+            med.produto.idproduto
+          }" class="btn btn-sm btn-primary" title="Editar"><i class="bi bi-pencil-fill"></i></a>
+          <button onclick="medicamentoController.confirmarExclusao(${
+            med.produto.idproduto
+          })" class="btn btn-sm btn-outline-danger" title="Desativar"><i class="bi bi-trash-fill"></i></button>
+        </td>`;
+      tabela.appendChild(tr);
+    });
+  }
+
+  renderizarTabelaInativos(medicamentos) {
+    const tabela = document.getElementById("tabela-medicamentos-inativos");
+    if (!tabela) return;
+    tabela.innerHTML = "";
+    if (medicamentos.length === 0) {
+      tabela.innerHTML = `<tr><td colspan="4" class="text-center">Nenhum medicamento inativo encontrado.</td></tr>`;
+      return;
+    }
+    medicamentos.forEach((med) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+            <td>${med.produto.nome || "-"}</td>
+            <td>${med.medicamento.composicao || "-"}</td>
+            <td>${med.tipoProduto?.descricao || "-"}</td>
+            <td>
+                <button onclick="medicamentoController.confirmarReativacao(${
+                  med.produto.idproduto
+                })" class="btn btn-sm btn-success" title="Reativar"><i class="bi bi-arrow-counterclockwise"></i> Reativar</button>
+            </td>`;
+      tabela.appendChild(tr);
+    });
+  }
+
+  filtrarMedicamentosAtivos() {
+    const termo = document
+      .getElementById("searchInput")
+      .value.trim()
+      .toLowerCase();
+    const filtro = document.getElementById("filterSelect").value;
+
+    if (!termo) {
+      this.renderizarTabelaAtivos(this.medicamentosAtivos);
+      return;
+    }
+
+    const filtrados = this.medicamentosAtivos.filter((med) => {
+      switch (filtro) {
+        case "1":
+          return med.produto.nome.toLowerCase().includes(termo);
+        case "2":
+          return med.medicamento.composicao.toLowerCase().includes(termo);
+        case "3":
+          return med.tipoProduto.descricao.toLowerCase().includes(termo);
+        case "4":
+          return med.produto.fabricante.toLowerCase().includes(termo);
+        default:
+          return true;
+      }
+    });
+    this.renderizarTabelaAtivos(filtrados);
+  }
+
+  confirmarExclusao(id) {
+    UIComponents.ModalConfirmacao.mostrar(
+      "Confirmar Desativação",
+      "Tem certeza que deseja desativar este medicamento? Ele não poderá ser usado em novas operações, mas o histórico será mantido.",
+      () => this.desativar(id)
+    );
+  }
+
+  async desativar(id) {
+    UIComponents.Loading.mostrar("Desativando...");
+    try {
+      const resposta = await this.service.excluir(id);
+      if (resposta.sucesso) {
+        UIComponents.Toast.sucesso(
+          resposta.mensagem || "Medicamento desativado com sucesso."
+        );
+        this.inicializarListagem(); // Recarrega ambas as listas
+      } else {
+        UIComponents.Toast.erro(
+          resposta.mensagem || MensagensPadroes.ERRO.EXCLUSAO
+        );
+      }
+    } catch (error) {
+      UIComponents.ModalErro.mostrar(
+        MensagensPadroes.ERRO.EXCLUSAO +
+          (error.message ? `: ${error.message}` : "")
+      );
+    } finally {
+      UIComponents.Loading.esconder();
+    }
+  }
+
+  confirmarReativacao(id) {
+    UIComponents.ModalConfirmacao.mostrar(
+      "Confirmar Reativação",
+      "Deseja reativar este medicamento? Ele voltará a aparecer nas listas de seleção.",
+      () => this.reativar(id)
+    );
+  }
+
+  async reativar(id) {
+    UIComponents.Loading.mostrar("Reativando...");
+    try {
+      await this.service.reativar(id);
+      UIComponents.Toast.sucesso("Medicamento reativado com sucesso!");
+      this.inicializarListagem(); // Recarrega ambas as listas
+    } catch (error) {
+      UIComponents.ModalErro.mostrar("Erro ao reativar: " + error.message);
+    } finally {
+      UIComponents.Loading.esconder();
+    }
   }
 
   async carregarSelectsTipoUnidade() {
@@ -315,6 +361,44 @@ class MedicamentoController {
           error.message
       );
     }
+  }
+
+  configurarMascarasCampos() {
+    const campoPreco = document.getElementById("preco");
+    if (campoPreco) {
+      campoPreco.setAttribute("data-mask", "money");
+      campoPreco.setAttribute("type", "text");
+      campoPreco.setAttribute("placeholder", "0,00");
+    }
+
+    const campoEstoque = document.getElementById("estoqueMinimo");
+    if (campoEstoque) {
+      campoEstoque.setAttribute("data-mask", "number");
+      campoEstoque.setAttribute("placeholder", "0");
+    }
+
+    const campoNome = document.getElementById("nome");
+    if (campoNome) {
+      campoNome.setAttribute("data-max-length", "100");
+      campoNome.setAttribute("data-show-counter", "true");
+    }
+
+    const campoComposicao = document.getElementById("composicao");
+    if (campoComposicao) {
+      campoComposicao.setAttribute("data-max-length", "200");
+      campoComposicao.setAttribute("data-show-counter", "true");
+    }
+
+    const campoFabricante = document.getElementById("fabricante");
+    if (campoFabricante) {
+      campoFabricante.setAttribute("data-max-length", "100");
+    }
+
+    UIComponents.InputMasks.inicializar();
+  }
+
+  limparMensagensErro() {
+    UIComponents.Validacao.limparErros("formMedicamento");
   }
 
   async carregarMedicamento(id) {
@@ -588,7 +672,5 @@ class MedicamentoController {
 }
 
 const medicamentoController = new MedicamentoController();
-window.medicamentoController = medicamentoController;
-
+window.medicamentoController = medicamentoController; // Expondo para o HTML
 export { medicamentoController };
-export default MedicamentoController;

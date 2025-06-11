@@ -1,6 +1,5 @@
 package salvacao.petcontrol.dao;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import salvacao.petcontrol.config.SingletonDB;
 import salvacao.petcontrol.dto.ProdutoCompletoDTO;
@@ -15,8 +14,33 @@ import java.util.List;
 
 @Repository
 public class ProdutoDAO {
-    @Autowired
-    private EstoqueModel estoqueModel = new EstoqueModel();
+
+    private ProdutoCompletoDTO buildDTOFromResultSet(ResultSet rs) throws SQLException {
+        ProdutoModel produto = new ProdutoModel(
+                rs.getInt("idproduto"),
+                rs.getString("nome"),
+                rs.getInt("idtipoproduto"),
+                rs.getInt("idunidademedida"),
+                rs.getString("fabricante"),
+                rs.getBigDecimal("preco"),
+                rs.getInt("estoque_minimo"),
+                rs.getDate("data_cadastro")
+        );
+        produto.setAtivo(rs.getBoolean("ativo"));
+
+        TipoProdutoModel tipoProduto = new TipoProdutoModel(
+                rs.getInt("idtipoproduto"),
+                rs.getString("tipo_descricao")
+        );
+
+        UnidadeMedidaModel unidadeMedida = new UnidadeMedidaModel(
+                rs.getInt("idunidademedida"),
+                rs.getString("unidade_descricao"),
+                rs.getString("unidade_sigla")
+        );
+
+        return new ProdutoCompletoDTO(produto, tipoProduto, unidadeMedida);
+    }
 
     public ProdutoModel getId(Integer id) {
         ProdutoModel produto = null;
@@ -92,59 +116,7 @@ public class ProdutoDAO {
         return dto;
     }
 
-    public ProdutoModel gravar(ProdutoModel produto) {
-        Connection conn = null;
-        boolean autoCommitOriginal = true;
-        try {
-            conn = SingletonDB.getConexao().getConnection();
-            autoCommitOriginal = conn.getAutoCommit();
-            conn.setAutoCommit(false);
-
-            ProdutoModel novoProduto = gravarInterno(produto, conn);
-
-            if (novoProduto != null && novoProduto.getIdproduto() != null) {
-                if (!estoqueModel.getEstDAO().inicializarEstoqueComConexao(novoProduto.getIdproduto(), conn)) {
-                    throw new SQLException("Erro ao gravar estoque inicial");
-                }
-                conn.commit();
-                return novoProduto;
-            } else {
-                conn.rollback();
-                return null;
-            }
-        } catch (SQLException e) {
-            try {
-                if (conn != null) {
-                    conn.rollback();
-                }
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
-            throw new RuntimeException("Erro ao adicionar produto e inicializar estoque: " + e.getMessage(), e);
-        } finally {
-            try {
-                if (conn != null) {
-                    conn.setAutoCommit(autoCommitOriginal);
-                }
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
-        }
-    }
-
-    public ProdutoModel gravarComConexao(ProdutoModel produto, Connection conn) throws SQLException {
-        ProdutoModel novoProduto = gravarInterno(produto, conn);
-
-        if (novoProduto != null && novoProduto.getIdproduto() != null) {
-            if (!estoqueModel.getEstDAO().inicializarEstoqueComConexao(novoProduto.getIdproduto(), conn)) {
-                throw new SQLException("Erro ao gravar estoque inicial");
-            }
-            return novoProduto;
-        }
-        return null;
-    }
-
-    private ProdutoModel gravarInterno(ProdutoModel produto, Connection conn) throws SQLException {
+    public ProdutoModel gravar(ProdutoModel produto, Connection conn) throws SQLException {
         String sql = "INSERT INTO produto (nome, idtipoproduto, idunidademedida, fabricante, preco, estoque_minimo, data_cadastro, ativo) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING idproduto";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -215,121 +187,62 @@ public class ProdutoDAO {
         }
     }
 
-    public boolean apagar(Integer id) {
-        Connection conn = SingletonDB.getConexao().getConnection();
-        boolean autoCommitOriginal = true;
-        try {
-            autoCommitOriginal = conn.getAutoCommit();
-            conn.setAutoCommit(false);
+    public boolean apagar(Integer id, Connection conn) throws SQLException {
+        System.out.println("Iniciando exclusão do produto ID na DAO: " + id);
 
-            System.out.println("Iniciando exclusão do produto ID: " + id);
+        String sqlMedicamento = "DELETE FROM medicamento WHERE idproduto = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sqlMedicamento)) {
+            stmt.setInt(1, id);
+            int excluidos = stmt.executeUpdate();
+            System.out.println("Registros de medicamento excluídos: " + excluidos);
+        }
 
-            String sqlMedicamento = "DELETE FROM medicamento WHERE idproduto = ?";
-            try (PreparedStatement stmt = conn.prepareStatement(sqlMedicamento)) {
-                stmt.setInt(1, id);
-                int excluidos = stmt.executeUpdate();
-                System.out.println("Registros de medicamento excluídos: " + excluidos);
-            }
+        String sqlVacina = "DELETE FROM vacina WHERE idproduto = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sqlVacina)) {
+            stmt.setInt(1, id);
+            int excluidos = stmt.executeUpdate();
+            System.out.println("Registros de vacina excluídos: " + excluidos);
+        }
 
-            String sqlVacina = "DELETE FROM vacina WHERE idproduto = ?";
-            try (PreparedStatement stmt = conn.prepareStatement(sqlVacina)) {
-                stmt.setInt(1, id);
-                int excluidos = stmt.executeUpdate();
-                System.out.println("Registros de vacina excluídos: " + excluidos);
-            }
+        String sqlEstoque = "DELETE FROM estoque WHERE idproduto = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sqlEstoque)) {
+            stmt.setInt(1, id);
+            int excluidos = stmt.executeUpdate();
+            System.out.println("Registros de estoque excluídos: " + excluidos);
+        }
 
-            String sqlEstoque = "DELETE FROM estoque WHERE idproduto = ?";
-            try (PreparedStatement stmt = conn.prepareStatement(sqlEstoque)) {
-                stmt.setInt(1, id);
-                int excluidos = stmt.executeUpdate();
-                System.out.println("Registros de estoque excluídos: " + excluidos);
-            }
+        String sqlProduto = "DELETE FROM produto WHERE idproduto = ?";
+        int produtoExcluido = 0;
+        try (PreparedStatement stmt = conn.prepareStatement(sqlProduto)) {
+            stmt.setInt(1, id);
+            produtoExcluido = stmt.executeUpdate();
+            System.out.println("Produto excluído: " + (produtoExcluido > 0 ? "Sim" : "Não"));
 
-            String sqlProduto = "DELETE FROM produto WHERE idproduto = ?";
-            int produtoExcluido = 0;
-            try (PreparedStatement stmt = conn.prepareStatement(sqlProduto)) {
-                stmt.setInt(1, id);
-                produtoExcluido = stmt.executeUpdate();
-                System.out.println("Produto excluído: " + (produtoExcluido > 0 ? "Sim" : "Não"));
-
-                if (produtoExcluido <= 0) {
-                    System.out.println("Produto não encontrado, realizando rollback");
-                    conn.rollback();
-                    return false;
-                }
-            }
-
-            System.out.println("Exclusão concluída com sucesso, realizando commit");
-            conn.commit();
-            return true;
-        } catch (SQLException e) {
-            try {
-                if (conn != null) {
-                    System.out.println("Erro durante exclusão: " + e.getMessage() + ", realizando rollback");
-                    conn.rollback();
-                }
-            } catch (SQLException ex) {
-                System.out.println("Erro durante rollback: " + ex.getMessage());
-                ex.printStackTrace();
-            }
-            throw new RuntimeException("Erro ao apagar produto: " + e.getMessage(), e);
-        } finally {
-            try {
-                if (conn != null) {
-                    conn.setAutoCommit(autoCommitOriginal);
-                }
-            } catch (SQLException ex) {
-                ex.printStackTrace();
+            if (produtoExcluido <= 0) {
+                return false;
             }
         }
+        return true;
     }
 
 
     public List<ProdutoCompletoDTO> getAllProdutos() {
         List<ProdutoCompletoDTO> list = new ArrayList<>();
-
-        String sql = "SELECT p.idproduto, p.nome, p.idtipoproduto, p.idunidademedida, " +
-                "p.fabricante, p.preco, p.estoque_minimo, p.data_cadastro, " +
-                "t.descricao AS tipo_descricao, " +
-                "u.descricao AS unidade_descricao, u.sigla AS unidade_sigla " +
+        String sql = "SELECT p.*, t.descricao AS tipo_descricao, u.descricao AS unidade_descricao, u.sigla AS unidade_sigla " +
                 "FROM produto p " +
                 "JOIN tipoproduto t ON p.idtipoproduto = t.idtipoproduto " +
                 "JOIN unidadedemedida u ON p.idunidademedida = u.idunidademedida " +
+                "WHERE p.ativo = true " +
                 "ORDER BY p.nome";
 
-        try {
-            ResultSet rs = SingletonDB.getConexao().consultar(sql);
-
+        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                ProdutoModel produto = new ProdutoModel(
-                        rs.getInt("idproduto"),
-                        rs.getString("nome"),
-                        rs.getInt("idtipoproduto"),
-                        rs.getInt("idunidademedida"),
-                        rs.getString("fabricante"),
-                        rs.getBigDecimal("preco"),
-                        rs.getInt("estoque_minimo"),
-                        rs.getDate("data_cadastro")
-                );
-
-                TipoProdutoModel tipoProduto = new TipoProdutoModel(
-                        rs.getInt("idtipoproduto"),
-                        rs.getString("tipo_descricao")
-                );
-
-                UnidadeMedidaModel unidadeMedida = new UnidadeMedidaModel(
-                        rs.getInt("idunidademedida"),
-                        rs.getString("unidade_descricao"),
-                        rs.getString("unidade_sigla")
-                );
-
-                ProdutoCompletoDTO dto = new ProdutoCompletoDTO(produto, tipoProduto, unidadeMedida);
-                list.add(dto);
+                list.add(buildDTOFromResultSet(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
         return list;
     }
 
@@ -546,13 +459,12 @@ public class ProdutoDAO {
                     ResultSet rs2 = stmt2.executeQuery();
                     if (rs2.next() && rs2.getInt(1) > 0) {
                         System.out.println("Produto é medicamento e possui " + rs2.getInt(1) + " medicações associadas");
-                        return false; // Não pode ser excluído, pois está em medicações
+                        return false;
                     }
                 }
             }
         }
 
-        // Verificar se o produto é uma vacina
         String sqlVacina = "SELECT COUNT(*) FROM vacina WHERE idproduto = ?";
         try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sqlVacina)) {
             stmt.setInt(1, id);
@@ -564,7 +476,7 @@ public class ProdutoDAO {
                     ResultSet rs2 = stmt2.executeQuery();
                     if (rs2.next() && rs2.getInt(1) > 0) {
                         System.out.println("Produto é vacina e possui " + rs2.getInt(1) + " vacinações associadas");
-                        return false; // Não pode ser excluído, pois está em vacinações
+                        return false;
                     }
                 }
 
@@ -574,7 +486,7 @@ public class ProdutoDAO {
                     ResultSet rs2 = stmt2.executeQuery();
                     if (rs2.next() && rs2.getInt(1) > 0) {
                         System.out.println("Produto é vacina e possui " + rs2.getInt(1) + " agendamentos associados");
-                        return false; // Não pode ser excluído, pois está em agendamentos
+                        return false;
                     }
                 }
             }
@@ -586,7 +498,7 @@ public class ProdutoDAO {
             ResultSet rs = stmt.executeQuery();
             if (rs.next() && rs.getInt(1) > 0) {
                 System.out.println("Produto possui " + rs.getInt(1) + " itens de movimentação associados");
-                return false; // Não pode ser excluído, pois está em movimentações
+                return false;
             }
         }
 
@@ -596,7 +508,7 @@ public class ProdutoDAO {
             ResultSet rs = stmt.executeQuery();
             if (rs.next() && rs.getInt(1) > 0) {
                 System.out.println("Produto possui " + rs.getInt(1) + " itens de acerto de estoque associados");
-                return false; // Não pode ser excluído, pois está em acertos de estoque
+                return false;
             }
         }
 

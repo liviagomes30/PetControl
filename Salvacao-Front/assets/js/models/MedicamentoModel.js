@@ -41,7 +41,6 @@ class MedicamentoModel {
       erros.unidadeMedida = "Campo obrigatório não preenchido";
     }
 
-    // Validações para os novos campos (apenas se foram preenchidos)
     if (this.produto.preco !== null && isNaN(parseFloat(this.produto.preco))) {
       erros.preco = "Preço deve ser um valor numérico";
     }

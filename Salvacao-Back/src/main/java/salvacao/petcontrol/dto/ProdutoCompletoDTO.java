@@ -4,8 +4,6 @@ import salvacao.petcontrol.model.ProdutoModel;
 import salvacao.petcontrol.model.TipoProdutoModel;
 import salvacao.petcontrol.model.UnidadeMedidaModel;
 
-import java.math.BigDecimal;
-import java.util.Date;
 
 public class ProdutoCompletoDTO {
     private ProdutoModel produto;

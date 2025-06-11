@@ -6,7 +6,6 @@ class TipoProdutoService {
 
   async listarTodos() {
     try {
-      // Corrigido para usar o endpoint correto
       const response = await fetch(`${this.baseUrl}${this.endpoint}`);
       if (!response.ok) {
         throw new Error(`Erro ${response.status}: ${await response.text()}`);
@@ -33,7 +32,6 @@ class TipoProdutoService {
 
   async cadastrar(tipoProdutoData) {
     try {
-      // Nota: Este endpoint /cadastro pode precisar ser adaptado conforme backend
       const response = await fetch(`${this.baseUrl}${this.endpoint}`, {
         method: "POST",
         headers: {
@@ -96,7 +94,6 @@ class TipoProdutoService {
 
   async buscarPorTermo(termo) {
     try {
-      // Nota: Este endpoint pode não existir no backend atual
       const response = await fetch(
         `${this.baseUrl}${this.endpoint}/buscar?termo=${encodeURIComponent(
           termo
@@ -104,7 +101,6 @@ class TipoProdutoService {
       );
       if (!response.ok) {
         if (response.status === 404) {
-          // Se o endpoint não existe, realizar filtragem no cliente
           const todos = await this.listarTodos();
           return todos.filter((t) =>
             t.descricao.toLowerCase().includes(termo.toLowerCase())
