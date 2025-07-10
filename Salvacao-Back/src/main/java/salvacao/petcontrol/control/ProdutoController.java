@@ -28,6 +28,15 @@ public class ProdutoController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Nenhum produto encontrado");
     }
 
+    @GetMapping("/inativos")
+    public ResponseEntity<Object> getAllInactive() {
+        List<ProdutoCompletoDTO> produtos = produtoService.getAllInactive();
+        if (produtos != null && !produtos.isEmpty()) {
+            return ResponseEntity.ok(produtos);
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Nenhum produto inativo encontrado");
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Object> getId(@PathVariable Integer id) {
         ProdutoCompletoDTO produto = produtoService.getId(id); // Updated method call

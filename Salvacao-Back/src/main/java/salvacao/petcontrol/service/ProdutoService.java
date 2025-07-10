@@ -210,4 +210,8 @@ public class ProdutoService {
     public List<ProdutoCompletoDTO> getByTipoDescricao(String filtro) {
         return produtoModel.getProdDAO().getByTipoDescricao(filtro);
     }
+
+    public List<ProdutoCompletoDTO> getAllInactive() {
+        return produtoModel.getProdDAO().getAllInactiveProdutos();
+    }
 }

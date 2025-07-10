@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PetControl - Cadastrar Produto</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/css/style.css" />
+    <script src="../../assets/js/services/authService.js"></script>
+    <script src="../../assets/js/components/sidebar.js" defer></script>
+  </head>
+  <body>
+    <div class="container py-4">
+      <div
+        class="header d-flex justify-content-between align-items-center mb-4"
+      >
+        <h1 class="h3" style="color: var(--vermelho-escuro)">
+          Cadastrar Novo Produto
+        </h1>
+      </div>
+
+      <div class="bg-white shadow rounded p-4">
+        <form id="form-novo-produto" class="needs-validation" novalidate>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="nome" class="form-label">Nome do Produto</label>
+              <input type="text" class="form-control" id="nome" required />
+              <div class="invalid-feedback">
+                O nome do produto é obrigatório.
+              </div>
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label for="fabricante" class="form-label">Fabricante</label>
+              <input
+                type="text"
+                class="form-control"
+                id="fabricante"
+                required
+              />
+              <div class="invalid-feedback">O fabricante é obrigatório.</div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="tipoProduto" class="form-label"
+                >Tipo de Produto</label
+              >
+              <select class="form-select" id="tipoProduto" required>
+                <option value="" disabled selected>Selecione um tipo...</option>
+              </select>
+              <div class="invalid-feedback">
+                Por favor, selecione um tipo de produto.
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="unidadeMedida" class="form-label"
+                >Unidade de Medida</label
+              >
+              <select class="form-select" id="unidadeMedida" required>
+                <option value="" disabled selected>
+                  Selecione uma unidade...
+                </option>
+              </select>
+              <div class="invalid-feedback">
+                Por favor, selecione uma unidade de medida.
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="descricao" class="form-label">Descrição</label>
+            <textarea class="form-control" id="descricao" rows="3"></textarea>
+          </div>
+
+          <div class="mt-4 d-flex justify-content-end">
+            <a href="listar.html" class="btn btn-secondary me-2">Cancelar</a>
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-check-circle me-1"></i> Salvar Produto
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay">
+      <div class="spinner" role="status">
+        <span class="visually-hidden">Carregando...</span>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script
+      type="module"
+      src="../../assets/js/controllers/ProdutoController.js"
+    ></script>
+  </body>
+</html>

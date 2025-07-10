@@ -561,4 +561,24 @@ public class ProdutoDAO {
             return false;
         }
     }
+
+    public List<ProdutoCompletoDTO> getAllInactiveProdutos() {
+        List<ProdutoCompletoDTO> list = new ArrayList<>();
+        String sql = "SELECT p.*, t.descricao AS tipo_descricao, u.descricao AS unidade_descricao, u.sigla AS unidade_sigla " +
+                "FROM produto p " +
+                "JOIN tipoproduto t ON p.idtipoproduto = t.idtipoproduto " +
+                "JOIN unidadedemedida u ON p.idunidademedida = u.idunidademedida " +
+                "WHERE p.ativo = false " + // A principal mudança está aqui
+                "ORDER BY p.nome";
+
+        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                list.add(buildDTOFromResultSet(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
 }

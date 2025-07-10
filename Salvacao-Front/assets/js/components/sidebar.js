@@ -1,6 +1,9 @@
 // sidebar.js
 document.addEventListener("DOMContentLoaded", function () {
-  if (!window.location.pathname.includes('login.html') && !AuthService.isAuthenticated()) {
+  if (
+    !window.location.pathname.includes("login.html") &&
+    !AuthService.isAuthenticated()
+  ) {
     AuthService.requireAuth();
     return;
   }
@@ -16,10 +19,12 @@ document.addEventListener("DOMContentLoaded", function () {
       "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css";
     document.head.appendChild(iconLink);
   }
-  
+
   const currentUser = AuthService.getCurrentUser();
-  const userName = currentUser ? (currentUser.pessoa?.nome || currentUser.usuario?.login || 'Usuário') : 'Usuário';
-  
+  const userName = currentUser
+    ? currentUser.pessoa?.nome || currentUser.usuario?.login || "Usuário"
+    : "Usuário";
+
   const sidebar = document.createElement("div");
   sidebar.className = "sidebar";
 
@@ -128,7 +133,6 @@ document.addEventListener("DOMContentLoaded", function () {
       <ul id="produtosSubmenu" class="sidebar-submenu">
         <a href="${getBasePath()}pages/produto/listar.html" class="sidebar-submenu-item" id="submenu-produtos-listar">Lista de Produtos</a>
         <a href="${getBasePath()}pages/produto/novo.html" class="sidebar-submenu-item" id="submenu-produtos-novo">Novo Produto</a>
-        <a href="${getBasePath()}pages/produto/categorias.html" class="sidebar-submenu-item" id="submenu-produtos-categorias">Lista de Categorias</a>
         <a href="${getBasePath()}pages/produto/tipo/listarTipos.html" class="sidebar-submenu-item" id="submenu-produtos-tipos">Tipos de Produto</a>
         <a href="${getBasePath()}pages/produto/unidade/listarUnidades.html" class="sidebar-submenu-item" id="submenu-produtos-unidades">Unidades de Medida</a>
         <a href="${getBasePath()}pages/produto/entrada/listarRegistros.html" class="sidebar-submenu-item" id="submenu-produtos-entrada">Entrada Produtos</a>
@@ -223,13 +227,18 @@ function markActiveMenuItem() {
       document
         .getElementById("submenu-receituario-listar")
         .classList.add("active");
-    } else if (currentPath.includes("cadastrarReceituario.html") || currentPath.includes("editarReceituario.html")) {
+    } else if (
+      currentPath.includes("cadastrarReceituario.html") ||
+      currentPath.includes("editarReceituario.html")
+    ) {
       document
         .getElementById("submenu-receituario-novo")
         .classList.add("active");
     }
 
-    const arrow = document.querySelector("#menu-receituario .sidebar-item-arrow");
+    const arrow = document.querySelector(
+      "#menu-receituario .sidebar-item-arrow"
+    );
     arrow.classList.remove("bi-chevron-down");
     arrow.classList.add("bi-chevron-up");
   } else if (currentPath.includes("/vacinacao/")) {
@@ -288,5 +297,5 @@ function getBasePath() {
 }
 
 function handleLogout() {
-    AuthService.logout();
+  AuthService.logout();
 }
