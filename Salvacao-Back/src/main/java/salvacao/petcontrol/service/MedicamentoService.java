@@ -42,6 +42,10 @@ public class MedicamentoService {
     }
 
     public MedicamentoModel gravar(MedicamentoCompletoDTO dto) throws Exception {
+        System.out.println("=== MÉTODO GRAVAR DO MEDICAMENTO SERVICE CHAMADO ===");
+        System.out.println("Thread: " + Thread.currentThread().getName());
+        System.out.println("Timestamp: " + System.currentTimeMillis());
+
         if (dto.getProduto() == null || dto.getMedicamento() == null) {
             throw new Exception("Dados do medicamento incompletos");
         }
@@ -61,23 +65,29 @@ public class MedicamentoService {
             throw new Exception("Unidade de medida não encontrada");
         }
 
+        if (dto.getProduto().getEstoqueMinimo() == null) {
+            dto.getProduto().setEstoqueMinimo(0);
+        }
+
         Connection conn = null;
         boolean autoCommitOriginal = true;
-        MedicamentoModel novoMedicamento = null;
         try {
             conn = SingletonDB.getConexao().getConnection();
             autoCommitOriginal = conn.getAutoCommit();
             conn.setAutoCommit(false);
 
-            novoMedicamento = medicamentoModel.getMedDAO().gravar(dto.getMedicamento(), dto.getProduto(), conn);
+            // Grava apenas uma vez o produto
+            ProdutoModel novoProduto = produtoModel.getProdDAO().gravar(dto.getProduto(), conn);
+            if (novoProduto == null || novoProduto.getIdproduto() == null) {
+                throw new SQLException("Erro ao gravar produto");
+            }
 
+            // Usa o novo método que só grava o medicamento
+            dto.getMedicamento().setIdproduto(novoProduto.getIdproduto());
+            MedicamentoModel novoMedicamento = medicamentoModel.getMedDAO().gravarSomenteRelacionamento(dto.getMedicamento(), conn);
 
-            if (novoMedicamento != null && novoMedicamento.getIdproduto() != null) {
-                if (!estoqueModel.getEstDAO().inicializarEstoqueComConexao(novoMedicamento.getIdproduto(), conn)) {
-                    throw new SQLException("Erro ao inicializar estoque para o novo medicamento.");
-                }
-            } else {
-                throw new SQLException("ID do produto não obtido após a gravação do medicamento.");
+            if (!estoqueModel.getEstDAO().inicializarEstoqueComConexao(novoProduto.getIdproduto(), conn)) {
+                throw new SQLException("Erro ao inicializar estoque");
             }
 
             conn.commit();
@@ -90,7 +100,7 @@ public class MedicamentoService {
                     ex.printStackTrace();
                 }
             }
-            throw new Exception("Erro ao adicionar medicamento e inicializar estoque: " + e.getMessage(), e);
+            throw new Exception("Erro ao adicionar medicamento: " + e.getMessage(), e);
         } finally {
             if (conn != null) {
                 try {

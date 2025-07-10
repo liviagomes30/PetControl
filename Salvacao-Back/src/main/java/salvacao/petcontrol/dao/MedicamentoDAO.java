@@ -90,29 +90,6 @@ public class MedicamentoDAO {
         return dto;
     }
 
-    public MedicamentoModel gravar(MedicamentoModel medicamento, ProdutoModel produtoModel, Connection conn) throws SQLException {
-        ProdutoModel novoProduto = produtoModel.getProdDAO().gravar(produtoModel, conn);
-
-        if (novoProduto == null || novoProduto.getIdproduto() == null) {
-            throw new SQLException("Erro ao gravar produto - ID não gerado");
-        }
-
-        String sql = "INSERT INTO medicamento (idproduto, composicao) VALUES (?, ?)";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, novoProduto.getIdproduto());
-            stmt.setString(2, medicamento.getComposicao());
-
-            if (stmt.executeUpdate() > 0) {
-                medicamento.setIdproduto(novoProduto.getIdproduto());
-            } else {
-                throw new SQLException("Falha ao inserir medicamento");
-            }
-        } catch (SQLException e) {
-            throw e;
-        }
-        return medicamento;
-    }
-
     public boolean alterar(Integer id, MedicamentoModel medicamento, ProdutoModel produtoModel, Connection conn) throws SQLException {
         boolean produtoAtualizado = produtoModel.getProdDAO().alterar(id, produtoModel);
 
@@ -488,5 +465,19 @@ public class MedicamentoDAO {
             e.printStackTrace();
         }
         return lista;
+    }
+
+    public MedicamentoModel gravarSomenteRelacionamento(MedicamentoModel medicamento, Connection conn) throws SQLException {
+        String sql = "INSERT INTO medicamento (idproduto, composicao) VALUES (?, ?)";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, medicamento.getIdproduto());
+            stmt.setString(2, medicamento.getComposicao());
+
+            if (stmt.executeUpdate() > 0) {
+                return medicamento;
+            } else {
+                throw new SQLException("Falha ao inserir medicamento");
+            }
+        }
     }
 }

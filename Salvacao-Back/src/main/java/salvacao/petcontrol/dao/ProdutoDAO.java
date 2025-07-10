@@ -117,6 +117,7 @@ public class ProdutoDAO {
     }
 
     public ProdutoModel gravar(ProdutoModel produto, Connection conn) throws SQLException {
+        System.out.println("Iniciando gravação do produto: " + produto.getNome());
         String sql = "INSERT INTO produto (nome, idtipoproduto, idunidademedida, fabricante, preco, estoque_minimo, data_cadastro, ativo) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING idproduto";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -128,13 +129,14 @@ public class ProdutoDAO {
             if (produto.getPreco() != null) {
                 stmt.setBigDecimal(5, produto.getPreco());
             } else {
-                stmt.setNull(5, java.sql.Types.NUMERIC);
+                stmt.setNull(5, java.sql.Types.DECIMAL);
             }
 
+            // Definindo um valor padrão de 0 para estoque_minimo se for nulo
             if (produto.getEstoqueMinimo() != null) {
                 stmt.setInt(6, produto.getEstoqueMinimo());
             } else {
-                stmt.setNull(6, java.sql.Types.INTEGER);
+                stmt.setInt(6, 0); // Valor padrão para estoque mínimo
             }
 
             if (produto.getDataCadastro() != null) {
@@ -147,14 +149,14 @@ public class ProdutoDAO {
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 produto.setIdproduto(rs.getInt("idproduto"));
-                System.out.println("Produto gravado na DAO com ID: " + produto.getIdproduto());
+                System.out.println("Produto '" + produto.getNome() + "' gravado com sucesso. ID: " + produto.getIdproduto());
                 return produto;
             }
+            throw new SQLException("Falha ao obter ID do produto após inserção");
         } catch (SQLException e) {
-            System.out.println("Erro na DAO ao gravar produto: " + e.getMessage());
+            System.err.println("Erro ao gravar produto '" + produto.getNome() + "': " + e.getMessage());
             throw e;
         }
-        return null;
     }
 
     public boolean alterar(Integer id, ProdutoModel produto) {

@@ -14,13 +14,13 @@
     />
     <link rel="stylesheet" href="../../assets/css/style.css" />
     <link rel="stylesheet" href="../../assets/css/estiloComplementar.css" />
-    
+
     <script>
       window.API_BASE_URL = "http://localhost:8080";
     </script>
 
     <script src="../../assets/js/services/authService.js"></script>
-    
+
     <script src="../../assets/js/components/sidebar.js" defer></script>
   </head>
   <body>
@@ -218,7 +218,7 @@
       import { medicamentoController } from "../../assets/js/controllers/MedicamentoController.js";
       import UIComponents from "../../assets/js/components/uiComponents.js";
 
-      document.addEventListener("DOMContentLoaded", () => {
+      document.addEventListener("DOMContentLoML", () => {
         medicamentoController.inicializarFormulario();
 
         (() => {
@@ -230,12 +230,17 @@
             form.addEventListener(
               "submit",
               (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+
                 if (!form.checkValidity()) {
-                  event.preventDefault();
-                  event.stopPropagation();
+                  form.classList.add("was-validated");
+                  return;
                 }
 
                 form.classList.add("was-validated");
+
+                medicamentoController.processarFormulario();
               },
               false
             );

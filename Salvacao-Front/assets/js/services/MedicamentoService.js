@@ -71,7 +71,14 @@ class MedicamentoService {
   }
 
   async cadastrar(medicamentoData) {
+    console.log("=== MÉTODO CADASTRAR CHAMADO ===");
+    console.log("Timestamp:", Date.now());
+    console.log("Stack trace:", new Error().stack);
     try {
+      console.log(
+        "Dados sendo enviados para o backend:",
+        JSON.stringify(medicamentoData, null, 2)
+      );
       const response = await fetch(`${this.baseUrl}${this.endpoint}`, {
         method: "POST",
         headers: {
@@ -82,10 +89,13 @@ class MedicamentoService {
 
       if (!response.ok) {
         const errorText = await response.text();
+        console.error("Erro retornado pelo backend:", errorText);
         throw new Error(errorText);
       }
 
-      return await response.json();
+      const result = await response.json();
+      console.log("Resposta do backend:", result);
+      return result;
     } catch (error) {
       console.error("Erro ao cadastrar medicamento:", error);
       throw error;
@@ -156,7 +166,9 @@ class MedicamentoService {
     try {
       const response = await fetch(`${this.baseUrl}/tipos-produto`);
       if (response.status === 404) {
-        console.warn("Nenhum tipo de produto encontrado (status 404). Retornando array vazio.");
+        console.warn(
+          "Nenhum tipo de produto encontrado (status 404). Retornando array vazio."
+        );
         return [];
       }
       if (!response.ok) {
@@ -173,7 +185,9 @@ class MedicamentoService {
     try {
       const response = await fetch(`${this.baseUrl}/unidades-medida`);
       if (response.status === 404) {
-        console.warn("Nenhuma unidade de medida encontrada (status 404). Retornando array vazio.");
+        console.warn(
+          "Nenhuma unidade de medida encontrada (status 404). Retornando array vazio."
+        );
         return [];
       }
       if (!response.ok) {

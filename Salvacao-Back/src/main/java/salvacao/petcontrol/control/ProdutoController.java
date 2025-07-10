@@ -57,6 +57,7 @@ public class ProdutoController {
 
     @PostMapping("/cadastro")
     public ResponseEntity<Object> gravar(@RequestBody ProdutoCompletoDTO produto) {
+        System.out.println("=== ProdutoController - gravar ===");
         try {
             ProdutoModel novoProduto = produtoService.gravar(produto); // Updated method call
             return ResponseEntity.status(HttpStatus.CREATED).body(novoProduto);
