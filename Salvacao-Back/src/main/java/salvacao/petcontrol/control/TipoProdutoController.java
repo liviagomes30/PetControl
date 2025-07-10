@@ -84,11 +84,10 @@ public class TipoProdutoController {
         }
     }
 
-    // Example of a search method (if needed, mirroring AnimalController's search methods)
-    @GetMapping("/descricao/{filtro}")
-    public ResponseEntity<Object> getByDescricao(@PathVariable String filtro) {
+    @GetMapping("/buscar")
+    public ResponseEntity<Object> getByDescricao(@RequestParam("termo") String filtro) {
         try {
-            List<TipoProdutoModel> tiposProduto = tipoProdutoService.getByDescricao(filtro); // Calls service.getByDescricao()
+            List<TipoProdutoModel> tiposProduto = tipoProdutoService.getByDescricao(filtro);
             if (!tiposProduto.isEmpty()) {
                 return ResponseEntity.ok(tiposProduto);
             }

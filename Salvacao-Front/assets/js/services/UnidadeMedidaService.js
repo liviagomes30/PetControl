@@ -1,125 +1,69 @@
+import { API_BASE_URL } from "../config/config.js";
+
 class UnidadeMedidaService {
-  constructor(baseUrl = "http://localhost:8080") {
-    this.baseUrl = baseUrl;
-    this.endpoint = "/unidades-medida";
+  constructor() {
+    this.baseUrl = `${API_BASE_URL}/unidades-medida`;
   }
 
-  async getAll() {
-    try {
-      const response = await fetch(`${this.baseUrl}${this.endpoint}`);
-      if (!response.ok) {
-        throw new Error(`Erro ${response.status}: ${await response.text()}`);
-      }
-      return await response.json();
-    } catch (error) {
-      console.error("Erro ao listar unidades de medida:", error);
-      throw error;
+  async _handleResponse(response) {
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(errorBody || `HTTP error! status: ${response.status}`);
     }
+    // Se o status for 204 (No Content), não há corpo para processar
+    if (response.status === 204) {
+      return null;
+    }
+    return response.json();
   }
 
-  async getById(id) {
-    try {
-      const response = await fetch(`${this.baseUrl}${this.endpoint}/${id}`);
-      if (!response.ok) {
-        throw new Error(`Erro ${response.status}: ${await response.text()}`);
-      }
-      return await response.json();
-    } catch (error) {
-      console.error(`Erro ao buscar unidade de medida ${id}:`, error);
-      throw error;
-    }
+  async listarTodos() {
+    const response = await fetch(this.baseUrl);
+    return this._handleResponse(response);
   }
 
-  async create(unidadeMedidaData) {
-    try {
-      const response = await fetch(`${this.baseUrl}${this.endpoint}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(unidadeMedidaData),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error("Erro ao cadastrar unidade de medida:", error);
-      throw error;
-    }
+  async buscarPorId(id) {
+    const response = await fetch(`${this.baseUrl}/${id}`);
+    return this._handleResponse(response);
   }
 
-  async update(unidadeMedidaData) {
-    try {
-      const id = unidadeMedidaData.idunidademedida;
-      const response = await fetch(`${this.baseUrl}${this.endpoint}/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(unidadeMedidaData),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText);
-      }
-
-      return (await response.text()) || {};
-    } catch (error) {
-      console.error(`Erro ao atualizar unidade de medida:`, error);
-      throw error;
+  // Ajustado para o endpoint do seu backend: /search/{filtro}
+  async buscarPorTermo(termo) {
+    if (!termo) {
+      return this.listarTodos();
     }
+    const response = await fetch(`${this.baseUrl}/search/${termo}`);
+    return this._handleResponse(response);
   }
 
-  async delete(id) {
-    try {
-      const response = await fetch(`${this.baseUrl}${this.endpoint}/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText);
-      }
-
-      return true;
-    } catch (error) {
-      console.error(`Erro ao excluir unidade de medida ${id}:`, error);
-      throw error;
-    }
+  async cadastrar(unidade) {
+    const response = await fetch(this.baseUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(unidade),
+    });
+    return this._handleResponse(response);
   }
 
-  async search(termo) {
-    try {
-      try {
-        const response = await fetch(
-          `${this.baseUrl}${this.endpoint}/buscar?termo=${encodeURIComponent(
-            termo
-          )}`
-        );
-        if (response.ok) {
-          return await response.json();
-        }
-        throw new Error("Endpoint de busca não encontrado");
-      } catch (e) {
-        const todos = await this.getAll();
-        return todos.filter(
-          (u) =>
-            u.descricao.toLowerCase().includes(termo.toLowerCase()) ||
-            u.sigla.toLowerCase().includes(termo.toLowerCase())
-        );
-      }
-    } catch (error) {
-      console.error(
-        `Erro ao buscar unidades de medida com termo '${termo}':`,
-        error
-      );
-      throw error;
+  async atualizar(id, unidade) {
+    const response = await fetch(`${this.baseUrl}/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(unidade),
+    });
+    return this._handleResponse(response);
+  }
+
+  async excluir(id) {
+    const response = await fetch(`${this.baseUrl}/${id}`, {
+      method: "DELETE",
+    });
+    // O backend retorna uma resposta de sucesso sem corpo, então tratamos de forma diferente.
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(errorBody || `HTTP error! status: ${response.status}`);
     }
+    return "Unidade de medida excluída com sucesso"; // Retorna uma mensagem de sucesso para o controller
   }
 }
 

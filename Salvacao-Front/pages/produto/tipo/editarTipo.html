@@ -3,258 +3,86 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Edição de Tipo de Produto - PetControl" />
     <title>PetControl - Editar Tipo de Produto</title>
+
     <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css"
     />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css"
+      rel="stylesheet"
+    />
+
     <link rel="stylesheet" href="../../../assets/css/style.css" />
-    
-    <!-- Services -->
+
     <script src="../../../assets/js/services/authService.js"></script>
-    
     <script src="../../../assets/js/components/sidebar.js" defer></script>
   </head>
   <body>
-    <main class="main-content">
-      <header class="content-header">
-        <button
-          class="btn-back"
-          onclick="window.location.href='listarTipos.html'"
-          aria-label="Voltar para lista de tipos de produto"
-        >
-          <i class="bi bi-arrow-left"></i> Voltar
-        </button>
-        <h1>Editar Tipo de Produto</h1>
-      </header>
+    <div class="container py-4">
+      <div
+        class="header d-flex justify-content-between align-items-center mb-4"
+      >
+        <h1 class="h3" style="color: var(--vermelho-escuro)">
+          Editar Tipo de Produto
+        </h1>
+        <a href="listarTipos.html" class="btn btn-outline-secondary">
+          <i class="bi bi-arrow-left me-1"></i> Voltar para a Lista
+        </a>
+      </div>
 
-      <div class="form-container">
+      <div class="bg-white shadow rounded p-4">
         <form id="tipoProdutoForm" novalidate>
-          <input type="hidden" id="idTipoProduto" value="0" />
+          <input type="hidden" id="idTipoProduto" name="id" />
 
-          <div class="form-group">
-            <label for="descricao" class="required">Descrição</label>
+          <div class="mb-3">
+            <label for="descricao" class="form-label">Descrição</label>
             <input
               type="text"
               id="descricao"
               name="descricao"
+              class="form-control"
               required
-              placeholder="Digite a descrição do tipo de produto"
-              aria-required="true"
-              aria-describedby="descricao-error descricao-help"
             />
-            <div
-              class="error-message"
-              id="descricao-error"
-              aria-live="polite"
-            ></div>
-            <small id="descricao-help" class="form-help-text">
-              Atualize a descrição conforme necessário
-            </small>
+            <div class="invalid-feedback">Por favor, insira uma descrição.</div>
           </div>
 
-          <div class="form-buttons">
-            <button type="submit" class="btn btn-primary">
-              <i class="bi bi-check-circle"></i> Salvar Alterações
-            </button>
-            <button
-              type="button"
-              class="btn btn-secondary"
-              onclick="window.location.href='listarTipos.html'"
+          <div class="mt-4 d-flex justify-content-end">
+            <a href="listarTipos.html" class="btn btn-secondary me-2"
+              >Cancelar</a
             >
-              Cancelar
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-save me-1"></i> Salvar Alterações
             </button>
           </div>
         </form>
       </div>
+    </div>
 
-      <!-- Toast para feedback -->
-      <div
-        id="toast"
-        class="toast"
-        role="alert"
-        aria-live="assertive"
-        aria-atomic="true"
-      >
-        <div class="toast-icon success">
-          <i class="bi bi-check-circle"></i>
-        </div>
-        <div class="toast-content">
-          <div class="toast-title" id="toastTitle">Sucesso!</div>
-          <div class="toast-message" id="toastMessage">
-            Tipo de produto atualizado com sucesso!
-          </div>
-        </div>
-        <button class="toast-close" aria-label="Fechar notificação">
-          <i class="bi bi-x"></i>
-        </button>
-      </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-      <!-- Loading overlay para operações assíncronas -->
-      <div id="loadingOverlay" class="loading-overlay">
-        <div class="spinner" role="status">
-          <span class="visually-hidden">Carregando...</span>
-        </div>
-      </div>
-    </main>
+    <script
+      src="../../../assets/js/components/uiComponents.js"
+      type="module"
+    ></script>
+    <script
+      src="../../../assets/js/controllers/TipoProdutoController.js"
+      type="module"
+    ></script>
+    <script
+      src="../../../assets/js/services/TipoProdutoService.js"
+      type="module"
+    ></script>
 
-    <!-- Importações de Scripts -->
-    <script src="../../../assets/js/models/TipoProdutoModel.js"></script>
-    <script src="../../../assets/js/services/TipoProdutoService.js"></script>
-    <script src="../../../assets/js/controllers/TipoProdutoController.js"></script>
+    <script type="module">
+      import TipoProdutoController from "../../../assets/js/controllers/TipoProdutoController.js";
 
-    <script>
       document.addEventListener("DOMContentLoaded", () => {
-        // Iniciar o controlador quando a página carregar
-        window.tipoProdutoController = new TipoProdutoController();
+        const controller = new TipoProdutoController();
+        window.tipoProdutoController = controller;
 
-        // Verificar se há um ID na URL para carregar os dados
-        const urlParams = new URLSearchParams(window.location.search);
-        const id = urlParams.get("id");
-
-        if (id) {
-          // Mostrar loading enquanto carrega
-          document.getElementById("loadingOverlay").classList.add("show");
-
-          // Carregar dados do tipo de produto
-          window.tipoProdutoController
-            .carregarTipoProduto(id)
-            .then((tipoProduto) => {
-              // Preencher formulário com dados
-              document.getElementById("idTipoProduto").value = tipoProduto.id;
-              document.getElementById("descricao").value =
-                tipoProduto.descricao;
-
-              // Esconder loading
-              document
-                .getElementById("loadingOverlay")
-                .classList.remove("show");
-            })
-            .catch((erro) => {
-              // Em caso de erro, mostrar toast de erro
-              mostrarToast(
-                "Erro!",
-                "Não foi possível carregar os dados. Tente novamente.",
-                "error"
-              );
-              console.error("Erro ao carregar tipo de produto:", erro);
-
-              // Esconder loading
-              document
-                .getElementById("loadingOverlay")
-                .classList.remove("show");
-            });
-        }
-
-        // Adicionar validação em tempo real para o formulário
-        const descricaoInput = document.getElementById("descricao");
-        const descricaoError = document.getElementById("descricao-error");
-
-        descricaoInput.addEventListener("input", function () {
-          validarCampo(this);
-        });
-
-        descricaoInput.addEventListener("blur", function () {
-          validarCampo(this);
-        });
-
-        function validarCampo(campo) {
-          if (campo.value.trim() === "") {
-            descricaoError.textContent = "Este campo é obrigatório";
-            campo.classList.add("invalid");
-            return false;
-          } else if (campo.value.length < 2) {
-            descricaoError.textContent =
-              "A descrição deve ter pelo menos 2 caracteres";
-            campo.classList.add("invalid");
-            return false;
-          } else {
-            descricaoError.textContent = "";
-            campo.classList.remove("invalid");
-            return true;
-          }
-        }
-
-        // Validação ao enviar o formulário
-        const form = document.getElementById("tipoProdutoForm");
-        form.addEventListener("submit", function (event) {
-          event.preventDefault();
-
-          if (validarCampo(descricaoInput)) {
-            // Exibir loading
-            document.getElementById("loadingOverlay").classList.add("show");
-
-            // Processar o formulário via controlador
-            const tipoProduto = {
-              id: document.getElementById("idTipoProduto").value,
-              descricao: descricaoInput.value.trim(),
-            };
-
-            window.tipoProdutoController
-              .atualizar(tipoProduto)
-              .then(() => {
-                // Mostrar mensagem de sucesso
-                mostrarToast(
-                  "Sucesso!",
-                  "Tipo de produto atualizado com sucesso!",
-                  "success"
-                );
-
-                // Redirecionar após 2 segundos
-                setTimeout(() => {
-                  window.location.href = "listarTipos.html";
-                }, 2000);
-              })
-              .catch((erro) => {
-                // Mostrar erro
-                mostrarToast(
-                  "Erro!",
-                  "Não foi possível atualizar. Tente novamente.",
-                  "error"
-                );
-                console.error("Erro ao atualizar tipo de produto:", erro);
-
-                // Esconder loading
-                document
-                  .getElementById("loadingOverlay")
-                  .classList.remove("show");
-              });
-          }
-        });
-
-        // Função para mostrar toast
-        function mostrarToast(titulo, mensagem, tipo = "success") {
-          const toast = document.getElementById("toast");
-          const toastTitle = document.getElementById("toastTitle");
-          const toastMessage = document.getElementById("toastMessage");
-          const toastIcon = document.querySelector(".toast-icon");
-
-          // Definir conteúdo
-          toastTitle.textContent = titulo;
-          toastMessage.textContent = mensagem;
-
-          // Ajustar aparência conforme tipo
-          toastIcon.className = "toast-icon " + tipo;
-          toastIcon.innerHTML =
-            tipo === "success"
-              ? '<i class="bi bi-check-circle"></i>'
-              : '<i class="bi bi-exclamation-triangle"></i>';
-
-          // Mostrar toast
-          toast.classList.add("show");
-
-          // Ocultar automaticamente após 5 segundos
-          setTimeout(() => {
-            toast.classList.remove("show");
-          }, 5000);
-        }
-
-        // Implementação do botão fechar do toast
-        const toastClose = document.querySelector(".toast-close");
-        toastClose.addEventListener("click", function () {
-          document.getElementById("toast").classList.remove("show");
-        });
+        controller.inicializarFormulario();
       });
     </script>
   </body>

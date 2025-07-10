@@ -34,17 +34,10 @@ class TipoProdutoService {
     try {
       const response = await fetch(`${this.baseUrl}${this.endpoint}`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(tipoProdutoData),
       });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText);
-      }
-
+      if (!response.ok) throw new Error(await response.text());
       return await response.json();
     } catch (error) {
       console.error("Erro ao cadastrar tipo de produto:", error);
@@ -56,18 +49,11 @@ class TipoProdutoService {
     try {
       const response = await fetch(`${this.baseUrl}${this.endpoint}/${id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(tipoProdutoData),
       });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText);
-      }
-
-      return (await response.text()) || {};
+      if (!response.ok) throw new Error(await response.text());
+      return await response.text();
     } catch (error) {
       console.error(`Erro ao atualizar tipo de produto ${id}:`, error);
       throw error;
@@ -79,41 +65,10 @@ class TipoProdutoService {
       const response = await fetch(`${this.baseUrl}${this.endpoint}/${id}`, {
         method: "DELETE",
       });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText);
-      }
-
+      if (!response.ok) throw new Error(await response.text());
       return true;
     } catch (error) {
       console.error(`Erro ao excluir tipo de produto ${id}:`, error);
-      throw error;
-    }
-  }
-
-  async buscarPorTermo(termo) {
-    try {
-      const response = await fetch(
-        `${this.baseUrl}${this.endpoint}/buscar?termo=${encodeURIComponent(
-          termo
-        )}`
-      );
-      if (!response.ok) {
-        if (response.status === 404) {
-          const todos = await this.listarTodos();
-          return todos.filter((t) =>
-            t.descricao.toLowerCase().includes(termo.toLowerCase())
-          );
-        }
-        throw new Error(`Erro ${response.status}: ${await response.text()}`);
-      }
-      return await response.json();
-    } catch (error) {
-      console.error(
-        `Erro ao buscar tipos de produto com termo '${termo}':`,
-        error
-      );
       throw error;
     }
   }

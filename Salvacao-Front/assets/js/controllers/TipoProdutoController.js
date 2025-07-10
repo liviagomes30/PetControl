@@ -1,5 +1,5 @@
 import TipoProdutoService from "../services/TipoProdutoService.js";
-import UIComponents from "../utils/uiComponents.js";
+import UIComponents from "../components/uiComponents.js";
 import MensagensPadroes from "../utils/mensagensPadroes.js";
 
 class TipoProdutoController {
@@ -7,32 +7,24 @@ class TipoProdutoController {
     this.service = new TipoProdutoService();
     this.tableBody = document.getElementById("tipoProdutoTableBody");
     this.searchInput = document.getElementById("searchInput");
-    this.searchButton = document.querySelector(".search-button");
-    this.itemToDelete = null;
-
-    this.bindEvents();
+    this.noDataMessage = document.getElementById("noDataMessage");
+    this.tableElement = document.getElementById("tipoProdutoTable");
+    this.tiposCache = []; // Cache para guardar os dados
   }
 
-  bindEvents() {
-    if (this.searchButton) {
-      this.searchButton.addEventListener("click", () => this.filterTable());
-    }
+  // Método para ser chamado na página de listagem
+  inicializarListagem() {
+    this.bindListEvents();
+    this.loadTiposProduto();
+  }
 
-    if (this.searchInput) {
-      this.searchInput.addEventListener("keyup", (e) => {
-        if (e.key === "Enter") {
-          this.filterTable();
-        }
-      });
-    }
-
+  // Método para ser chamado nas páginas de formulário (cadastro/edição)
+  inicializarFormulario() {
     const form = document.getElementById("tipoProdutoForm");
     if (form) {
       form.addEventListener("submit", (e) => {
         e.preventDefault();
-        if (this.validateForm()) {
-          this.saveTipoProduto();
-        }
+        this.salvar(form);
       });
 
       const urlParams = new URLSearchParams(window.location.search);
@@ -40,16 +32,23 @@ class TipoProdutoController {
       if (id) {
         document.querySelector("h1").textContent = "Editar Tipo de Produto";
         document.getElementById("idTipoProduto").value = id;
-        this.loadTipoProdutoData(id);
+        this.carregarDadosParaEdicao(id);
       }
+    }
+  }
+
+  bindListEvents() {
+    if (this.searchInput) {
+      this.searchInput.addEventListener("input", () => this.filterTable());
     }
   }
 
   async loadTiposProduto() {
     try {
-      UIComponents.Loading.mostrar("Carregando tipos de produto...");
-      const tiposProduto = await this.service.listarTodos();
-      this.renderTable(tiposProduto);
+      UIComponents.Loading.mostrar("Carregando tipos...");
+      const tipos = await this.service.listarTodos();
+      this.tiposCache = tipos;
+      this.renderTable(this.tiposCache);
     } catch (error) {
       UIComponents.ModalErro.mostrar(
         "Erro ao carregar tipos de produto: " + error.message
@@ -59,161 +58,116 @@ class TipoProdutoController {
     }
   }
 
-  async loadTipoProdutoData(id) {
-    try {
-      UIComponents.Loading.mostrar("Carregando dados do tipo de produto...");
-      const tipoProduto = await this.service.buscarPorId(id);
-      document.getElementById("descricao").value = tipoProduto.descricao;
-      UIComponents.Toast.sucesso("Dados carregados com sucesso");
-    } catch (error) {
-      UIComponents.ModalErro.mostrar(
-        "Erro ao carregar dados: " + error.message
-      );
-    } finally {
-      UIComponents.Loading.esconder();
-    }
-  }
-
-  renderTable(tiposProduto) {
+  renderTable(tipos) {
     if (!this.tableBody) return;
-
     this.tableBody.innerHTML = "";
 
-    if (tiposProduto.length === 0) {
-      const row = document.createElement("tr");
-      row.innerHTML =
-        '<td colspan="3" class="no-data">Nenhum tipo de produto encontrado</td>';
-      this.tableBody.appendChild(row);
+    if (!tipos || tipos.length === 0) {
+      this.tableElement.style.display = "none";
+      this.noDataMessage.style.display = "block";
       return;
     }
 
-    tiposProduto.forEach((tipo) => {
+    this.tableElement.style.display = "table";
+    this.noDataMessage.style.display = "none";
+
+    tipos.forEach((tipo) => {
       const row = document.createElement("tr");
+
       row.innerHTML = `
-        <td>${tipo.idtipoproduto}</td>
-        <td>${tipo.descricao}</td>
-        <td class="actions">
-          <button class="btn-edit" onclick="tipoProdutoController.editTipoProduto(${tipo.idtipoproduto})">
-            <i class="bi bi-pencil"></i>
-          </button>
-          <button class="btn-delete" onclick="tipoProdutoController.showDeleteModal(${tipo.idtipoproduto})">
-            <i class="bi bi-trash"></i>
-          </button>
-        </td>
-      `;
+                <td>${tipo.idtipoproduto}</td>
+                <td>${tipo.descricao}</td>
+                <td class="actions">
+                    <a href="editarTipo.html?id=${tipo.idtipoproduto}" class="btn btn-sm btn-primary" title="Editar">
+                        <i class="bi bi-pencil-fill"></i>
+                    </a>
+                    <button class="btn btn-sm btn-outline-danger" onclick="window.tipoProdutoController.confirmarExclusao(${tipo.idtipoproduto})" title="Excluir">
+                        <i class="bi bi-trash-fill"></i>
+                    </button>
+                </td>
+            `;
       this.tableBody.appendChild(row);
     });
   }
 
   filterTable() {
-    if (!this.searchInput) return;
-
-    const searchTerm = this.searchInput.value.toLowerCase();
-
-    try {
-      UIComponents.Loading.mostrar("Filtrando resultados...");
-      this.service
-        .buscarPorTermo(searchTerm)
-        .then((filteredResults) => {
-          this.renderTable(filteredResults);
-        })
-        .catch((error) => {
-          UIComponents.ModalErro.mostrar("Erro ao filtrar: " + error.message);
-        })
-        .finally(() => {
-          UIComponents.Loading.esconder();
-        });
-    } catch (error) {
-      UIComponents.Loading.esconder();
-      UIComponents.ModalErro.mostrar("Erro ao filtrar: " + error.message);
-    }
+    const termo = this.searchInput.value.toLowerCase();
+    const filtrados = this.tiposCache.filter((tipo) =>
+      tipo.descricao.toLowerCase().includes(termo)
+    );
+    this.renderTable(filtrados);
   }
 
-  editTipoProduto(id) {
-    window.location.href = `editarTipo.html?id=${id}`;
-  }
-
-  showDeleteModal(id) {
-    this.itemToDelete = id;
+  confirmarExclusao(id) {
     UIComponents.ModalConfirmacao.mostrar(
-      "Confirmar exclusão",
+      "Confirmar Exclusão",
       MensagensPadroes.CONFIRMACAO.EXCLUSAO,
-      () => this.deleteTipoProduto(id)
+      () => this.excluir(id)
     );
   }
 
-  async deleteTipoProduto(id) {
+  async excluir(id) {
     try {
-      UIComponents.Loading.mostrar("Excluindo tipo de produto...");
+      UIComponents.Loading.mostrar("Excluindo...");
       await this.service.excluir(id);
-      UIComponents.Toast.sucesso("Tipo de produto excluído com sucesso!");
+      UIComponents.Toast.sucesso(MensagensPadroes.SUCESSO.EXCLUSAO);
       this.loadTiposProduto();
     } catch (error) {
-      UIComponents.ModalErro.mostrar("Erro ao excluir: " + error.message);
+      UIComponents.ModalErro.mostrar("Erro ao excluir", error.message);
     } finally {
       UIComponents.Loading.esconder();
     }
   }
 
-  validateForm() {
-    let isValid = true;
-    const descricao = document.getElementById("descricao");
-
-    UIComponents.Validacao.limparErros("tipoProdutoForm");
-
-    if (!descricao.value.trim()) {
-      UIComponents.Validacao.mostrarErro(
-        "descricao",
-        MensagensPadroes.VALIDACAO.CAMPO_OBRIGATORIO
+  async carregarDadosParaEdicao(id) {
+    try {
+      UIComponents.Loading.mostrar("Carregando dados...");
+      const tipo = await this.service.buscarPorId(id);
+      document.getElementById("descricao").value = tipo.descricao;
+    } catch (error) {
+      UIComponents.ModalErro.mostrar(
+        "Erro ao carregar dados para edição",
+        error.message
       );
-      isValid = false;
+    } finally {
+      UIComponents.Loading.esconder();
     }
-
-    return isValid;
   }
 
-  async saveTipoProduto() {
-    const id = document.getElementById("idTipoProduto").value;
-    const descricao = document.getElementById("descricao").value;
+  async salvar(form) {
+    if (!form.checkValidity()) {
+      form.classList.add("was-validated");
+      return;
+    }
 
+    const id = document.getElementById("idTipoProduto").value;
     const tipoProduto = {
-      idtipoproduto: id !== "0" ? parseInt(id) : null,
-      descricao: descricao,
+      idtipoproduto: id && id !== "0" ? parseInt(id, 10) : null,
+      descricao: document.getElementById("descricao").value,
     };
 
-    try {
-      UIComponents.Loading.mostrar(
-        tipoProduto.idtipoproduto
-          ? "Atualizando tipo de produto..."
-          : "Cadastrando tipo de produto..."
-      );
+    const ehEdicao = !!tipoProduto.idtipoproduto;
+    UIComponents.Loading.mostrar(ehEdicao ? "Atualizando..." : "Salvando...");
 
-      if (tipoProduto.idtipoproduto) {
+    try {
+      if (ehEdicao) {
         await this.service.atualizar(tipoProduto.idtipoproduto, tipoProduto);
-        UIComponents.Toast.sucesso(MensagensPadroes.SUCESSO.ATUALIZACAO);
       } else {
         await this.service.cadastrar(tipoProduto);
-        UIComponents.Toast.sucesso(MensagensPadroes.SUCESSO.CADASTRO);
       }
-
-      setTimeout(() => {
-        window.location.href = "listarTipos.html";
-      }, 2000);
+      UIComponents.Toast.sucesso(
+        ehEdicao
+          ? MensagensPadroes.SUCESSO.ATUALIZACAO
+          : MensagensPadroes.SUCESSO.CADASTRO
+      );
+      setTimeout(() => (window.location.href = "listarTipos.html"), 1500);
     } catch (error) {
-      UIComponents.ModalErro.mostrar("Erro ao salvar: " + error.message);
+      UIComponents.ModalErro.mostrar("Erro ao salvar", error.message);
     } finally {
       UIComponents.Loading.esconder();
     }
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  window.tipoProdutoController = new TipoProdutoController();
-
-  const tableBody = document.getElementById("tipoProdutoTableBody");
-  if (tableBody) {
-    window.tipoProdutoController.loadTiposProduto();
-  }
-});
-
+window.TipoProdutoController = TipoProdutoController;
 export default TipoProdutoController;
