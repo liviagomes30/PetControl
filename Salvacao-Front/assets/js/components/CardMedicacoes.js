@@ -1,9 +1,10 @@
 // assets/js/components/CardMedicacoes.js
 
 class CardMedicacoes {
-  constructor(containerId, compromissos = []) {
+  constructor(containerId, compromissos = [], animaisMap = new Map()) {
     this.containerId = containerId;
     this.compromissos = compromissos;
+    this.animaisMap = animaisMap;
   }
 
   render() {
@@ -13,7 +14,7 @@ class CardMedicacoes {
     let compromissosHTML = "";
 
     if (!this.compromissos || this.compromissos.length === 0) {
-      compromissosHTML = `<tr><td colspan="4" class="text-center">Nenhum compromisso de medicação encontrado.</td></tr>`;
+      compromissosHTML = `<tr><td colspan="5" class="text-center">Nenhum compromisso de medicação encontrado.</td></tr>`;
     } else {
       this.compromissos.forEach((comp) => {
         const statusClass =
@@ -23,8 +24,36 @@ class CardMedicacoes {
         const statusText =
           comp.status.toLowerCase() === "planejado" ? "Planejado" : "Aplicado";
 
-        // **AQUI ESTÁ A CORREÇÃO:** Usamos a nova função universal.
         const dataFormatada = this.formatarDataUniversal(comp.dataHora);
+
+        let acoesHTML = "";
+        const statusLower = comp.status.toLowerCase();
+
+        if (statusLower === "planejado") {
+          const animalEntry = [...this.animaisMap.entries()].find(
+            ([id, nome]) => nome === comp.animalNome
+          );
+          const animalId = animalEntry ? animalEntry[0] : null;
+
+          if (animalId) {
+            // --- INÍCIO DA MODIFICAÇÃO ---
+            // Adicionado o compromissoId (que é o posologiaId do DTO) à URL.
+            const url = `pages/medicamentos/efetuarMedicacao.html?animalId=${animalId}&compromissoId=${comp.posologiaId}`;
+            // --- FIM DA MODIFICAÇÃO ---
+
+            acoesHTML = `
+              <a href="${url}" class="btn btn-sm btn-primary" title="Efetuar Medicação">
+                <i class="bi bi-check-circle me-1"></i> Efetuar
+              </a>
+            `;
+          }
+        } else if (statusLower === "aplicado") {
+          acoesHTML = `
+            <a href="pages/medicamentos/historicoMedicacoes.html" class="btn btn-sm btn-secondary" title="Ver Histórico de Medicações">
+              <i class="bi bi-clock-history me-1"></i> Histórico
+            </a>
+          `;
+        }
 
         compromissosHTML += `
           <tr>
@@ -34,6 +63,7 @@ class CardMedicacoes {
             <td>
               <strong class="${statusClass}">${statusText}</strong>
             </td>
+            <td>${acoesHTML}</td>
           </tr>
         `;
       });
@@ -51,6 +81,7 @@ class CardMedicacoes {
                   <th>Animal</th>
                   <th>Medicamento</th>
                   <th>Status</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -66,35 +97,23 @@ class CardMedicacoes {
   }
 
   formatarDataUniversal(dataOrigem) {
-    if (!dataOrigem) {
-      return "Data não fornecida";
-    }
-
+    if (!dataOrigem) return "Data não fornecida";
     let ano,
       mes,
       dia,
       hora = "00",
       minuto = "00";
-
-    // Cenário 1: A data vem como um array (ex: [2024, 7, 15, 9, 30])
     if (Array.isArray(dataOrigem)) {
       [ano, mes, dia, hora = "00", minuto = "00"] = dataOrigem;
-    }
-    // Cenário 2: A data vem como uma string (ex: "2024-07-15T09:30:00")
-    else if (typeof dataOrigem === "string") {
+    } else if (typeof dataOrigem === "string") {
       const partes = dataOrigem.split("T");
       if (partes.length === 2) {
         const dataPartes = partes[0].split("-");
         const horaPartes = partes[1].split(":");
         if (dataPartes.length === 3) [ano, mes, dia] = dataPartes;
         if (horaPartes.length >= 2) [hora, minuto] = horaPartes;
-      } else {
-        const dataPartes = dataOrigem.split("-");
-        if (dataPartes.length === 3) [ano, mes, dia] = dataPartes;
       }
-    }
-    // Cenário 3: A data vem como um objeto (formato comum de serialização)
-    else if (
+    } else if (
       typeof dataOrigem === "object" &&
       dataOrigem.year &&
       dataOrigem.monthValue
@@ -105,19 +124,11 @@ class CardMedicacoes {
       hora = dataOrigem.hour;
       minuto = dataOrigem.minute;
     }
-
-    // Se, após todas as tentativas, o ano não for válido, retorna erro.
     if (!ano) {
-      console.error(
-        "Formato de data desconhecido recebido do backend:",
-        dataOrigem
-      );
+      console.error("Formato de data desconhecido:", dataOrigem);
       return "Formato de data inválido";
     }
-
-    // Função para adicionar um zero à esquerda se o número for menor que 10
-    const pad = (num) => num.toString().padStart(2, "0");
-
+    const pad = (num) => String(num).padStart(2, "0");
     return `${pad(dia)}/${pad(mes)}/${ano} ${pad(hora)}:${pad(minuto)}`;
   }
 }

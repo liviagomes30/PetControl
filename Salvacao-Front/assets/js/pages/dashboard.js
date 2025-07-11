@@ -67,7 +67,34 @@ class DashboardController {
 
     const totalAnimais = this.animaisMap.size;
 
-    return { eventosAtivos, medicacoesPlanejadas, totalAnimais };
+    // Lógica para contar as medicações de hoje
+    const hojeStr = new Date().toISOString().slice(0, 10); // Formato "YYYY-MM-DD"
+    const medicacoesHoje = this.todosCompromissosMedicacao.filter((comp) => {
+      if (comp.status.toLowerCase() !== "planejado") {
+        return false;
+      }
+
+      let dataCompromissoStr = "";
+      if (Array.isArray(comp.dataHora)) {
+        // Formato [YYYY, MM, DD, ...]
+        const [ano, mes, dia] = comp.dataHora;
+        dataCompromissoStr = `${ano}-${String(mes).padStart(2, "0")}-${String(
+          dia
+        ).padStart(2, "0")}`;
+      } else if (typeof comp.dataHora === "string") {
+        // Formato "YYYY-MM-DDTHH:MM:SS"
+        dataCompromissoStr = comp.dataHora.slice(0, 10);
+      }
+
+      return dataCompromissoStr === hojeStr;
+    }).length;
+
+    return {
+      eventosAtivos,
+      medicacoesPlanejadas,
+      totalAnimais,
+      medicacoesHoje,
+    };
   }
 
   renderizarLayout() {
@@ -102,6 +129,10 @@ class DashboardController {
           font-size: 1rem;
           margin: 0;
         }
+        /* Estilo especial para o card de hoje */
+        .stat-card.today {
+            border-left-color: var(--laranja-vibrante, #f2541b);
+        }
       </style>
 
       <div class="content-header">
@@ -109,13 +140,17 @@ class DashboardController {
       </div>
 
       <div class="stat-card-grid mb-5">
+        <div class="stat-card today">
+          <h4>${stats.medicacoesHoje}</h4>
+          <p>Medicações para Hoje</p>
+        </div>
         <div class="stat-card">
           <h4>${stats.eventosAtivos}</h4>
           <p>Eventos Ativos</p>
         </div>
         <div class="stat-card">
           <h4>${stats.medicacoesPlanejadas}</h4>
-          <p>Medicações Planejadas</p>
+          <p>Total de Medicações Planejadas</p>
         </div>
         <div class="stat-card">
           <h4>${stats.totalAnimais}</h4>
@@ -133,6 +168,7 @@ class DashboardController {
         <div id="medicamentos-section"></div>
       </div>
     `;
+    // --- FIM DA MODIFICAÇÃO ---
 
     this.renderizarSecaoEventos();
     this.renderizarSecaoMedicacoes();
@@ -193,7 +229,15 @@ class DashboardController {
     `;
 
     new CardFiltrosMedicacoes("filtros-medicacoes-container").render();
-    new CardMedicacoes("card-medicacoes-container", compromissos).render();
+
+    // --- INÍCIO DA MODIFICAÇÃO ---
+    // Passamos o `this.animaisMap` para o construtor do CardMedicacoes.
+    new CardMedicacoes(
+      "card-medicacoes-container",
+      compromissos,
+      this.animaisMap
+    ).render();
+    // --- FIM DA MODIFICAÇÃO ---
 
     const selectAnimal = document.getElementById("filtroAnimalMedicacao");
     if (selectAnimal) {

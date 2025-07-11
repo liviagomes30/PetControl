@@ -12,9 +12,10 @@ class MedicacaoController {
     this.init();
   }
 
-  init() {
+  async init() {
     this.setupEventListeners();
-    this.carregarDadosIniciais();
+    await this.carregarDadosIniciais();
+    await this.handleUrlParameters();
   }
 
   setupEventListeners() {
@@ -53,6 +54,63 @@ class MedicacaoController {
       );
     } finally {
       UIComponents.Loading.esconder();
+    }
+  }
+
+  async handleUrlParameters() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const animalId = urlParams.get("animalId");
+    const compromissoId = urlParams.get("compromissoId");
+
+    if (animalId) {
+      const animalSelect = document.getElementById("animal");
+      animalSelect.value = animalId;
+
+      // Carrega os medicamentos para o animal pré-selecionado
+      await this.handleAnimalChange(animalId);
+
+      UIComponents.Toast.mostrar("Animal pré-selecionado com sucesso.", "info");
+
+      // Se houver um compromissoId, marca o checkbox correspondente
+      if (compromissoId) {
+        const checkbox = document.getElementById(
+          `medicamento-${compromissoId}`
+        );
+        if (checkbox) {
+          checkbox.checked = true;
+          // Foca visualmente no medicamento pré-selecionado
+          checkbox.scrollIntoView({ behavior: "smooth", block: "center" });
+          UIComponents.Toast.mostrar("Medicação pré-selecionada.", "info");
+        }
+      }
+    }
+  }
+
+  async handleAnimalChange(animalId) {
+    const container = document.getElementById(
+      "receitas-medicamentos-container"
+    );
+    if (!animalId) {
+      container.innerHTML =
+        '<p class="text-muted">Selecione um animal para ver os medicamentos.</p>';
+      return;
+    }
+
+    UIComponents.Loading.show("Buscando medicamentos...");
+    try {
+      const data = await this.medicacaoService.getReceitasAndMedicamentos(
+        animalId
+      );
+      this.renderReceitasEMedicamentos(data);
+    } catch (error) {
+      UIComponents.ModalErro.mostrar(
+        "Erro ao carregar os medicamentos do animal.",
+        error.message
+      );
+      container.innerHTML =
+        '<p class="text-danger">Não foi possível carregar os medicamentos.</p>';
+    } finally {
+      UIComponents.Loading.hide();
     }
   }
 
@@ -342,6 +400,23 @@ class MedicacaoController {
   getNestedValue(obj, path) {
     if (!obj || !path) return "";
     return path.split(".").reduce((acc, part) => acc && acc[part], obj);
+  }
+
+  handleUrlParameters() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const animalId = urlParams.get("animalId");
+
+    if (animalId) {
+      const animalSelect = document.getElementById("animal");
+      if (animalSelect) {
+        animalSelect.value = animalId;
+        // Dispara o evento 'change' para carregar as receitas e medicamentos do animal
+        animalSelect.dispatchEvent(new Event("change"));
+
+        // Adiciona um feedback visual para o usuário
+        UIComponents.Toast.info(`Animal pré-selecionado (ID: ${animalId}).`);
+      }
+    }
   }
 }
 
