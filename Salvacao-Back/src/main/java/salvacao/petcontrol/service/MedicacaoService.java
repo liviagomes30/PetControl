@@ -3,23 +3,15 @@ package salvacao.petcontrol.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import salvacao.petcontrol.config.SingletonDB;
-import salvacao.petcontrol.dto.BatchMedicacaoRequestDTO;
-import salvacao.petcontrol.dto.ItemMedicacaoRequestDTO;
-import salvacao.petcontrol.dto.MedicamentoCompletoDTO;
-import salvacao.petcontrol.dto.PosologiaDTO;
-import salvacao.petcontrol.model.MedicacaoModel;
-import salvacao.petcontrol.model.AnimalModel;
-import salvacao.petcontrol.model.MedicamentoModel;
-import salvacao.petcontrol.model.ReceitaMedicamentoModel;
-import salvacao.petcontrol.model.PosologiaModel;
-import salvacao.petcontrol.model.EstoqueModel;
-import salvacao.petcontrol.model.HistoricoModel;
+import salvacao.petcontrol.dto.*;
+import salvacao.petcontrol.model.*;
 import salvacao.petcontrol.util.ResultadoOperacao;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -449,5 +441,59 @@ public class MedicacaoService {
 
     public List<MedicacaoModel> searchMedicacoesByComposicao(String searchTerm) {
         return medicacaoModel.getMedDAO().searchMedicacoesByComposicao(searchTerm);
+    }
+
+    public List<CompromissoMedicacaoDTO> listarComoCompromissos() {
+        List<CompromissoMedicacaoDTO> compromissos = new ArrayList<>();
+        List<MedicacaoModel> aplicadas = medicacaoModel.getMedDAO().getAll();
+
+        if (aplicadas == null) {
+            return compromissos;
+        }
+
+        for (MedicacaoModel med : aplicadas) {
+            if (med == null) continue;
+
+            String animalNome = "Animal (ID: " + med.getIdanimal() + ")";
+            String medicamentoNome = "Medicamento (ID: " + med.getPosologia_medicamento_idproduto() + ")";
+
+            // Busca o nome do animal com segurança
+            try {
+                if (med.getIdanimal() != null) {
+                    AnimalModel animal = animalModel.getAnimalDAO().getId(med.getIdanimal());
+                    if (animal != null && animal.getNome() != null) {
+                        animalNome = animal.getNome();
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("Erro ao buscar nome do animal com ID " + med.getIdanimal() + ": " + e.getMessage());
+            }
+
+            // Busca o nome do medicamento com segurança
+            try {
+                if (med.getPosologia_medicamento_idproduto() != null) {
+                    MedicamentoCompletoDTO medicamentoCompleto = medicamentoModel.getMedDAO()
+                            .findMedicamentoCompleto(med.getPosologia_medicamento_idproduto());
+
+                    if (medicamentoCompleto != null && medicamentoCompleto.getProduto() != null && medicamentoCompleto.getProduto().getNome() != null) {
+                        medicamentoNome = medicamentoCompleto.getProduto().getNome();
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("Erro ao buscar nome do medicamento com ID " + med.getPosologia_medicamento_idproduto() + ": " + e.getMessage());
+            }
+
+            // Garante que a data não é nula antes de usá-la
+            if (med.getData() != null) {
+                compromissos.add(new CompromissoMedicacaoDTO(
+                        animalNome,
+                        medicamentoNome,
+                        med.getData().atStartOfDay(),
+                        "Aplicado",
+                        med.getIdmedicacao()
+                ));
+            }
+        }
+        return compromissos;
     }
 }

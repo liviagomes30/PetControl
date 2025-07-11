@@ -124,4 +124,16 @@ public class EventoService {
                         evento.getData().isBefore(LocalDate.now()))
                 .toList();
     }
+
+    public boolean updateStatus(int id, String status) throws Exception {
+        if (status == null || status.trim().isEmpty()) {
+            throw new Exception("O status não pode ser vazio!");
+        }
+        EventoModel evento = eventoModel.getDAL().findById(id);
+        if (evento == null) {
+            throw new Exception("Evento não encontrado!");
+        }
+        evento.setStatus(status);
+        return eventoModel.getDAL().updateEvento(id, evento);
+    }
 }

@@ -3,35 +3,6 @@ class CardCompromissosProximos {
   constructor(containerId, compromissos = []) {
     this.containerId = containerId;
     this.compromissos = compromissos;
-
-    if (this.compromissos.length === 0) {
-      this.compromissos = [
-        {
-          data: "17/05/2025 - 09:00",
-          animal: "Rex",
-          tipo: "Vacinação",
-          descricao: "Vacina V10",
-          status: "pendente",
-          prioridade: "high",
-        },
-        {
-          data: "17/05/2025 - 14:30",
-          animal: "Luna",
-          tipo: "Medicação",
-          descricao: "Antibiótico",
-          status: "pendente",
-          prioridade: "",
-        },
-        {
-          data: "18/05/2025 - 10:15",
-          animal: "Bob",
-          tipo: "Consulta",
-          descricao: "Check-up de rotina",
-          status: "pendente",
-          prioridade: "medium",
-        },
-      ];
-    }
   }
 
   render() {
@@ -40,33 +11,41 @@ class CardCompromissosProximos {
 
     let compromissosHTML = "";
 
-    this.compromissos.forEach((compromisso) => {
-      const prioridadeClass = compromisso.prioridade
-        ? `priority-${compromisso.prioridade}`
-        : "";
-
-      compromissosHTML += `
-        <tr class="${prioridadeClass}">
-          <td>${compromisso.data}</td>
-          <td>${compromisso.animal}</td>
-          <td>${compromisso.tipo}</td>
-          <td>${compromisso.descricao}</td>
-          <td>
-            <span class="badge badge-status-${
-              compromisso.status
-            }">${this.capitalizeFirstLetter(compromisso.status)}</span>
-          </td>
-          <td>
-            <button class="btn btn-sm btn-outline-primary">
-              <i class="bi bi-pencil"></i>
-            </button>
-            <button class="btn btn-sm btn-outline-success">
-              <i class="bi bi-check2"></i>
-            </button>
-          </td>
+    if (this.compromissos.length === 0) {
+      compromissosHTML = `
+        <tr>
+          <td colspan="6" class="text-center">Nenhum compromisso próximo.</td>
         </tr>
       `;
-    });
+    } else {
+      this.compromissos.forEach((compromisso) => {
+        const prioridadeClass = compromisso.prioridade
+          ? `priority-${compromisso.prioridade}`
+          : "";
+
+        compromissosHTML += `
+          <tr class="${prioridadeClass}">
+            <td>${compromisso.data}</td>
+            <td>${compromisso.animal}</td>
+            <td>${compromisso.tipo}</td>
+            <td>${compromisso.descricao}</td>
+            <td>
+              <span class="badge badge-status-${
+                compromisso.status
+              }">${this.capitalizeFirstLetter(compromisso.status)}</span>
+            </td>
+            <td>
+              <button class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-pencil"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-success">
+                <i class="bi bi-check2"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+    }
 
     const cardHTML = `
       <div class="card mb-4" id="card-compromissos-proximos">

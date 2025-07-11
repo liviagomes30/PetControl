@@ -94,13 +94,13 @@ public class ReceitaMedicamentoDAO {
     public List<ReceitaMedicamentoDTO> listarTodas() {
         List<ReceitaMedicamentoDTO> lista = new ArrayList<>();
         String sql = "SELECT r.idreceita, r.data, r.medico, r.clinica, r.animal_idanimal, a.nome as animal_nome " +
-                    "FROM receitamedicamento r " +
-                    "JOIN animal a ON r.animal_idanimal = a.idanimal " +
-                    "ORDER BY r.data DESC";
-        
+                "FROM receitamedicamento r " +
+                "JOIN animal a ON r.animal_idanimal = a.idanimal " +
+                "ORDER BY r.data DESC";
+
         try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
             ResultSet rs = stmt.executeQuery();
-            
+
             while (rs.next()) {
                 ReceitaMedicamentoDTO receita = new ReceitaMedicamentoDTO();
                 receita.setIdreceita(rs.getInt("idreceita"));
@@ -109,7 +109,12 @@ public class ReceitaMedicamentoDAO {
                 receita.setClinica(rs.getString("clinica"));
                 receita.setAnimal_idanimal(rs.getInt("animal_idanimal"));
                 receita.setAnimalNome(rs.getString("animal_nome"));
-                
+
+                // =================================================================
+                // LINHA DE CORREÇÃO ADICIONADA: Carrega as posologias da receita
+                // =================================================================
+                receita.setPosologias(getPosologiasByReceita(receita.getIdreceita()));
+
                 lista.add(receita);
             }
         } catch (SQLException e) {

@@ -3,12 +3,15 @@ package salvacao.petcontrol.service;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import salvacao.petcontrol.config.SingletonDB;
+import salvacao.petcontrol.dto.CompromissoMedicacaoDTO;
 import salvacao.petcontrol.dto.ReceitaMedicamentoDTO;
 import salvacao.petcontrol.dto.ReceitaMedicamentoRequestDTO;
 import salvacao.petcontrol.dto.PosologiaDTO;
@@ -293,5 +296,49 @@ public class ReceitaMedicamentoService {
 
     public List<PosologiaDTO> buscarPosologiasPorMedicamento(Integer medicamentoId) {
         return posologiaModel.getPosDAO().listarPorMedicamento(medicamentoId);
+    }
+
+    public List<CompromissoMedicacaoDTO> gerarAplicacoesFuturas() {
+        List<CompromissoMedicacaoDTO> compromissos = new ArrayList<>();
+        List<ReceitaMedicamentoDTO> todasReceitas = listarTodas();
+
+        if (todasReceitas == null) {
+            return compromissos;
+        }
+
+        for (ReceitaMedicamentoDTO receita : todasReceitas) {
+            // Pula a receita se dados essenciais estiverem faltando
+            // **AQUI ESTÁ A CORREÇÃO PRINCIPAL:** Verifica se a lista de posologias não é nula
+            if (receita == null || receita.getData() == null || receita.getPosologias() == null) {
+                continue; // Pula esta receita e vai para a próxima
+            }
+
+            LocalDateTime dataInicioReceita = receita.getData().atStartOfDay();
+
+            for (PosologiaDTO posologia : receita.getPosologias()) {
+                // Pula a posologia se dados para o cálculo estiverem inválidos ou nulos
+                if (posologia == null || posologia.getQuantidadedias() == null || posologia.getIntervalohoras() == null ||
+                        posologia.getQuantidadedias() <= 0 || posologia.getIntervalohoras() <= 0) {
+                    continue;
+                }
+
+                LocalDateTime dataFimTratamento = dataInicioReceita.plusDays(posologia.getQuantidadedias());
+                LocalDateTime proximaAplicacao = dataInicioReceita;
+
+                while (proximaAplicacao.isBefore(dataFimTratamento) || proximaAplicacao.isEqual(dataFimTratamento)) {
+                    if (proximaAplicacao.isAfter(LocalDateTime.now())) {
+                        compromissos.add(new CompromissoMedicacaoDTO(
+                                receita.getAnimalNome() != null ? receita.getAnimalNome() : "N/D",
+                                posologia.getMedicamentoNome() != null ? posologia.getMedicamentoNome() : "N/D",
+                                proximaAplicacao,
+                                "Planejado",
+                                posologia.getIdposologia()
+                        ));
+                    }
+                    proximaAplicacao = proximaAplicacao.plusHours(posologia.getIntervalohoras());
+                }
+            }
+        }
+        return compromissos;
     }
 }

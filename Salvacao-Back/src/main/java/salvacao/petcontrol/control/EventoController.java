@@ -10,6 +10,7 @@ import salvacao.petcontrol.service.EventoService;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -139,6 +140,21 @@ public class EventoController {
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                     .body("Erro ao deletar evento: " + e.getMessage());
+        }
+    }
+
+    @PutMapping("/{id}/status")
+    public ResponseEntity<Object> updateStatus(@PathVariable int id, @RequestBody Map<String, String> payload) {
+        try {
+            String status = payload.get("status");
+            boolean atualizado = eventoService.updateStatus(id, status);
+            if (atualizado) {
+                return ResponseEntity.ok("Status do evento alterado com sucesso!");
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Evento não encontrado.");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Erro ao atualizar status do evento: " + e.getMessage());
         }
     }
 }

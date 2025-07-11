@@ -1,6 +1,7 @@
 package salvacao.petcontrol.dto;
 
 import java.time.LocalDate;
+import java.util.ArrayList; // 1. IMPORTAR a classe ArrayList
 import java.util.List;
 
 public class ReceitaMedicamentoDTO {
@@ -13,6 +14,7 @@ public class ReceitaMedicamentoDTO {
     private List<PosologiaDTO> posologias;
 
     public ReceitaMedicamentoDTO() {
+        this.posologias = new ArrayList<>();
     }
 
     public ReceitaMedicamentoDTO(Integer idreceita, LocalDate data, String medico, String clinica, Integer animal_idanimal) {
@@ -21,8 +23,10 @@ public class ReceitaMedicamentoDTO {
         this.medico = medico;
         this.clinica = clinica;
         this.animal_idanimal = animal_idanimal;
+        this.posologias = new ArrayList<>();
     }
 
+    // Getters e Setters (sem alteração)
     public Integer getIdreceita() {
         return idreceita;
     }
@@ -78,4 +82,4 @@ public class ReceitaMedicamentoDTO {
     public void setPosologias(List<PosologiaDTO> posologias) {
         this.posologias = posologias;
     }
-} 
+}

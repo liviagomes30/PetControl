@@ -3,32 +3,6 @@ class CardCompromissosRecentes {
   constructor(containerId, compromissos = []) {
     this.containerId = containerId;
     this.compromissos = compromissos;
-
-    if (this.compromissos.length === 0) {
-      this.compromissos = [
-        {
-          data: "16/05/2025 - 15:00",
-          animal: "Mel",
-          tipo: "Vacinação",
-          descricao: "Antirrábica",
-          status: "concluido",
-        },
-        {
-          data: "15/05/2025 - 09:30",
-          animal: "Thor",
-          tipo: "Medicação",
-          descricao: "Vermífugo",
-          status: "concluido",
-        },
-        {
-          data: "14/05/2025 - 14:00",
-          animal: "Nina",
-          tipo: "Consulta",
-          descricao: "Avaliação dermatológica",
-          status: "cancelado",
-        },
-      ];
-    }
   }
 
   render() {
@@ -37,26 +11,34 @@ class CardCompromissosRecentes {
 
     let compromissosHTML = "";
 
-    this.compromissos.forEach((compromisso) => {
-      compromissosHTML += `
+    if (this.compromissos.length === 0) {
+      compromissosHTML = `
         <tr>
-          <td>${compromisso.data}</td>
-          <td>${compromisso.animal}</td>
-          <td>${compromisso.tipo}</td>
-          <td>${compromisso.descricao}</td>
-          <td>
-            <span class="badge badge-status-${
-              compromisso.status
-            }">${this.capitalizeFirstLetter(compromisso.status)}</span>
-          </td>
-          <td>
-            <button class="btn btn-sm btn-outline-primary view-details">
-              <i class="bi bi-eye"></i>
-            </button>
-          </td>
+          <td colspan="6" class="text-center">Nenhum compromisso recente.</td>
         </tr>
       `;
-    });
+    } else {
+      this.compromissos.forEach((compromisso) => {
+        compromissosHTML += `
+          <tr>
+            <td>${compromisso.data}</td>
+            <td>${compromisso.animal}</td>
+            <td>${compromisso.tipo}</td>
+            <td>${compromisso.descricao}</td>
+            <td>
+              <span class="badge badge-status-${
+                compromisso.status
+              }">${this.capitalizeFirstLetter(compromisso.status)}</span>
+            </td>
+            <td>
+              <button class="btn btn-sm btn-outline-primary view-details">
+                <i class="bi bi-eye"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+    }
 
     const cardHTML = `
       <div class="card" id="card-compromissos-recentes">
@@ -104,6 +86,7 @@ class CardCompromissosRecentes {
   }
 
   capitalizeFirstLetter(string) {
+    if (!string) return "";
     return string.charAt(0).toUpperCase() + string.slice(1);
   }
 }

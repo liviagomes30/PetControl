@@ -6,7 +6,7 @@ class MedicacaoService {
   }
 
   // ==================== MEDICACAO ENDPOINTS ====================
-  
+
   async listarTodos() {
     try {
       const response = await fetch(`${this.baseUrl}${this.medicacaoEndpoint}`);
@@ -23,7 +23,9 @@ class MedicacaoService {
 
   async buscarPorId(id) {
     try {
-      const response = await fetch(`${this.baseUrl}${this.medicacaoEndpoint}/${id}`);
+      const response = await fetch(
+        `${this.baseUrl}${this.medicacaoEndpoint}/${id}`
+      );
       if (!response.ok) {
         if (response.status === 404) return null;
         throw new Error(`Erro ${response.status}: ${await response.text()}`);
@@ -37,9 +39,12 @@ class MedicacaoService {
 
   async apagar(id) {
     try {
-      const response = await fetch(`${this.baseUrl}${this.medicacaoEndpoint}/${id}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `${this.baseUrl}${this.medicacaoEndpoint}/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
       return response;
     } catch (error) {
       console.error(`Erro ao apagar medicação ${id}:`, error);
@@ -49,7 +54,9 @@ class MedicacaoService {
 
   async buscarPorAnimal(animalId) {
     try {
-      const response = await fetch(`${this.baseUrl}${this.medicacaoEndpoint}/animal/${animalId}`);
+      const response = await fetch(
+        `${this.baseUrl}${this.medicacaoEndpoint}/animal/${animalId}`
+      );
       if (!response.ok) {
         if (response.status === 404) return [];
         throw new Error(`Erro ${response.status}: ${await response.text()}`);
@@ -64,7 +71,9 @@ class MedicacaoService {
   async buscarPorComposicao(searchTerm) {
     try {
       const response = await fetch(
-        `${this.baseUrl}${this.medicacaoEndpoint}/search-by-composicao?searchTerm=${encodeURIComponent(searchTerm)}`
+        `${this.baseUrl}${
+          this.medicacaoEndpoint
+        }/search-by-composicao?searchTerm=${encodeURIComponent(searchTerm)}`
       );
       if (!response.ok) {
         if (response.status === 404) return [];
@@ -79,14 +88,17 @@ class MedicacaoService {
 
   async efetuarMedicacaoEmLote(batchRequest) {
     try {
-      const response = await fetch(`${this.baseUrl}${this.medicacaoEndpoint}/efetuar-lote`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(batchRequest),
-      });
-      
+      const response = await fetch(
+        `${this.baseUrl}${this.medicacaoEndpoint}/efetuar-lote`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(batchRequest),
+        }
+      );
+
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Erro ${response.status}: ${errorText}`);
@@ -102,14 +114,17 @@ class MedicacaoService {
 
   async cadastrarReceita(receita) {
     try {
-      const response = await fetch(`${this.baseUrl}${this.receituarioEndpoint}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(receita),
-      });
-      
+      const response = await fetch(
+        `${this.baseUrl}${this.receituarioEndpoint}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(receita),
+        }
+      );
+
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Erro ${response.status}: ${errorText}`);
@@ -123,7 +138,9 @@ class MedicacaoService {
 
   async listarTodasReceitas() {
     try {
-      const response = await fetch(`${this.baseUrl}${this.receituarioEndpoint}`);
+      const response = await fetch(
+        `${this.baseUrl}${this.receituarioEndpoint}`
+      );
       if (!response.ok) {
         if (response.status === 404) return [];
         throw new Error(`Erro ${response.status}: ${await response.text()}`);
@@ -137,7 +154,9 @@ class MedicacaoService {
 
   async buscarReceitaPorId(id) {
     try {
-      const response = await fetch(`${this.baseUrl}${this.receituarioEndpoint}/${id}`);
+      const response = await fetch(
+        `${this.baseUrl}${this.receituarioEndpoint}/${id}`
+      );
       if (!response.ok) {
         if (response.status === 404) return null;
         throw new Error(`Erro ${response.status}: ${await response.text()}`);
@@ -151,14 +170,17 @@ class MedicacaoService {
 
   async alterarReceita(id, receita) {
     try {
-      const response = await fetch(`${this.baseUrl}${this.receituarioEndpoint}/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(receita),
-      });
-      
+      const response = await fetch(
+        `${this.baseUrl}${this.receituarioEndpoint}/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(receita),
+        }
+      );
+
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Erro ${response.status}: ${errorText}`);
@@ -172,10 +194,13 @@ class MedicacaoService {
 
   async apagarReceita(id) {
     try {
-      const response = await fetch(`${this.baseUrl}${this.receituarioEndpoint}/${id}`, {
-        method: "DELETE",
-      });
-      
+      const response = await fetch(
+        `${this.baseUrl}${this.receituarioEndpoint}/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Erro ${response.status}: ${errorText}`);
@@ -189,7 +214,9 @@ class MedicacaoService {
 
   async listarReceitasPorAnimal(animalId) {
     try {
-      const response = await fetch(`${this.baseUrl}${this.receituarioEndpoint}/animal/${animalId}`);
+      const response = await fetch(
+        `${this.baseUrl}${this.receituarioEndpoint}/animal/${animalId}`
+      );
       if (!response.ok) {
         if (response.status === 404) return [];
         throw new Error(`Erro ${response.status}: ${await response.text()}`);
@@ -204,7 +231,9 @@ class MedicacaoService {
   async buscarReceitasPorMedico(medico) {
     try {
       const response = await fetch(
-        `${this.baseUrl}${this.receituarioEndpoint}/medico/${encodeURIComponent(medico)}`
+        `${this.baseUrl}${this.receituarioEndpoint}/medico/${encodeURIComponent(
+          medico
+        )}`
       );
       if (!response.ok) {
         if (response.status === 404) return [];
@@ -219,7 +248,9 @@ class MedicacaoService {
 
   async buscarReceitasPorData(data) {
     try {
-      const response = await fetch(`${this.baseUrl}${this.receituarioEndpoint}/data/${data}`);
+      const response = await fetch(
+        `${this.baseUrl}${this.receituarioEndpoint}/data/${data}`
+      );
       if (!response.ok) {
         if (response.status === 404) return [];
         throw new Error(`Erro ${response.status}: ${await response.text()}`);
@@ -235,7 +266,9 @@ class MedicacaoService {
 
   async buscarPosologiasPorReceita(receitaId) {
     try {
-      const response = await fetch(`${this.baseUrl}${this.receituarioEndpoint}/${receitaId}/posologias`);
+      const response = await fetch(
+        `${this.baseUrl}${this.receituarioEndpoint}/${receitaId}/posologias`
+      );
       if (!response.ok) {
         if (response.status === 404) return [];
         throw new Error(`Erro ${response.status}: ${await response.text()}`);
@@ -265,7 +298,9 @@ class MedicacaoService {
 
   async buscarMedicamentosDaReceita(receitaId) {
     try {
-      const response = await fetch(`${this.baseUrl}${this.receituarioEndpoint}/${receitaId}/medicamentos`);
+      const response = await fetch(
+        `${this.baseUrl}${this.receituarioEndpoint}/${receitaId}/medicamentos`
+      );
       if (!response.ok) {
         if (response.status === 404) return [];
         throw new Error(`Erro ${response.status}: ${await response.text()}`);
@@ -281,7 +316,9 @@ class MedicacaoService {
 
   async buscarAnimais() {
     try {
-      const response = await fetch(`${this.baseUrl}${this.receituarioEndpoint}/animais`);
+      const response = await fetch(
+        `${this.baseUrl}${this.receituarioEndpoint}/animais`
+      );
       if (!response.ok) {
         if (response.status === 404) return [];
         throw new Error(`Erro ${response.status}: ${await response.text()}`);
@@ -295,7 +332,9 @@ class MedicacaoService {
 
   async buscarMedicamentos() {
     try {
-      const response = await fetch(`${this.baseUrl}${this.receituarioEndpoint}/medicamentos`);
+      const response = await fetch(
+        `${this.baseUrl}${this.receituarioEndpoint}/medicamentos`
+      );
       if (!response.ok) {
         if (response.status === 404) return [];
         throw new Error(`Erro ${response.status}: ${await response.text()}`);
@@ -322,6 +361,24 @@ class MedicacaoService {
     } catch (error) {
       console.error("Erro ao listar medicamentos disponíveis:", error);
       throw error;
+    }
+  }
+
+  async listarCompromissosDeMedicacao() {
+    try {
+      const response = await fetch(`${this.baseURL}/compromissos-medicacao`);
+      if (!response.ok) {
+        // Se a rota não for encontrada ou não houver dados, retorna uma lista vazia.
+        if (response.status === 404) {
+          return [];
+        }
+        throw new Error(`Erro HTTP ao buscar medicações: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error("Erro ao listar compromissos de medicação:", error);
+      // Lança o erro para que o dashboard possa tratá-lo.
+      throw new Error("Não foi possível carregar a lista de medicações.");
     }
   }
 }

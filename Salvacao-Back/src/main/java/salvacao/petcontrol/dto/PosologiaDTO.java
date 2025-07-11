@@ -1,6 +1,7 @@
 package salvacao.petcontrol.dto;
 
 public class PosologiaDTO {
+    private long idposologia;
     private String dose;
     private Integer quantidadedias;
     private Integer intervalohoras;
@@ -32,6 +33,10 @@ public class PosologiaDTO {
         this.medicamentoNome = medicamentoNome;
         this.medicamentoComposicao = medicamentoComposicao;
         this.receitamedicamento_idreceita = receitamedicamento_idreceita;
+    }
+
+    public long getIdposologia() {
+        return idposologia;
     }
 
     public String getDose() {
@@ -97,4 +102,6 @@ public class PosologiaDTO {
     public void setReceitamedicamento_idreceita(Integer receitamedicamento_idreceita) {
         this.receitamedicamento_idreceita = receitamedicamento_idreceita;
     }
-} 
+
+
+}

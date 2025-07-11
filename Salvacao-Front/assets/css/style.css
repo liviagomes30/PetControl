@@ -488,7 +488,7 @@ table tbody tr:last-child td {
   border-radius: var(--border-radius-md);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   padding: var(--spacing-xl);
-  max-width: 700px;
+
   margin: 0 auto;
 }
 
