@@ -1,48 +1,32 @@
 package salvacao.petcontrol.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.stereotype.Repository;
 import salvacao.petcontrol.dao.AdocaoDAL;
+
 import java.time.LocalDate;
 
 @Repository
 public class AdocaoModel {
+
     private int idAdocao;
     private int idAdotante;
     private int idAnimal;
+    private AdocaoDAL adocaoDAL;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate dataAdocao;
+
     private int pessoaIdPessoa;
     private String obs;
     private String statusAcompanhamento;
-    private LocalDate dataAcompanhamento;
-    private AdocaoDAL adocaoDAL;
 
-    // Construtor vazio
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate dataAcompanhamento;
+
     public AdocaoModel() {
         adocaoDAL = new AdocaoDAL();
-    }
-
-    // Construtor com todos os campos
-    public AdocaoModel(int idAdocao, int idAdotante, int idAnimal, LocalDate dataAdocao,
-                       int pessoaIdPessoa, String obs, String statusAcompanhamento, LocalDate dataAcompanhamento) {
-        this.idAdocao = idAdocao;
-        this.idAdotante = idAdotante;
-        this.idAnimal = idAnimal;
-        this.dataAdocao = dataAdocao;
-        this.pessoaIdPessoa = pessoaIdPessoa;
-        this.obs = obs;
-        this.statusAcompanhamento = statusAcompanhamento;
-        this.dataAcompanhamento = dataAcompanhamento;
-        this.adocaoDAL = new AdocaoDAL();
-    }
-
-    // Método para acessar o DAO
-    @JsonIgnore
-    public AdocaoDAL getDAL() {
-        if (adocaoDAL == null) {
-            adocaoDAL = new AdocaoDAL();
-        }
-        return adocaoDAL;
     }
 
     public int getIdAdocao() {
@@ -73,8 +57,8 @@ public class AdocaoModel {
         return dataAdocao;
     }
 
-    public void setDataAdocao(String dataAdocao) {
-        this.dataAdocao = (dataAdocao != null) ? LocalDate.parse(dataAdocao) : null;
+    public void setDataAdocao(LocalDate dataAdocao) {
+        this.dataAdocao = dataAdocao;
     }
 
     public int getPessoaIdPessoa() {
@@ -107,5 +91,10 @@ public class AdocaoModel {
 
     public void setDataAcompanhamento(LocalDate dataAcompanhamento) {
         this.dataAcompanhamento = dataAcompanhamento;
+    }
+
+    @JsonIgnore
+    public AdocaoDAL getDAL() {
+        return adocaoDAL;
     }
 }

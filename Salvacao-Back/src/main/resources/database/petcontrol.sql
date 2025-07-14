@@ -11,12 +11,14 @@ CREATE TABLE acertoestoque (
 COMMENT ON TABLE acertoestoque IS 'Registra operações de acerto de estoque';
 
 CREATE TABLE adocao (
-    idadocao        INTEGER PRIMARY KEY,
-    idadotante      INTEGER NOT NULL,
-    idanimal        INTEGER NOT NULL,
-    dataadocao      DATE NOT NULL,
-    pessoa_idpessoa INTEGER NOT NULL,
-    obs             VARCHAR(500)
+    idadocao               INTEGER PRIMARY KEY,
+    idadotante             INTEGER NOT NULL,
+    idanimal               INTEGER NOT NULL,
+    dataadocao             DATE NOT NULL,
+    pessoa_idpessoa        INTEGER NOT NULL,
+    obs                    VARCHAR(500),
+    status_acompanhamento  VARCHAR(50),
+    data_acompanhamento    DATE
 );
 
 CREATE TABLE agendavacinacao (
@@ -326,14 +328,14 @@ COMMENT ON COLUMN receitamedicamento.status IS 'Status da receita (ATIVA, CONCLU
 -- =====================================
 
 -- Inserindo pessoas e usuários
-INSERT INTO pessoa (nome, cpf, endereco, telefone, email) VALUES 
+INSERT INTO pessoa (nome, cpf, endereco, telefone, email) VALUES
 ('João Silva', '123.456.789-00', 'Rua A, 123', '11999999999', 'joao@email.com'),
 ('Maria Santos', '987.654.321-00', 'Avenida B, 456', '11888888888', 'maria@email.com'),
 ('Pedro Costa', '456.789.123-00', 'Rua C, 789', '11777777777', 'pedro@email.com'),
 ('Ana Paula', '321.654.987-00', 'Alameda D, 321', '11666666666', 'ana@email.com'),
 ('Carlos Souza', '789.123.456-00', 'Travessa E, 654', '11555555555', 'carlos@email.com');
 
-INSERT INTO usuario (login, senha, pessoa_idpessoa) VALUES 
+INSERT INTO usuario (login, senha, pessoa_idpessoa) VALUES
 ('joao', 'senha123', 1),
 ('maria', 'senha456', 2),
 ('pedro', 'senha789', 3),
@@ -341,7 +343,7 @@ INSERT INTO usuario (login, senha, pessoa_idpessoa) VALUES
 ('carlos', 'senha654', 5);
 
 -- Tipos de produtos
-INSERT INTO tipoproduto (descricao) VALUES 
+INSERT INTO tipoproduto (descricao) VALUES
 ('Medicamento'),
 ('Vacina'),
 ('Suplemento'),
@@ -351,7 +353,7 @@ INSERT INTO tipoproduto (descricao) VALUES
 ('Higiene');
 
 -- Unidades de medida
-INSERT INTO unidadedemedida (descricao, sigla) VALUES 
+INSERT INTO unidadedemedida (descricao, sigla) VALUES
 ('Mililitro', 'ml'),
 ('Miligrama', 'mg'),
 ('Comprimido', 'comp'),
@@ -361,7 +363,7 @@ INSERT INTO unidadedemedida (descricao, sigla) VALUES
 ('Litro', 'l');
 
 -- Produtos diversos
-INSERT INTO produto (nome, idtipoproduto, idunidademedida, fabricante, preco, estoque_minimo, data_cadastro, ativo) VALUES 
+INSERT INTO produto (nome, idtipoproduto, idunidademedida, fabricante, preco, estoque_minimo, data_cadastro, ativo) VALUES
 ('Vacina Antirrábica', 2, 1, 'LabVet', 35.50, 10, '2024-01-01', TRUE),
 ('Vermífugo Canino', 1, 3, 'PetMed', 12.80, 20, '2024-01-01', TRUE),
 ('Ração Premium Cães', 5, 5, 'NutriPet', 89.90, 5, '2024-01-01', TRUE),
@@ -374,17 +376,17 @@ INSERT INTO produto (nome, idtipoproduto, idunidademedida, fabricante, preco, es
 ('Ração Gatos Filhotes', 5, 5, 'FelineFood', 67.80, 6, '2024-01-01', TRUE);
 
 -- Vacinas
-INSERT INTO vacina (idproduto, lote, validade) VALUES 
+INSERT INTO vacina (idproduto, lote, validade) VALUES
 (1, 'VAR001', '2025-12-31'),
 (8, 'V10002', '2025-06-30');
 
 -- Medicamentos
-INSERT INTO medicamento (idproduto, composicao) VALUES 
+INSERT INTO medicamento (idproduto, composicao) VALUES
 (2, 'Praziquantel + Pirantel'),
 (4, 'Meloxicam 0,5mg'),
 (9, 'Amoxilina 500mg');
 
-INSERT INTO animal (nome, especie, datanascimento, raca, porte, sexo, status, dataresgate, foto, castrado, cor) VALUES 
+INSERT INTO animal (nome, especie, datanascimento, raca, porte, sexo, status, dataresgate, foto, castrado, cor) VALUES
 ('Rex', 'Cachorro', '2021-01-15', 'Vira-lata', 'Médio', 'Macho', 'Disponível', '2023-12-01', NULL, TRUE, 'Marrom'),
 ('Mimi', 'Gato', '2022-02-20', 'Persa', 'Pequeno', 'Fêmea', 'Disponível', '2024-01-10', NULL, TRUE, 'Branco'),
 ('Bolt', 'Cachorro', '2019-03-10', 'Pastor Alemão', 'Grande', 'Macho', 'Disponível', '2023-11-15', NULL, FALSE, 'Preto e Marrom'),
@@ -394,7 +396,7 @@ INSERT INTO animal (nome, especie, datanascimento, raca, porte, sexo, status, da
 ('Max', 'Cachorro', '2018-07-15', 'Bulldog', 'Médio', 'Macho', 'Disponível', '2023-09-30', NULL, TRUE, 'Branco e Marrom'),
 ('Bella', 'Cachorro', '2022-08-01', 'Poodle', 'Pequeno', 'Fêmea', 'Disponível', '2024-03-05', NULL, FALSE, 'Branco');
 
-INSERT INTO historico (descricao, data, animal_idanimal, vacinacao_idvacinacao, medicacao_idmedicacao) VALUES 
+INSERT INTO historico (descricao, data, animal_idanimal, vacinacao_idvacinacao, medicacao_idmedicacao) VALUES
 ('Vacinação antirrábica e vermifugação', '2024-01-15', 1, NULL, NULL),
 ('Tratamento anti-inflamatório para artrite', '2024-02-20', 2, NULL, NULL),
 ('Vacinação V10 e tratamento antibiótico', '2024-03-10', 3, NULL, NULL),
@@ -407,7 +409,7 @@ INSERT INTO historico (descricao, data, animal_idanimal, vacinacao_idvacinacao, 
 
 
 -- Receitas médicas
-INSERT INTO receitamedicamento (data, medico, clinica, animal_idanimal) VALUES 
+INSERT INTO receitamedicamento (data, medico, clinica, animal_idanimal) VALUES
 ('2024-01-15', 'Dr. João Veterinário', 'Clínica VetCare', 1),
 ('2024-02-20', 'Dra. Maria Pet', 'Hospital Animal', 2),
 ('2024-03-10', 'Dr. Pedro Silva', 'Clínica VetCare', 3),
@@ -415,19 +417,19 @@ INSERT INTO receitamedicamento (data, medico, clinica, animal_idanimal) VALUES
 ('2024-05-12', 'Dr. Carlos Vet', 'Hospital Animal', 5);
 
 -- Posologias
-INSERT INTO posologia (dose, quantidadedias, intervalohoras, frequencia_diaria, medicamento_idproduto, receitamedicamento_idreceita) VALUES 
+INSERT INTO posologia (dose, quantidadedias, intervalohoras, frequencia_diaria, medicamento_idproduto, receitamedicamento_idreceita) VALUES
 ('1 comprimido', 7, 24, 1, 2, 1),
 ('0.5ml', 5, 12, 2, 4, 2),
 ('250mg', 10, 8, 3, 9, 3);
 
 -- Medicações
-INSERT INTO medicacao (idanimal, idhistorico, posologia_medicamento_idproduto, posologia_receitamedicamento_idreceita, data) VALUES 
+INSERT INTO medicacao (idanimal, idhistorico, posologia_medicamento_idproduto, posologia_receitamedicamento_idreceita, data) VALUES
 (1, 1, 2, 1, '2024-01-15'),
 (2, 2, 4, 2, '2024-02-20'),
 (3, 3, 9, 3, '2024-03-10');
 
 -- Vacinações
-INSERT INTO vacinacao (idvacina, idanimal, idhistorico, data, local) VALUES 
+INSERT INTO vacinacao (idvacina, idanimal, idhistorico, data, local) VALUES
 (1, 1, 1, '2024-01-15', 'Clínica VetCare'),
 (8, 2, 2, '2024-02-20', 'Hospital Animal'),
 (1, 3, 3, '2024-03-10', 'Clínica VetCare'),
@@ -444,7 +446,7 @@ UPDATE historico SET vacinacao_idvacinacao = 5 WHERE idhistorico = 5;
 
 
 -- Estoque inicial
-INSERT INTO estoque (idproduto, quantidade) VALUES 
+INSERT INTO estoque (idproduto, quantidade) VALUES
 (1, 50),   -- Vacina Antirrábica
 (2, 100),  -- Vermífugo Canino
 (3, 25),   -- Ração Premium Cães
@@ -457,7 +459,7 @@ INSERT INTO estoque (idproduto, quantidade) VALUES
 (10, 20);  -- Ração Gatos Filhotes
 
 -- Motivos de movimentação
-INSERT INTO motivomovimentacao (descricao, tipo) VALUES 
+INSERT INTO motivomovimentacao (descricao, tipo) VALUES
 ('Compra de fornecedor', 'ENTRADA'),
 ('Doação recebida', 'ENTRADA'),
 ('Devolução de cliente', 'ENTRADA'),
@@ -468,7 +470,7 @@ INSERT INTO motivomovimentacao (descricao, tipo) VALUES
 ('Perda/Quebra', 'SAIDA');
 
 -- Movimentações de estoque
-INSERT INTO movimentacaoestoque (tipomovimentacao, data, usuario_pessoa_id, obs, fornecedor) VALUES 
+INSERT INTO movimentacaoestoque (tipomovimentacao, data, usuario_pessoa_id, obs, fornecedor) VALUES
 ('ENTRADA', '2024-01-10', 1, 'Compra mensal de medicamentos', 'FornecedorA'),
 ('ENTRADA', '2024-02-15', 2, 'Doação de vacinas', NULL),
 ('SAIDA', '2024-03-20', 3, 'Tratamentos realizados no mês', NULL),
@@ -476,7 +478,7 @@ INSERT INTO movimentacaoestoque (tipomovimentacao, data, usuario_pessoa_id, obs,
 ('SAIDA', '2024-05-10', 4, 'Vendas do período', NULL);
 
 -- Itens de movimentação
-INSERT INTO itemmovimentacao (movimentacao_id, produto_id, quantidade, motivomovimentacao_id) VALUES 
+INSERT INTO itemmovimentacao (movimentacao_id, produto_id, quantidade, motivomovimentacao_id) VALUES
 (1, 1, 30, 1),    -- Entrada vacina antirrábica
 (1, 4, 50, 1),    -- Entrada anti-inflamatório
 (2, 8, 20, 2),    -- Doação vacina V10
@@ -487,18 +489,18 @@ INSERT INTO itemmovimentacao (movimentacao_id, produto_id, quantidade, motivomov
 (5, 7, 3, 4);     -- Venda shampoo
 
 -- Acertos de estoque
-INSERT INTO acertoestoque (data, usuario_pessoa_id, motivo, observacao) VALUES 
+INSERT INTO acertoestoque (data, usuario_pessoa_id, motivo, observacao) VALUES
 ('2024-06-01', 1, 'Inventário mensal', 'Ajuste após contagem física'),
 ('2024-06-15', 2, 'Produto vencido encontrado', 'Lote VAR001 com validade próxima');
 
 -- Itens de acerto de estoque
-INSERT INTO itemacertoestoque (acerto_id, produto_id, quantidade_antes, quantidade_depois, tipoajuste) VALUES 
+INSERT INTO itemacertoestoque (acerto_id, produto_id, quantidade_antes, quantidade_depois, tipoajuste) VALUES
 (1, 5, 60, 58, 'SAIDA'),      -- Vitamina B12 - diferença no inventário
 (1, 10, 20, 22, 'ENTRADA'),   -- Ração gatos - encontrada unidade extra
 (2, 1, 65, 60, 'SAIDA');      -- Vacina antirrábica - descarte por vencimento
 
 -- Agendamentos de vacinação
-INSERT INTO agendavacinacao (animal_idanimal, vacina_idproduto, data, motivo, usuario_pessoa_idpessoa) VALUES 
+INSERT INTO agendavacinacao (animal_idanimal, vacina_idproduto, data, motivo, usuario_pessoa_idpessoa) VALUES
 (6, 1, '2024-08-15', 'Vacinação antirrábica anual', 1),
 (7, 8, '2024-08-20', 'Primeira dose V10', 2),
 (8, 1, '2024-09-01', 'Revacinação', 3),
@@ -506,9 +508,9 @@ INSERT INTO agendavacinacao (animal_idanimal, vacina_idproduto, data, motivo, us
 (2, 1, '2024-10-01', 'Vacinação anual', 2);
 
 -- Adoções
-INSERT INTO adocao (idadotante, idanimal, dataadocao, pessoa_idpessoa, obs) VALUES 
-(1, 6, '2024-07-01', 4, 'Adoção bem-sucedida, animal adaptado'),
-(2, 7, '2024-07-15', 5, 'Família com experiência em pets');
+INSERT INTO adocao (idadotante, idanimal, dataadocao, pessoa_idpessoa, obs, status_acompanhamento, data_acompanhamento) VALUES
+(1, 6, '2024-07-01', 4, 'Adoção bem-sucedida, animal adaptado', 'CONCLUIDA', '2024-07-15'),
+(2, 7, '2024-07-15', 5, 'Família com experiência em pets', 'EM_ANDAMENTO', NULL);
 
 -- Eventos
 INSERT INTO evento (descricao, data, foto, animal_idanimal, local, responsavel, status) VALUES 

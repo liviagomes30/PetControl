@@ -4,14 +4,10 @@ import org.springframework.stereotype.Repository;
 import salvacao.petcontrol.config.SingletonDB;
 import salvacao.petcontrol.model.AnimalModel;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.sql.Date;
 
 @Repository
 public class AnimalDAO {
@@ -403,5 +399,14 @@ public class AnimalDAO {
             e.printStackTrace();;
         }
         return animalModelList;
+    }
+
+    public boolean updateStatus(int idAnimal, String novoStatus, Connection conn) throws SQLException {
+        String sql = "UPDATE animal SET status = ? WHERE idanimal = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, novoStatus);
+            stmt.setInt(2, idAnimal);
+            return stmt.executeUpdate() > 0;
+        }
     }
 }

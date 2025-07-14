@@ -19,16 +19,16 @@ public class PessoaService {
         if (!Validation.isCpfValido(pessoa.getCpf()))
             throw new Exception("CPF inválido!");
 
-        if (pessoaModel.getDAL().findByPessoa(pessoa.getCpf()) != null)
+        if (pessoaModel.getPessoaDAO().findByPessoa(pessoa.getCpf()) != null)
             throw new Exception("Usuário já cadastrado!");
 
         System.out.println("Adicionando pessoa: " + pessoa);
-        PessoaModel pessoaFinal = pessoaModel.getDAL().addPessoa(pessoa);
+        PessoaModel pessoaFinal = pessoaModel.getPessoaDAO().addPessoa(pessoa);
         return pessoaFinal;
     }
 
     public PessoaModel getPessoaCpf(String cpf) {
-        PessoaModel pessoa = pessoaModel.getDAL().findByPessoa(cpf);
+        PessoaModel pessoa = pessoaModel.getPessoaDAO().findByPessoa(cpf);
         return pessoa;
     }
 
@@ -36,10 +36,10 @@ public class PessoaService {
         if(!Validation.isCpfValido(pessoa.getCpf()))
             throw new Exception("CPF inválido!");
 
-        if(pessoaModel.getDAL().findByPessoa(pessoa.getCpf()) == null)
+        if(pessoaModel.getPessoaDAO().findByPessoa(pessoa.getCpf()) == null)
             throw new Exception("Não existe esse usuário!");
 
-        pessoaModel.getDAL().updatePessoa(cpf, pessoa);
+        pessoaModel.getPessoaDAO().updatePessoa(cpf, pessoa);
         return true;
     }
 
@@ -47,16 +47,16 @@ public class PessoaService {
         if(!Validation.isCpfValido(cpf))
             throw new Exception("CPF inválido!");
 
-        PessoaModel pessoaDelete = pessoaModel.getDAL().findByPessoa(cpf);
+        PessoaModel pessoaDelete = pessoaModel.getPessoaDAO().findByPessoa(cpf);
 
         if(pessoaDelete == null)
             throw new Exception("Não existe esse usuário!");
 
-        if(!pessoaModel.getDAL().deleteByPessoa(cpf))
+        if(!pessoaModel.getPessoaDAO().deleteByPessoa(cpf))
             throw new Exception("Erro ao deletar uma pessoa!");
     }
 
     public List<PessoaModel> getAllPessoa() {
-        return pessoaModel.getDAL().getAll();
+        return pessoaModel.getPessoaDAO().getAll();
     }
 }
