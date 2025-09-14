@@ -1,4 +1,3 @@
-// salvacao.petcontrol.control.AcertoEstoqueController.java
 package salvacao.petcontrol.control;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import salvacao.petcontrol.dto.AcertoEstoqueCompletoDTO;
 import salvacao.petcontrol.dto.AcertoEstoqueRequestDTO;
 import salvacao.petcontrol.model.AcertoEstoqueModel;
-import salvacao.petcontrol.service.AcertoEstoqueService;
+// 1. Importar o novo serviço V2
+import salvacao.petcontrol.service.AcertoEstoqueServiceV2;
 import salvacao.petcontrol.util.ResultadoOperacao;
 
 import java.time.LocalDate;
@@ -21,12 +21,12 @@ import java.util.List;
 public class AcertoEstoqueController {
 
     @Autowired
-    private AcertoEstoqueService acertoEstoqueService;
+    private AcertoEstoqueServiceV2 acertoEstoqueService;
 
     @GetMapping("/{id}")
-    public ResponseEntity<Object> getId(@PathVariable Integer id) { // Renamed from getAcertoById
+    public ResponseEntity<Object> getId(@PathVariable Integer id) {
         try {
-            AcertoEstoqueCompletoDTO acerto = acertoEstoqueService.getId(id); // Calls service.getId()
+            AcertoEstoqueCompletoDTO acerto = acertoEstoqueService.getId(id);
             return ResponseEntity.ok(acerto);
         } catch (Exception e) {
             ResultadoOperacao resultado = new ResultadoOperacao("buscar", false, e.getMessage());
@@ -35,8 +35,8 @@ public class AcertoEstoqueController {
     }
 
     @GetMapping
-    public ResponseEntity<Object> getAll() { // Renamed from getAllAcertos
-        List<AcertoEstoqueModel> acertos = acertoEstoqueService.getAll(); // Calls service.getAll()
+    public ResponseEntity<Object> getAll() {
+        List<AcertoEstoqueModel> acertos = acertoEstoqueService.getAll();
         if (!acertos.isEmpty()) {
             return ResponseEntity.ok(acertos);
         }
@@ -45,11 +45,11 @@ public class AcertoEstoqueController {
     }
 
     @GetMapping("/periodo")
-    public ResponseEntity<Object> getByPeriodo( // Renamed from getAcertosByPeriodo
-                                                @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
-                                                @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim) {
+    public ResponseEntity<Object> getByPeriodo(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim) {
 
-        List<AcertoEstoqueModel> acertos = acertoEstoqueService.getByPeriodo(dataInicio, dataFim); // Calls service.getByPeriodo()
+        List<AcertoEstoqueModel> acertos = acertoEstoqueService.getByPeriodo(dataInicio, dataFim);
         if (!acertos.isEmpty()) {
             return ResponseEntity.ok(acertos);
         }
@@ -58,8 +58,8 @@ public class AcertoEstoqueController {
     }
 
     @GetMapping("/usuario/{usuarioId}")
-    public ResponseEntity<Object> getByUsuario(@PathVariable Integer usuarioId) { // Renamed from getAcertosByUsuario
-        List<AcertoEstoqueModel> acertos = acertoEstoqueService.getByUsuario(usuarioId); // Calls service.getByUsuario()
+    public ResponseEntity<Object> getByUsuario(@PathVariable Integer usuarioId) {
+        List<AcertoEstoqueModel> acertos = acertoEstoqueService.getByUsuario(usuarioId);
         if (!acertos.isEmpty()) {
             return ResponseEntity.ok(acertos);
         }
@@ -68,13 +68,18 @@ public class AcertoEstoqueController {
     }
 
     @PostMapping
-    public ResponseEntity<Object> gravar(@RequestBody AcertoEstoqueRequestDTO request) { // Renamed from efetuarAcertoEstoque
+    public ResponseEntity<Object> gravar(@RequestBody AcertoEstoqueRequestDTO request) {
         try {
-            ResultadoOperacao resultado = acertoEstoqueService.gravar(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
+            ResultadoOperacao resultado = acertoEstoqueService.gravarComTemplate(request);
+
+            if (resultado.isSucesso()) {
+                return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
+            } else {
+                return ResponseEntity.badRequest().body(resultado);
+            }
         } catch (Exception e) {
-            ResultadoOperacao resultado = new ResultadoOperacao("acertoEstoque", false, e.getMessage());
-            return ResponseEntity.badRequest().body(resultado);
+            ResultadoOperacao resultado = new ResultadoOperacao("acertoEstoque", false, "Erro inesperado no controller: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(resultado);
         }
     }
 }

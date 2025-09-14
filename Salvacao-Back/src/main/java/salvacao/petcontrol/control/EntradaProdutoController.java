@@ -8,7 +8,9 @@ import salvacao.petcontrol.dto.EntradaProdutoDTO;
 import salvacao.petcontrol.model.EntradaProdutoModel;
 import salvacao.petcontrol.model.EstoqueModel;
 import salvacao.petcontrol.model.RegistroModel;
-import salvacao.petcontrol.service.EntradaProdutoService;
+// 1. Importar o novo serviço V2 e o ResultadoOperacao
+import salvacao.petcontrol.service.EntradaProdutoServiceV2;
+import salvacao.petcontrol.util.ResultadoOperacao;
 import salvacao.petcontrol.dto.ItensEntradaDTO;
 
 import java.time.LocalDate;
@@ -19,8 +21,9 @@ import java.util.List;
 @RestController
 @RequestMapping("/entrada-produto")
 public class EntradaProdutoController {
+
     @Autowired
-    private EntradaProdutoService entradaProdutoService;
+    private EntradaProdutoServiceV2 entradaProdutoService;
 
     @GetMapping()
     public ResponseEntity<Object> getAll(){
@@ -47,7 +50,6 @@ public class EntradaProdutoController {
             return ResponseEntity.ok(estoque);
         else
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Nenhum produto encontrado");
-
     }
 
     @GetMapping("/itens/{id}")
@@ -65,16 +67,13 @@ public class EntradaProdutoController {
             @RequestParam(required = false) String dataFim) {
 
         try {
-            // Validação: se alguma data for null, lança exceção
             if (dataInicio == null || dataFim == null) {
                 throw new IllegalArgumentException("As datas de início e fim são obrigatórias.");
             }
 
-            // Converte para LocalDate
             LocalDate inicio = LocalDate.parse(dataInicio);
             LocalDate fim = LocalDate.parse(dataFim);
 
-            // Chama o serviço que faz a busca
             List<RegistroModel> resultado = entradaProdutoService.getRegistrosPeriodo(inicio,fim);
 
             if (resultado.isEmpty()) {
@@ -95,12 +94,17 @@ public class EntradaProdutoController {
     @PostMapping()
     public ResponseEntity<Object> addRegistroEntrada(@RequestBody EntradaProdutoModel registro){
         try {
-            entradaProdutoService.addRegistro(registro);
-            return ResponseEntity.ok(registro);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+            ResultadoOperacao resultado = entradaProdutoService.addRegistroComTemplate(registro);
 
+            if (resultado.isSucesso()) {
+                return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
+            } else {
+                return ResponseEntity.badRequest().body(resultado);
+            }
+        } catch (Exception e) {
+            ResultadoOperacao resultado = new ResultadoOperacao("entradaProduto", false, "Erro inesperado no controller: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(resultado);
+        }
     }
 
     @DeleteMapping("/{id}")
@@ -114,5 +118,4 @@ public class EntradaProdutoController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
 }

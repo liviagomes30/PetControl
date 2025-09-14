@@ -10,7 +10,8 @@ import salvacao.petcontrol.model.EstoqueModel;
 import salvacao.petcontrol.model.RegistroModel;
 import salvacao.petcontrol.service.EntradaProdutoService;
 import salvacao.petcontrol.dto.ItensEntradaDTO;
-import salvacao.petcontrol.service.SaidaProdutoService;
+import salvacao.petcontrol.service.SaidaProdutoServiceV2;
+import salvacao.petcontrol.util.ResultadoOperacao;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -25,7 +26,7 @@ public class SaidaProdutoController {
     private EntradaProdutoService entradaProdutoService;
 
     @Autowired
-    private SaidaProdutoService saidaProdutoService;
+    private SaidaProdutoServiceV2 saidaProdutoService;
 
     @GetMapping()
     public ResponseEntity<Object> getAll(){
@@ -70,16 +71,13 @@ public class SaidaProdutoController {
             @RequestParam(required = false) String dataFim) {
 
         try {
-            // Validação: se alguma data for null, lança exceção
             if (dataInicio == null || dataFim == null) {
                 throw new IllegalArgumentException("As datas de início e fim são obrigatórias.");
             }
 
-            // Converte para LocalDate
             LocalDate inicio = LocalDate.parse(dataInicio);
             LocalDate fim = LocalDate.parse(dataFim);
 
-            // Chama o serviço que faz a busca
             List<RegistroModel> resultado = saidaProdutoService.getRegistrosPeriodo(inicio,fim);
 
             if (resultado.isEmpty()) {
@@ -97,15 +95,23 @@ public class SaidaProdutoController {
         }
     }
 
+    // 3. Alterado para usar o novo método com Template Method
     @PostMapping()
-    public ResponseEntity<Object> addRegistroEntrada(@RequestBody EntradaProdutoModel registro){
+    public ResponseEntity<Object> addRegistro(@RequestBody EntradaProdutoModel registro){
         try {
-            saidaProdutoService.addRegistro(registro);
-            return ResponseEntity.ok(registro);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+            // Chamando o método que encapsula a lógica de transação
+            ResultadoOperacao resultado = saidaProdutoService.registrarSaidaComTemplate(registro);
 
+            if (resultado.isSucesso()) {
+                return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
+            } else {
+                return ResponseEntity.badRequest().body(resultado);
+            }
+        } catch (Exception e) {
+            // Captura para erros inesperados não tratados pelo template
+            ResultadoOperacao resultado = new ResultadoOperacao("saidaProduto", false, "Erro inesperado no controller: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(resultado);
+        }
     }
 
     @DeleteMapping("/{id}")
@@ -119,5 +125,4 @@ public class SaidaProdutoController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
 }

@@ -3,14 +3,23 @@ package salvacao.petcontrol.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import salvacao.petcontrol.model.AnimalModel;
+import salvacao.petcontrol.model.PreferenciaPorteModel;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class AnimalService {
+public class AnimalService implements Subject{
     @Autowired
     private AnimalModel animal_Model = new AnimalModel();
+
+    @Autowired
+    private PreferenciaPorteModel preferenciaPorteModel = new PreferenciaPorteModel();
+
+    private PessoaService observer;
+
+    private List<PreferenciaPorteModel> listaPreferenciaPorte;
 
     public AnimalModel getId(Integer id){
         return animal_Model.getAnimalDAO().getId(id);
@@ -36,8 +45,26 @@ public class AnimalService {
         if(animalModel.getNome().isEmpty() || animalModel.getEspecie().isEmpty() || animalModel.getSexo().isEmpty()){
             throw new Exception("Dados inclompletos");
         }
-        else
-            return animal_Model.getAnimalDAO().gravar(animalModel);
+        else {
+            if(!animalModel.getPorte().isEmpty()) {
+                int porte;
+
+                if (animalModel.getPorte().equals("Pequeno"))
+                    porte = 1;
+                else
+                    if(animalModel.getPorte().equals("Médio"))
+                        porte = 2;
+                    else
+                        porte = 3;
+
+                listaPreferenciaPorte = preferenciaPorteModel.getPreferenciaPorteDAO().buscarPorte(porte);
+            }
+
+            AnimalModel animal = animal_Model.getAnimalDAO().gravar(animalModel);
+            if(!animalModel.getPorte().isEmpty())
+                notificarObservers(animal);
+            return animal;
+        }
     }
 
     public boolean uptAnimal(AnimalModel animalModel) throws Exception{
@@ -86,5 +113,25 @@ public class AnimalService {
         if (data1 != null && data2 != null && data1.isAfter(data2)) {
             throw new Exception("Erro: A data de nascimento não pode ser maior que a data de resgate.");
         }
+    }
+
+    @Override
+    public void registrarObserver(PreferenciaPorteModel p) {
+        if(!preferenciaPorteModel.getPreferenciaPorteDAO().buscarPessoaPorte(p))
+            preferenciaPorteModel.getPreferenciaPorteDAO().gravar(p);
+    }
+
+    @Override
+    public void removerObserver(PreferenciaPorteModel p) {
+        if(preferenciaPorteModel.getPreferenciaPorteDAO().buscarPessoaPorte(p)) {
+            preferenciaPorteModel.getPreferenciaPorteDAO().apagar(p);
+        }
+    }
+
+    @Override
+    public void notificarObservers(AnimalModel animal) {
+        observer = new PessoaService();
+        for(PreferenciaPorteModel p : listaPreferenciaPorte)
+            observer.update(p,animal);
     }
 }
