@@ -73,6 +73,21 @@
                     <input type="text" class="form-control" id="endereco" required>
                     <div class="form-text">Endereço completo da pessoa</div>
                 </div>
+
+                <div>
+                    <h3>Preferencia de Porte:</h3>
+                    <label>
+                        <input type="checkbox" name="tamanho" value="1"> Pequeno
+                    </label>
+
+                    <label>
+                        <input type="checkbox" name="tamanho" value="2"> Médio
+                    </label>
+
+                    <label>
+                        <input type="checkbox" name="tamanho" value="3"> Grande
+                    </label>
+                </div>
             </div>
 
             <!-- Botões -->
@@ -296,6 +311,13 @@
             // Limpar CPF e telefone para enviar apenas números
             const cpfLimpo = document.getElementById('cpf').value.replace(/\D/g, '');
             const telefoneLimpo = document.getElementById('telefone').value.replace(/\D/g, '');
+            
+            
+            // pega todos os checkboxes que estão marcados
+            let selecionados = document.querySelectorAll('input[name="tamanho"]:checked');
+
+            // transforma a lista em array e pega só os valores
+            let valores = Array.from(selecionados).map(el => el.value);
 
             const dados = {
                 idpessoa: idpessoa,
@@ -303,7 +325,8 @@
                 cpf: cpfLimpo,
                 email: document.getElementById('email').value.trim(),
                 telefone: telefoneLimpo,
-                endereco: document.getElementById('endereco').value.trim()
+                endereco: document.getElementById('endereco').value.trim(),
+                valores: valores
             };
 
             console.log("Dados do formulário:", dados);

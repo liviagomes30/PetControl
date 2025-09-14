@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import salvacao.petcontrol.model.PessoaModel;
+import salvacao.petcontrol.model.PessoaPreferenciaModel;
 import salvacao.petcontrol.service.PessoaService;
 
 
@@ -30,14 +31,14 @@ public class PessoaController {
 
     @GetMapping("/{cpf}")
     public ResponseEntity<Object> getPessoaCpf(@PathVariable String cpf) {
-        PessoaModel pessoa = pessoaService.getPessoaCpf(cpf);
+        PessoaPreferenciaModel pessoa = pessoaService.getPessoaCpfPreferencia(cpf);
         if(pessoa != null)
             return ResponseEntity.ok(pessoa);
         return ResponseEntity.badRequest().body("Pessoa não encontrada!");
     }
 
     @PostMapping("/cadastro")
-    public ResponseEntity<Object> addPessoa(@RequestBody PessoaModel pessoa) {
+    public ResponseEntity<Object> addPessoa(@RequestBody PessoaPreferenciaModel pessoa) {
         try {
             PessoaModel novaPessoa = pessoaService.addPessoa(pessoa);
             return ResponseEntity.ok(novaPessoa);
@@ -47,7 +48,7 @@ public class PessoaController {
     }
 
     @PutMapping("/alterar")
-    public ResponseEntity<Object> updatePessoa(@RequestBody PessoaModel pessoa) {
+    public ResponseEntity<Object> updatePessoa(@RequestBody PessoaPreferenciaModel pessoa) {
         try {
             boolean atualizada = pessoaService.updatePessoa(pessoa.getCpf(), pessoa);
             if (atualizada) {

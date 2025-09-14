@@ -1,30 +1,22 @@
 package salvacao.petcontrol.model;
 
-import org.springframework.stereotype.Repository;
-import salvacao.petcontrol.dao.PessoaDAO;
-
-@Repository
-public class PessoaModel {
+public class PessoaPreferenciaModel {
     private Integer idpessoa;
     private String nome;
     private String cpf;
     private String endereco;
     private String telefone;
     private String email;
-    private PessoaDAO pessoaDAO;
+    private int[] valores = new int[3];
 
-
-    public PessoaModel() {
-        pessoaDAO = new PessoaDAO();
-    }
-
-    public PessoaModel(Integer idpessoa, String nome, String cpf, String endereco, String telefone, String email) {
+    public PessoaPreferenciaModel(Integer idpessoa, String nome, String cpf, String endereco, String telefone, String email) {
         this.idpessoa = idpessoa;
         this.nome = nome;
         this.cpf = cpf;
         this.endereco = endereco;
         this.telefone = telefone;
         this.email = email;
+
     }
 
     public Integer getIdpessoa() {
@@ -75,7 +67,11 @@ public class PessoaModel {
         this.email = email;
     }
 
-    public PessoaDAO getPessoaDAO() {
-        return pessoaDAO;
+    public int[] getValores() {
+        return valores;
+    }
+
+    public void setValores(int[] valores) {
+        this.valores = valores;
     }
 }

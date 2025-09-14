@@ -84,6 +84,22 @@
           <input type="text" class="form-control" id="endereco" required>
           <div class="form-text">Endereço completo da pessoa</div>
         </div>
+
+        <div>
+            <h3>Preferencia de Porte:</h3>
+            <label>
+                <input type="checkbox" name="tamanho" value="1"> Pequeno
+            </label>
+
+            <label>
+                <input type="checkbox" name="tamanho" value="2"> Médio
+            </label>
+
+            <label>
+                <input type="checkbox" name="tamanho" value="3"> Grande
+            </label>
+        </div>
+
       </div>
 
       <!-- Botões -->
@@ -241,6 +257,20 @@
       document.getElementById('email').value = pessoa.email || '';
       document.getElementById('telefone').value = this.formatarTelefone(pessoa.telefone) || '';
       document.getElementById('endereco').value = pessoa.endereco || '';
+      
+      const checkboxes = document.querySelectorAll('input[name="tamanho"]');
+      // Primeiro desmarca todos
+      checkboxes.forEach(cb => cb.checked = false);
+
+      // pessoa.preferencias deve ser algo tipo [1, null, 3] ou [1, 2, 3]
+      if (pessoa.valores && Array.isArray(pessoa.valores)) {
+        pessoa.valores.forEach((valor, index) => {
+          if (valor) { // se tiver algum valor na posição
+            let checkbox = document.querySelector(`input[name="tamanho"][value="${index + 1}"]`);
+            if (checkbox) checkbox.checked = true;
+          }
+        });
+      }
     }
 
     formatarCPF(cpf) {
@@ -290,13 +320,26 @@
       const telefoneLimpo = document.getElementById('telefone').value.replace(/\D/g, '');
       const cpfLimpo = this.cpfPessoa.replace(/\D/g, '');
 
+      // pega todos os checkboxes que estão marcados
+      let selecionados = document.querySelectorAll('input[name="tamanho"]:checked');
+
+      // cria um vetor de tamanho 3 inicializado com 0 (ou null, se preferir)
+      let valores = [0, 0, 0]; // posição 0 = Pequeno, 1 = Médio, 2 = Grande
+
+      // percorre os checkboxes selecionados e preenche o vetor
+      selecionados.forEach(cb => {
+        let valor = parseInt(cb.value); // 1, 2 ou 3
+        valores[valor - 1] = valor; // coloca o valor na posição correta
+      });
+
       const dados = {
         idpessoa: parseInt(document.getElementById('idpessoa').value),
         nome: document.getElementById('nome').value.trim(),
         cpf: cpfLimpo,
         email: document.getElementById('email').value.trim(),
         telefone: telefoneLimpo,
-        endereco: document.getElementById('endereco').value.trim()
+        endereco: document.getElementById('endereco').value.trim(),
+        valores: valores
       };
 
       console.log("Dados do formulário:", dados);

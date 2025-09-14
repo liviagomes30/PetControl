@@ -68,8 +68,8 @@ public class PessoaDAO {
 
     public PessoaModel addPessoa(PessoaModel pessoa) throws SQLException {
         String sql = "INSERT INTO pessoa (nome, cpf, endereco, telefone, email) VALUES (?, ?, ?, ?, ?)";
-        try (Connection conn = SingletonDB.getConexao().getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setString(1, pessoa.getNome());
             stmt.setString(2, pessoa.getCpf());
@@ -95,8 +95,7 @@ public class PessoaDAO {
 
     public boolean updatePessoa(String cpf, PessoaModel pessoa) throws SQLException {
         String sql = "UPDATE pessoa SET nome = ?, endereco = ?, telefone = ?, email = ? WHERE cpf = ?";
-        try (Connection conn = SingletonDB.getConexao().getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement stmt = SingletonDB.getConexao().getPreparedStatement(sql)) {
 
             stmt.setString(1, pessoa.getNome());
             stmt.setString(2, pessoa.getEndereco());
@@ -116,8 +115,7 @@ public class PessoaDAO {
         }
 
         String sqlCheckUsuario = "SELECT COUNT(*) FROM usuario WHERE pessoa_idpessoa = ?";
-        try (Connection conn = SingletonDB.getConexao().getConnection();
-             PreparedStatement stmtCheck = conn.prepareStatement(sqlCheckUsuario)) {
+        try (PreparedStatement stmtCheck = SingletonDB.getConexao().getPreparedStatement(sqlCheckUsuario)) {
 
             stmtCheck.setInt(1, pessoa.getIdpessoa());
             try (ResultSet rs = stmtCheck.executeQuery()) {
@@ -128,8 +126,7 @@ public class PessoaDAO {
         }
 
         String sqlDelete = "DELETE FROM pessoa WHERE cpf = ?";
-        try (Connection conn = SingletonDB.getConexao().getConnection();
-             PreparedStatement stmtDelete = conn.prepareStatement(sqlDelete)) {
+        try (PreparedStatement stmtDelete = SingletonDB.getConexao().getPreparedStatement(sqlDelete)) {
             stmtDelete.setString(1, cpf);
             return stmtDelete.executeUpdate() > 0;
         }
